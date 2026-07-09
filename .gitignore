@@ -1,0 +1,49 @@
+# ─────────────────────────────────────────────────────────────
+# .gitignore raíz — Sistema de Gestión Turística de Chimbo
+# El repositorio contiene SOLO el sistema (backend Laravel + frontend React).
+# Se excluyen entornos, dependencias, secretos y la documentación de tesis.
+# (backend/ y frontend/ tienen además sus propios .gitignore.)
+# ─────────────────────────────────────────────────────────────
+
+# ── Secretos y entorno ──────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.key
+
+# ── Entornos y dependencias ─────────────────────────────────
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+/vendor/
+node_modules/
+dist/
+dist-ssr/
+
+# Distribución local de Redis para Windows (binarios, no es código del sistema)
+backend/Redis/
+
+# ── Documentación de tesis (no forma parte del sistema) ─────
+*.docx
+~$*.docx
+*.drawio
+evidencia_manual_mintur.html
+diagrama_er_sgt.html
+arquitectura_sgt.png
+diagrama_er_sgt.png
+modelo_relacional_sgt*.png
+secuencia_*.png
+
+# Generador de documentos (herramienta auxiliar de tesis, no del sistema)
+generar-doc.js
+/composer.json
+/composer.lock
+
+# ── Sistema operativo / editores ────────────────────────────
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+.claude/settings.local.json

@@ -50,24 +50,43 @@ Tu proyecto no es un sitio simple: son **5 piezas** que trabajan juntas.
 | **Backend** | Laravel 12, PHP 8.2 | Host PHP + `composer` |
 | **Base de datos** | PostgreSQL | Postgres gestionado o en el servidor |
 | **worker.py** | Python (psycopg2, requests) | Host Python + **acceso al disco de storage de Laravel** |
-| **clip_service.py** | Python (Flask, PyTorch, transformers) | Host Python con **≥ 2 GB RAM** (modelo CLIP) |
+| **clip_service.py** | Python (Flask, **onnxruntime int8**) | Host Python con **~400 MB RAM** (modelo CLIP en ONNX) |
+
+> ✅ **Versión ONNX activada.** El servicio de IA ya **no usa PyTorch**: corre el
+> modelo CLIP como ONNX cuantizado (int8) con `onnxruntime`, bajando la RAM de
+> ~2 GB a **~400 MB**. Por eso ahora cabe en un servidor pequeño y barato.
 
 > 💡 **Cola:** tu backend usa `QUEUE_CONNECTION=database`, así que **Redis NO es
 > obligatorio** para producción. Puedes omitirlo.
 
 ### La decisión que define todo el despliegue
 
-Dos restricciones de tu arquitectura descartan las opciones "gratis y fáciles":
+Con ONNX, la RAM ya **no** es el problema (bajó a ~400 MB). Pero queda una
+restricción de arquitectura que sigue mandando:
 
-1. **CLIP + PyTorch pesan.** El modelo necesita ~2 GB de RAM. Los planes gratuitos
-   (512 MB) **no lo aguantan**.
-2. **`worker.py` lee las imágenes del disco de Laravel** (`storage/app/public`),
-   asumiendo que está en la **misma máquina** que el backend. En despliegues de
-   contenedores separados no comparten disco.
+- **`worker.py` lee las imágenes del disco de Laravel** (`storage/app/public`),
+  asumiendo que está en la **misma máquina** que el backend. En plataformas de
+  contenedores aislados (Railway, Render) cada servicio tiene su propio disco, así
+  que habría que migrar el almacenamiento a S3 y tocar código.
 
-➡️ **Por eso la opción recomendada para un demo público completo y fiel a tu
-código es un único servidor (VPS) con todo junto.** Es lo más estable para una
-defensa. Abajo va esa ruta (Opción A) y una alternativa gestionada (Opción B).
+## ⭐ Mi recomendación para tu caso: **un VPS pequeño con Supervisor**
+
+Elegiste "recomiéndame tú", así que esta es la vía más simple y fiable **para una
+tesis**, dado tu stack:
+
+- **Todo en un solo servidor** → el worker comparte disco con Laravel sin trucos.
+- Con ONNX (~400 MB) basta un VPS de **2 GB de RAM** (**~€4/mes**, o gratis con
+  crédito educativo de proveedores).
+- Sin reescribir código para S3 ni repartir servicios: es lo más **fiel a tu
+  arquitectura** y lo más robusto el día de la defensa.
+- Los servicios se mantienen vivos solos con **Supervisor** (si uno se cae, se
+  reinicia). No tienes que estar pendiente.
+
+> Descarté las plataformas gestionadas (Railway/Render) como opción principal
+> **solo** por el disco compartido del worker: te obligarían a migrar a S3 antes
+> de que funcione. Si algún día quieres esa ruta, la dejo esbozada en la Opción B.
+
+Sigue la **Opción A** de abajo (es exactamente esta recomendación, paso a paso).
 
 ---
 
@@ -155,26 +174,35 @@ php artisan config:cache && php artisan route:cache
 chown -R www-data:www-data storage bootstrap/cache
 ```
 
-### Paso 5 — Servicios Python (CLIP + worker)
-Crea el archivo de dependencias (no existe aún en el repo):
+### Paso 5 — Servicios Python (CLIP en ONNX + worker)
+
+**5.1 — Generar el modelo ONNX (UNA vez, en TU PC — no en el servidor).**
+Tu PC ya tiene PyTorch; el servidor no lo necesitará.
+```bash
+# En tu PC (Windows), dentro de backend/
+python -m venv .venv-export
+.venv-export\Scripts\activate
+pip install -r requirements-export.txt
+python scripts/export_clip_onnx.py
+```
+Esto crea `backend/models/clip_image_int8.onnx` (~40–90 MB) y **verifica** que
+los vectores siguen siendo equivalentes a PyTorch (similitud coseno > 0.99).
+
+**5.2 — Subir el modelo al servidor** (no está en Git por su tamaño):
+```bash
+# Desde tu PC
+scp backend/models/clip_image_int8.onnx root@TU_IP:/var/www/sgt-chimbo/backend/models/
+```
+
+**5.3 — Instalar el runtime ligero en el servidor** (sin PyTorch):
 ```bash
 cd /var/www/sgt-chimbo/backend
-cat > requirements.txt <<'EOF'
-flask
-flask-cors
-psycopg2-binary
-requests
-pillow
-numpy
-torch
-transformers
-EOF
 python3 -m venv .venv
 .venv/bin/pip install --upgrade pip
-.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install -r requirements.txt   # flask, onnxruntime, pillow, numpy…
 ```
-> La primera vez, `clip_service.py` **descarga el modelo CLIP** (~600 MB) de
-> HuggingFace. Puede tardar varios minutos.
+> Sin `torch` ni `transformers`: la instalación es pequeña y `clip_service.py`
+> arranca usando ~400 MB de RAM.
 
 ### Paso 6 — Mantener todo corriendo con Supervisor
 Crea `/etc/supervisor/conf.d/sgt.conf`:
@@ -319,10 +347,13 @@ código actual, **la Opción A (VPS) es más directa**.
 
 | Recurso | Mínimo | Recomendado | Costo aprox. |
 |---------|--------|-------------|--------------|
-| VPS (todo el backend + IA) | 2 GB RAM | 4 GB RAM | €4–5/mes |
+| VPS (todo el backend + IA en ONNX) | 1 GB RAM | 2 GB RAM | €3–4/mes |
 | Frontend (Vercel) | — | — | Gratis |
 | Groq (chat IA) | — | — | Gratis (con límites) |
 | Dominio (para HTTPS) | — | 1 dominio | ~US$10/año |
+
+> Gracias a ONNX, el servicio de IA pasó de necesitar ~2 GB a ~400 MB, así que un
+> VPS de **2 GB** cubre todo (backend + Postgres + IA) con margen de sobra.
 
 > Si el presupuesto es un problema o solo necesitas mostrarlo el día de la
 > defensa, existe una versión **sin la búsqueda por imagen (CLIP)** que cabe en

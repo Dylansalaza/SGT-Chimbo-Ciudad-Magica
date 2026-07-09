@@ -1,0 +1,10 @@
+# Dependencias SOLO para generar el modelo ONNX (se corre una vez, en tu PC).
+# NO se instalan en el servidor. Uso:
+#   pip install -r requirements-export.txt
+#   python scripts/export_clip_onnx.py
+torch
+transformers
+onnx
+onnxruntime
+pillow
+numpy

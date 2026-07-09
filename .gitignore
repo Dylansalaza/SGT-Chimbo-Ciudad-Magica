@@ -24,6 +24,11 @@ dist-ssr/
 # Distribución local de Redis para Windows (binarios, no es código del sistema)
 backend/Redis/
 
+# Modelo CLIP en ONNX (binario grande; se genera con scripts/export_clip_onnx.py
+# y se sube al servidor). No se versiona para no inflar el repositorio.
+*.onnx
+backend/models/
+
 # ── Documentación de tesis (no forma parte del sistema) ─────
 *.docx
 ~$*.docx

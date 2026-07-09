@@ -1,0 +1,10 @@
+# Dependencias de PRODUCCIÓN del servicio de IA (runtime ligero, sin PyTorch).
+# Úsalas en el servidor: pip install -r requirements.txt
+# Requiere el modelo generado: models/clip_image_int8.onnx (ver requirements-export.txt)
+flask
+flask-cors
+onnxruntime
+pillow
+numpy
+requests
+psycopg2-binary

@@ -62,16 +62,25 @@ php artisan storage:link
 php artisan serve --port=3000
 ```
 
-### 2. Servicio de IA (Python)
+### 2. Servicio de IA (Python — CLIP en ONNX)
+El motor de visión usa el modelo CLIP como **ONNX cuantizado (int8)**, así corre
+con ~400 MB de RAM y sin PyTorch. Se genera una sola vez:
 ```bash
 cd backend
+# (a) Generar el modelo ONNX — una única vez (requiere PyTorch, solo aquí)
+python -m venv .venv-export
+# Windows: .venv-export\Scripts\activate   |   Linux/Mac: source .venv-export/bin/activate
+pip install -r requirements-export.txt
+python scripts/export_clip_onnx.py         # crea models/clip_image_int8.onnx y verifica paridad
+
+# (b) Ejecutar los servicios (runtime ligero, sin PyTorch)
 python -m venv .venv
-# Windows: .venv\Scripts\activate   |   Linux/Mac: source .venv/bin/activate
-pip install flask flask-cors psycopg2-binary requests pillow numpy torch transformers
-python clip_service.py    # arranca Flask con el modelo CLIP (puerto 5001)
+# activar el entorno…
+pip install -r requirements.txt
+python clip_service.py    # Flask + onnxruntime (puerto 5001)
 python worker.py          # en otra terminal: procesa las búsquedas
 ```
-> La primera ejecución descarga el modelo CLIP (~600 MB).
+> El paso (a) descarga el modelo CLIP (~600 MB) desde HuggingFace solo esa vez.
 
 ### 3. Frontend (React)
 ```bash

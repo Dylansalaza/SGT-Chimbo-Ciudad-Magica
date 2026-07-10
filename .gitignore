@@ -52,3 +52,9 @@ Thumbs.db
 .idea/
 .vscode/
 .claude/settings.local.json
+
+# Entorno virtual de exportacion CLIP (venv, no es codigo del sistema)
+backend/.venv-export/
+
+# Skills auxiliares de IA (herramientas, no forman parte del sistema)
+/ai-skills/

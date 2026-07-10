@@ -1,87 +1,117 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<div class="bg-white rounded-xl shadow-lg p-6">
-    <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="fas fa-calendar-days text-slate-400"></i> Crear Nuevo Evento</h2>
+<div class="w-full flex flex-col">
 
-    <form method="POST" action="{{ route('admin.eventos.store') }}" id="eventoForm">
-        @csrf
-
-        <div class="space-y-4">
-            <div class="grid md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Título *</label>
-                    <input type="text" name="title" id="title" class="w-full p-2 border rounded" required>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium mb-1">Categoría</label>
-                    <input type="text" name="categoria" list="cats-eventos" class="w-full p-2 border rounded" placeholder="Ej: Cultural, Religioso, Deportivo...">
-                    <datalist id="cats-eventos">
-                        <option value="Cultural"><option value="Religioso"><option value="Deportivo"><option value="Gastronómico"><option value="Musical"><option value="Feria">
-                    </datalist>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium mb-1">Descripción</label>
-                    <textarea name="description" id="description" rows="1" class="w-full p-2 border rounded"></textarea>
-                </div>
+    {{-- Header de Pantalla Completa (mismo patrón que el resto del panel) --}}
+    <div class="sticky top-0 z-30 bg-[#00294d] text-white w-full px-10 py-8 shadow-lg border-b border-white/5">
+        <div class="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
+            <div class="space-y-1">
+                <a href="{{ route('admin.eventos.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition mb-1">
+                    <i class="fas fa-arrow-left text-[10px]"></i> Volver a Eventos
+                </a>
+                <h1 class="font-serif text-2xl font-extrabold tracking-tight md:text-3xl flex items-center gap-3">
+                    <i class="fas fa-calendar-days text-lg text-slate-300"></i> Crear Nuevo Evento
+                </h1>
+                <p class="text-sm text-slate-300 font-medium">Publica una actividad cultural o festividad en la agenda del cantón.</p>
             </div>
+        </div>
+    </div>
 
-            {{-- ⏱️ Bloque Separado de Fechas y Horas --}}
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Fecha Inicio</label>
-                    <input type="date" name="starts_date" id="starts_date" class="w-full p-2 border rounded bg-white">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Hora Inicio</label>
-                    <input type="time" name="starts_time" id="starts_time" class="w-full p-2 border rounded bg-white">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Fecha Fin</label>
-                    <input type="date" name="ends_date" id="ends_date" class="w-full p-2 border rounded bg-white">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Hora Fin</label>
-                    <input type="time" name="ends_time" id="ends_time" class="w-full p-2 border rounded bg-white">
-                </div>
-            </div>
+    <div class="p-8 w-full">
+        <div class="bg-white rounded-2xl card-premium-shadow max-w-4xl mx-auto">
+            <form method="POST" action="{{ route('admin.eventos.store') }}" id="eventoForm" class="p-8 sm:p-10 space-y-10">
+                @csrf
 
-            <div>
-                <label class="block text-sm font-medium mb-2 flex items-center gap-1.5"><i class="fas fa-camera text-slate-400"></i> Foto o video de portada del evento (arrastra o haz clic)</label>
+                {{-- Sección: Información general --}}
+                <section class="space-y-5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i class="fas fa-circle-info"></i> Información general
+                    </h2>
+                    <div>
+                        <label for="title" class="block text-sm font-bold text-slate-700 mb-1.5">Título *</label>
+                        <input type="text" name="title" id="title" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm transition" required>
+                    </div>
+                    <div>
+                        <label for="categoria" class="block text-sm font-bold text-slate-700 mb-1.5">Categoría</label>
+                        <input type="text" name="categoria" id="categoria" list="cats-eventos" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm transition" placeholder="Ej: Cultural, Religioso, Deportivo...">
+                        <datalist id="cats-eventos">
+                            <option value="Cultural"><option value="Religioso"><option value="Deportivo"><option value="Gastronómico"><option value="Musical"><option value="Feria">
+                        </datalist>
+                    </div>
+                    <div>
+                        <label for="description" class="block text-sm font-bold text-slate-700 mb-1.5">Descripción</label>
+                        <textarea name="description" id="description" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm leading-relaxed transition"></textarea>
+                    </div>
+                </section>
 
-                <div id="dropzoneArea" class="border-2 border-dashed border-blue-500 rounded-xl p-8 text-center cursor-pointer bg-gray-50 hover:bg-blue-50 transition">
-                    <i class="fas fa-cloud-upload-alt text-4xl text-blue-500 mb-2 block"></i>
-                    <p class="text-gray-600">Arrastra una foto o video aquí, o haz clic para seleccionar</p>
-                    <p class="text-xs text-gray-400 mt-1">JPG, PNG, GIF, WEBP o MP4/MOV/WEBM (máx. 25MB)</p>
-                    <input type="file" id="fileInput" accept="image/*,video/*" style="display: none;">
-                </div>
+                {{-- Sección: Fechas y horas --}}
+                <section class="space-y-5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i class="fas fa-calendar-days"></i> Fechas del evento
+                    </h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <label for="starts_date" class="block text-sm font-bold text-slate-700 mb-1.5">Fecha Inicio</label>
+                            <input type="date" name="starts_date" id="starts_date" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm transition">
+                        </div>
+                        <div>
+                            <label for="starts_time" class="block text-sm font-bold text-slate-700 mb-1.5">Hora Inicio</label>
+                            <input type="time" name="starts_time" id="starts_time" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm transition">
+                        </div>
+                        <div>
+                            <label for="ends_date" class="block text-sm font-bold text-slate-700 mb-1.5">Fecha Fin</label>
+                            <input type="date" name="ends_date" id="ends_date" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm transition">
+                        </div>
+                        <div>
+                            <label for="ends_time" class="block text-sm font-bold text-slate-700 mb-1.5">Hora Fin</label>
+                            <input type="time" name="ends_time" id="ends_time" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm transition">
+                        </div>
+                    </div>
+                </section>
 
-                <div id="previewContainer" class="mt-3 hidden">
-                    <img id="previewImg" class="w-32 h-32 object-cover rounded shadow hidden">
-                    <video id="previewVideo" class="w-48 h-32 object-cover rounded shadow hidden" controls muted></video>
-                    <p id="previewUrl" class="text-xs text-blue-600 mt-1"></p>
-                    <button type="button" id="removeImageBtn" class="mt-1 text-red-500 text-sm hover:underline">
-                        Eliminar
+                {{-- Sección: Multimedia --}}
+                <section class="space-y-5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i class="fas fa-camera"></i> Foto o video de portada
+                    </h2>
+
+                    <div id="dropzoneArea" class="border-2 border-dashed border-blue-400 rounded-2xl p-8 sm:p-10 text-center cursor-pointer bg-slate-50/60 hover:bg-blue-50 transition">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-blue-500 mb-3 block"></i>
+                        <p class="text-slate-600 text-sm font-medium">Arrastra una foto o video aquí, o haz clic para seleccionar</p>
+                        <p class="text-xs text-slate-400 mt-1">JPG, PNG, GIF, WEBP o MP4/MOV/WEBM (máx. 25MB)</p>
+                        <input type="file" id="fileInput" accept="image/*,video/*" style="display: none;">
+                    </div>
+
+                    <div id="previewContainer" class="hidden">
+                        <img id="previewImg" class="w-32 h-32 object-cover rounded-xl shadow border border-slate-200 hidden">
+                        <video id="previewVideo" class="w-48 h-32 object-cover rounded-xl shadow border border-slate-200 hidden" controls muted></video>
+                        <p id="previewUrl" class="text-xs text-blue-600 mt-2"></p>
+                        <button type="button" id="removeImageBtn" class="mt-1 text-rose-500 text-xs font-bold hover:underline flex items-center gap-1">
+                            <i class="fas fa-trash-alt"></i> Eliminar
+                        </button>
+                    </div>
+
+                    <input type="hidden" name="image_url" id="imageUrl">
+                </section>
+
+                {{-- Sección: Galería adicional --}}
+                <section class="space-y-5">
+                    @include('admin.partials.galeria-uploader', ['uploadRoute' => 'admin.eventos.upload'])
+                </section>
+
+                {{-- Acciones --}}
+                <div class="flex items-center gap-3 pt-6 border-t border-slate-100">
+                    <button type="submit" class="px-6 py-2.5 bg-[#00294d] hover:bg-[#003d73] text-white font-bold rounded-xl text-sm transition-all shadow-md inline-flex items-center gap-2">
+                        <i class="fas fa-plus"></i> Crear Evento
                     </button>
+                    <a href="{{ route('admin.eventos.index') }}" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold rounded-xl text-sm transition-all">
+                        Cancelar
+                    </a>
                 </div>
-
-                <input type="hidden" name="image_url" id="imageUrl">
-            </div>
-
-            @include('admin.partials.galeria-uploader', ['uploadRoute' => 'admin.eventos.upload'])
+            </form>
         </div>
-
-        <div class="mt-6 border-t pt-4">
-            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 font-semibold text-sm">
-                Crear Evento
-            </button>
-            <a href="{{ route('admin.eventos.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 ml-2 text-sm">
-                Cancelar
-            </a>
-        </div>
-    </form>
+    </div>
 </div>
 
 @push('scripts')

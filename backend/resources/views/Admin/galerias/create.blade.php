@@ -1,49 +1,76 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<div class="bg-white rounded-xl shadow-lg p-6">
-    <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="fas fa-images text-slate-400"></i> Crear Nueva Galería</h2>
+<div class="w-full flex flex-col">
 
-    <form method="POST" action="{{ route('admin.galerias.store') }}" id="galeriaForm">
-        @csrf
-
-        <div class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium mb-1">Título *</label>
-                <input type="text" name="title" id="title" class="w-full p-2 border rounded" required>
+    {{-- Header de Pantalla Completa (mismo patrón que el resto del panel) --}}
+    <div class="sticky top-0 z-30 bg-[#00294d] text-white w-full px-10 py-8 shadow-lg border-b border-white/5">
+        <div class="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
+            <div class="space-y-1">
+                <a href="{{ route('admin.galerias.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition mb-1">
+                    <i class="fas fa-arrow-left text-[10px]"></i> Volver a Galerías
+                </a>
+                <h1 class="font-serif text-2xl font-extrabold tracking-tight md:text-3xl flex items-center gap-3">
+                    <i class="fas fa-images text-lg text-slate-300"></i> Crear Nueva Galería
+                </h1>
+                <p class="text-sm text-slate-300 font-medium">Agrupa varias fotos o videos bajo un mismo álbum.</p>
             </div>
+        </div>
+    </div>
 
-            <div>
-                <label class="block text-sm font-medium mb-2 flex items-center gap-1.5"><i class="fas fa-camera text-slate-400"></i> Imágenes de la galería (puedes subir varias)</label>
+    <div class="p-8 w-full">
+        <div class="bg-white rounded-2xl card-premium-shadow max-w-4xl mx-auto">
+            <form method="POST" action="{{ route('admin.galerias.store') }}" id="galeriaForm" class="p-8 sm:p-10 space-y-10">
+                @csrf
 
-                <div id="dropzoneArea" class="border-2 border-dashed border-purple-500 rounded-xl p-8 text-center cursor-pointer bg-gray-50 hover:bg-purple-50 transition">
-                    <i class="fas fa-cloud-upload-alt text-4xl text-purple-500 mb-2 block"></i>
-                    <p class="text-gray-600">Arrastra imágenes aquí o haz clic para seleccionar</p>
-                    <p class="text-xs text-gray-400 mt-1">JPG, PNG, GIF (máx. 2MB por imagen)</p>
-                    <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
+                {{-- Sección: Información general --}}
+                <section class="space-y-5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i class="fas fa-circle-info"></i> Información general
+                    </h2>
+                    <div>
+                        <label for="title" class="block text-sm font-bold text-slate-700 mb-1.5">Título *</label>
+                        <input type="text" name="title" id="title" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none text-sm transition" required>
+                    </div>
+                </section>
+
+                {{-- Sección: Imágenes --}}
+                <section class="space-y-5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i class="fas fa-camera"></i> Imágenes de la galería
+                    </h2>
+                    <p class="text-sm text-slate-500 -mt-2">Puedes subir varias a la vez.</p>
+
+                    <div id="dropzoneArea" class="border-2 border-dashed border-purple-400 rounded-2xl p-8 sm:p-10 text-center cursor-pointer bg-slate-50/60 hover:bg-purple-50 transition">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-purple-500 mb-3 block"></i>
+                        <p class="text-slate-600 text-sm font-medium">Arrastra imágenes aquí o haz clic para seleccionar</p>
+                        <p class="text-xs text-slate-400 mt-1">JPG, PNG, GIF (máx. 2MB por imagen)</p>
+                        <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
+                    </div>
+
+                    {{-- Preview de imágenes subidas --}}
+                    <div id="previewGrid" class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"></div>
+
+                    {{-- Aquí se añaden los inputs hidden dinámicamente --}}
+                    <div id="imageInputs"></div>
+
+                    <p class="text-xs text-slate-400">
+                        Imágenes agregadas: <span id="imageCount" class="font-bold text-slate-600">0</span>
+                    </p>
+                </section>
+
+                {{-- Acciones --}}
+                <div class="flex items-center gap-3 pt-6 border-t border-slate-100">
+                    <button type="submit" id="submitBtn" class="px-6 py-2.5 bg-purple-500 hover:bg-purple-600 disabled:opacity-50 text-white font-bold rounded-xl text-sm transition-all shadow-md inline-flex items-center gap-2">
+                        <i class="fas fa-plus"></i> Crear Galería
+                    </button>
+                    <a href="{{ route('admin.galerias.index') }}" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold rounded-xl text-sm transition-all">
+                        Cancelar
+                    </a>
                 </div>
-
-                {{-- Preview de imágenes subidas --}}
-                <div id="previewGrid" class="mt-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"></div>
-
-                {{-- Aquí se añaden los inputs hidden dinámicamente --}}
-                <div id="imageInputs"></div>
-
-                <p class="text-xs text-gray-400 mt-2">
-                    Imágenes agregadas: <span id="imageCount">0</span>
-                </p>
-            </div>
+            </form>
         </div>
-
-        <div class="mt-4">
-            <button type="submit" id="submitBtn" class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:opacity-50">
-                Crear Galería
-            </button>
-            <a href="{{ route('admin.galerias.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 ml-2">
-                Cancelar
-            </a>
-        </div>
-    </form>
+    </div>
 </div>
 
 @push('scripts')

@@ -5,6 +5,7 @@
 torch
 transformers
 onnx
+onnxscript
 onnxruntime
 pillow
 numpy

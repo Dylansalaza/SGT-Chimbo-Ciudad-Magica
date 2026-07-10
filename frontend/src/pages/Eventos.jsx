@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   MagnifyingGlassIcon,
@@ -7,9 +8,6 @@ import {
   PhotoIcon,
   PlayIcon,
   ArrowRightIcon,
-  FlagIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
 } from '@heroicons/react/24/solid';
 
 const LARAVEL_URL = 'http://127.0.0.1:3000';
@@ -60,26 +58,17 @@ function esEventoPasado(ev) {
     return !isNaN(t) && t < Date.now();
 }
 
-// Arma el array de imágenes/videos de un evento (portada + galería adicional)
-// ya resueltas a URL completa, para alimentar el carrusel del modal.
-function galeriaDe(ev) {
-    const imgs = [];
-    if (ev.image_url) imgs.push(resolverImagen(ev.image_url));
-    (ev.images || []).forEach(u => { const r = resolverImagen(u); if (r) imgs.push(r); });
-    return imgs;
-}
-
 // ============================================================================
 // COMPONENTE PRINCIPAL: Eventos (ruta /eventos)
 // Lista pública de eventos con filtros (texto, categoría, rango de fechas),
 // badge de estado (🟢 actual / ⚪ pasado) calculado automáticamente según la
-// fecha, y un modal de detalle con carrusel de fotos/videos.
+// fecha. Cada evento abre su propia página completa en /eventos/:id (ver
+// EventoDetalle.jsx).
 // ============================================================================
 export default function Eventos() {
-    const [eventos, setEventos]                 = useState([]); // Lista completa traída del backend
-    const [cargando, setCargando]               = useState(true);
-    const [eventoSeleccionado, setSeleccionado] = useState(null); // Evento abierto en el modal
-    const [imgActiva, setImgActiva]             = useState(0);    // Índice de la imagen activa en el carrusel del modal
+    const navigate = useNavigate();
+    const [eventos, setEventos]   = useState([]); // Lista completa traída del backend
+    const [cargando, setCargando] = useState(true);
 
     // Filtros
     const [texto, setTexto]           = useState('');
@@ -127,8 +116,8 @@ export default function Eventos() {
     const hayFiltro = texto || categoria !== 'Todas' || fechaDesde || fechaHasta;
     // Restablece todos los filtros a su valor inicial
     const limpiar = () => { setTexto(''); setCategoria('Todas'); setFechaDesde(''); setFechaHasta(''); };
-    // Abre el modal de detalle de un evento, reiniciando el carrusel en la primera imagen
-    const abrir = (ev) => { setSeleccionado(ev); setImgActiva(0); };
+    // Navega a la página completa de un evento
+    const abrir = (ev) => navigate(`/eventos/${ev.id}`);
 
     if (cargando) {
         return (
@@ -223,101 +212,6 @@ export default function Eventos() {
                 </div>
             )}
 
-            {/* Modal con carrusel */}
-            {eventoSeleccionado && (() => {
-                const imgs = galeriaDe(eventoSeleccionado);
-                const prev = (e) => { e.stopPropagation(); setImgActiva(i => (i - 1 + imgs.length) % imgs.length); };
-                const next = (e) => { e.stopPropagation(); setImgActiva(i => (i + 1) % imgs.length); };
-                return (
-                    <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4" onClick={() => setSeleccionado(null)}>
-                        <div className="relative max-w-4xl w-full bg-white dark:bg-[#242424] rounded-2xl flex flex-col max-h-[92vh] my-4" onClick={e => e.stopPropagation()}>
-                            <button onClick={() => setSeleccionado(null)} className="absolute top-4 right-4 z-20 bg-black/50 hover:bg-black/70 text-white rounded-full w-10 h-10 flex items-center justify-center"><XMarkIcon className="w-5 h-5" /></button>
-
-                            {/* Carrusel principal */}
-                            <div className="relative h-64 md:h-80 bg-gray-900 overflow-hidden select-none rounded-t-2xl mx-2 mt-2 shrink-0">
-                                {imgs.length > 0 ? (
-                                    imgs.map((src, idx) => (
-                                        esVideoUrl(src) ? (
-                                            <video key={idx} src={src} controls={idx === imgActiva} muted playsInline preload="metadata"
-                                                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${idx === imgActiva ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
-                                        ) : (
-                                            <img key={idx} src={src} alt={`${eventoSeleccionado.title} ${idx + 1}`}
-                                                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${idx === imgActiva ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
-                                        )
-                                    ))
-                                ) : (
-                                    <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"><CalendarDaysIcon className="w-16 h-16 text-gray-400 dark:text-gray-500" /></div>
-                                )}
-
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
-
-                                {/* Flechas */}
-                                {imgs.length > 1 && (
-                                    <>
-                                        <button onClick={prev}
-                                            className="absolute left-3 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/75 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all hover:scale-110 backdrop-blur-sm">
-                                            <ChevronLeftIcon className="w-5 h-5" />
-                                        </button>
-                                        <button onClick={next}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/75 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all hover:scale-110 backdrop-blur-sm">
-                                            <ChevronRightIcon className="w-5 h-5" />
-                                        </button>
-                                        {/* Puntos indicadores */}
-                                        <div className="absolute bottom-14 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                                            {imgs.map((_, idx) => (
-                                                <button key={idx} onClick={e => { e.stopPropagation(); setImgActiva(idx); }}
-                                                    className={`rounded-full transition-all duration-300 ${idx === imgActiva ? 'bg-white w-4 h-2' : 'bg-white/50 w-2 h-2 hover:bg-white/80'}`} />
-                                            ))}
-                                        </div>
-                                        {/* Contador */}
-                                        <span className="absolute top-4 left-4 z-10 bg-black/50 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-                                            {imgActiva + 1} / {imgs.length}
-                                        </span>
-                                    </>
-                                )}
-
-                                <div className="absolute bottom-4 left-4 flex flex-wrap gap-2 z-10">
-                                    {eventoSeleccionado.categoria && <span className="text-sm bg-blue-600/80 text-white px-3 py-1 rounded-full">{eventoSeleccionado.categoria}</span>}
-                                    <span className="flex items-center gap-1 text-sm bg-black/50 text-white px-3 py-1 rounded-full"><CalendarDaysIcon className="w-4 h-4" /> Inicio: {formatearFecha(eventoSeleccionado.starts_at)}</span>
-                                    {eventoSeleccionado.ends_at && <span className="flex items-center gap-1 text-sm bg-blue-500/70 text-white px-3 py-1 rounded-full"><FlagIcon className="w-4 h-4" /> Fin: {formatearFecha(eventoSeleccionado.ends_at)}</span>}
-                                    <span className={`flex items-center gap-1 text-sm text-white px-3 py-1 rounded-full font-semibold ${esEventoPasado(eventoSeleccionado) ? 'bg-gray-600/80' : 'bg-emerald-500/90'}`}>
-                                        <span className="w-1.5 h-1.5 rounded-full bg-current" /> {esEventoPasado(eventoSeleccionado) ? 'Evento pasado' : 'Evento actual'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Miniaturas */}
-                            {imgs.length > 1 && (
-                                <div className="flex gap-2 px-4 py-2 overflow-x-auto bg-gray-100 dark:bg-[#242424] shrink-0 mx-2">
-                                    {imgs.map((src, idx) => (
-                                        <div key={idx} onClick={() => setImgActiva(idx)}
-                                            className={`relative h-16 w-24 shrink-0 rounded-lg cursor-pointer border-2 transition-all overflow-hidden ${idx === imgActiva ? 'border-blue-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}>
-                                            {esVideoUrl(src) ? (
-                                                <>
-                                                    <video src={src} muted playsInline preload="metadata" className="h-full w-full object-cover" />
-                                                    <span className="absolute inset-0 flex items-center justify-center text-white bg-black/30"><PlayIcon className="w-4 h-4" /></span>
-                                                </>
-                                            ) : (
-                                                <img src={src} className="h-full w-full object-cover" />
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Texto — ocupa el espacio restante y hace scroll */}
-                            <div className="flex-1 overflow-y-auto min-h-0">
-                                <div className="px-8 py-5 mx-auto max-w-3xl">
-                                    <h2 className="text-2xl font-bold mb-3 text-gray-800 dark:text-white">{eventoSeleccionado.title}</h2>
-                                    <div className="text-gray-600 dark:text-gray-300 text-sm leading-7 whitespace-pre-wrap text-justify pb-4">
-                                        {eventoSeleccionado.description || 'Sin descripción disponible.'}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                );
-            })()}
         </div>
     );
 }

@@ -11,7 +11,6 @@ import {
   MapPinIcon,
   BuildingLibraryIcon,
   SparklesIcon,
-  StarIcon,
   ArrowRightIcon,
   PhotoIcon,
   ClockIcon,
@@ -20,10 +19,21 @@ import {
   CalendarDaysIcon,
   XMarkIcon,
   PhoneIcon,
+  EyeIcon,
 } from '@heroicons/react/24/solid';
 
 const API_URL     = import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000/api';
 const LARAVEL_URL = API_URL.replace('/api', '');
+
+// Video vertical grabado en Chimbo, mostrado en la sección Visitas del Home
+const VIDEO_CHIMBO = '/media/plaza-chimbo.mp4';
+
+// Fotos del collage junto al video
+const FOTOS_CHIMBO = [
+  { url: '/media/collage/iglesia.jpg', alt: 'Iglesia Matriz de San José de Chimbo, vista aérea' },
+  { url: '/media/collage/estatua.jpg', alt: 'Estatua de San José, patrono de Chimbo' },
+  { url: '/media/collage/vista.jpg', alt: 'Vista panorámica del centro de San José de Chimbo' },
+];
 
 // Normaliza rutas de imagen (igual criterio que el resto de la app)
 function resolverImagen(url) {
@@ -66,6 +76,123 @@ const CARRUSEL_DEFAULT = [
 ];
 
 // ============================================================================
+// COMPONENTE: Reveal
+// Hace aparecer su contenido con un fade + leve desplazamiento cuando entra
+// al viewport (IntersectionObserver, solo opacity/transform). `delay` permite
+// escalonar varias columnas. Respeta prefers-reduced-motion.
+// ============================================================================
+function Reveal({ children, delay = 0, className = '' }) {
+  const ref = React.useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setVisible(true);
+      return;
+    }
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.2 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      style={{ transitionDelay: `${delay}ms` }}
+      className={`transition-all duration-500 ease-out will-change-transform ${
+        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+      } ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ============================================================================
+// COMPONENTE: CountUp
+// Cuenta de 0 al valor final la primera vez que el número entra al viewport
+// (1.2 s, easing suave). Con prefers-reduced-motion muestra el valor directo.
+// ============================================================================
+function CountUp({ value, duration = 1200 }) {
+  const ref = React.useRef(null);
+  const [n, setN] = useState(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setN(value);
+      return;
+    }
+    let raf;
+    const obs = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      obs.disconnect();
+      const t0 = performance.now();
+      const tick = (t) => {
+        const p = Math.min((t - t0) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3); // ease-out cúbico
+        setN(Math.round(value * eased));
+        if (p < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    }, { threshold: 0.4 });
+    obs.observe(el);
+    return () => { obs.disconnect(); if (raf) cancelAnimationFrame(raf); };
+  }, [value, duration]);
+
+  return <span ref={ref} className="tabular-nums">{Number(n).toLocaleString('es-ES')}</span>;
+}
+
+// ============================================================================
+// COMPONENTE: AdminAccessCard
+// Reemplaza el antiguo formulario de usuario/clave embebido en el Home: el
+// acceso administrativo vive en el panel de Laravel (con su propio login),
+// así que aquí solo mostramos un botón directo hacia allá. Si ya hay sesión
+// de administrador iniciada, se indica en lugar del botón.
+// ============================================================================
+function AdminAccessCard() {
+  const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user');
+  const usuario = userRaw ? JSON.parse(userRaw) : null;
+
+  return (
+    <div className="bg-white dark:bg-[#242424] rounded-2xl shadow-sm border border-black/5 dark:border-gray-700 p-5 text-center hover:shadow-md transition-shadow duration-300">
+      <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-green-50 dark:bg-green-900/30 flex items-center justify-center">
+        <BuildingLibraryIcon className="w-5 h-5 text-green-700 dark:text-green-400" />
+      </div>
+
+      {usuario ? (
+        <>
+          <h3 className="font-bold text-base text-gray-800 dark:text-white mb-1">Sesión iniciada</h3>
+          <p className="text-gray-600 dark:text-gray-300 text-xs leading-relaxed mb-4">
+            Bienvenido, <span className="font-semibold">{usuario.name || 'Usuario'}</span>.
+          </p>
+        </>
+      ) : (
+        <>
+          <h3 className="font-bold text-base text-gray-800 dark:text-white mb-1">Panel de Administración</h3>
+          <p className="text-gray-600 dark:text-gray-300 text-xs leading-relaxed mb-4">
+            Gestiona lugares, noticias y eventos desde el panel administrativo.
+          </p>
+        </>
+      )}
+
+      <a
+        href={`${LARAVEL_URL}/admin`}
+        className="inline-flex w-full items-center justify-center gap-1.5 px-4 py-2.5 bg-green-700 hover:bg-green-800 active:scale-[0.98] text-white font-semibold rounded-lg text-sm transition"
+      >
+        Dirigirse al Panel de Administrador <ArrowRightIcon className="w-4 h-4" />
+      </a>
+    </div>
+  );
+}
+
+// ============================================================================
 // COMPONENTE PRINCIPAL: Home
 // Página de inicio pública. Muestra un carrusel de imágenes, la sección de
 // bienvenida (con collage de fotos), un banner de la Iglesia Matriz, y tres
@@ -84,6 +211,7 @@ export default function Home() {
   // Interruptores para mostrar/ocultar cada sección (configurables desde el admin)
   const [secciones, setSecciones]       = useState({ destacados: true, noticias: true, eventos: true });
   const [selectedPlace, setSelectedPlace] = useState(null); // Lugar destacado abierto en el modal de detalle
+  const [visitas, setVisitas]           = useState(null);   // Total histórico de visitas (endpoint público /stats)
 
   // Formatea una fecha ISO a texto legible en español, ej: "6 de julio de 2026"
   const fmtFecha = (f) => f ? new Date(f).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
@@ -141,6 +269,12 @@ export default function Home() {
       }
     };
     cargar();
+
+    // Contador público de visitas (si falla, el bloque no se muestra)
+    fetch(`${API_URL}/stats`)
+      .then((r) => r.json())
+      .then((d) => setVisitas(d?.totales?.historico ?? null))
+      .catch(() => {});
   }, []);
 
   // Abre el modal de detalle de un lugar destacado y bloquea el scroll del fondo
@@ -177,7 +311,7 @@ export default function Home() {
                   <div className="max-w-4xl mx-auto">
                     {image.title && <h2 className="font-serif text-4xl md:text-6xl font-bold mb-4">{image.title}</h2>}
                     {image.subtitle && <p className="text-lg md:text-2xl opacity-90">{image.subtitle}</p>}
-                    <Link to="/mapa" className="inline-flex items-center gap-2 mt-6 px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full text-white font-semibold hover:scale-105 transition transform duration-300 shadow-lg">
+                    <Link to="/mapa" className="inline-flex items-center gap-2 mt-6 px-8 py-3 bg-green-700 hover:bg-green-600 active:scale-[0.98] rounded-full text-white font-semibold transition-colors duration-200 shadow-lg shadow-green-950/40">
                       <MapIcon className="w-5 h-5" /> Explorar ahora
                     </Link>
                   </div>
@@ -189,14 +323,13 @@ export default function Home() {
       </div>
 
       {/* Bienvenida */}
-      <div className="relative py-16 md:py-20 overflow-hidden border-t border-black/5 dark:border-white/10">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 blur-3xl"></div>
+      <div className="relative py-16 md:py-24 overflow-hidden border-t border-black/5 dark:border-white/10">
         <div className="relative max-w-7xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-10 lg:gap-14 items-center">
 
             {/* ── Columna izquierda: texto ── */}
             <div className="text-left">
-              <p className="text-xs font-bold uppercase tracking-[0.3em] text-blue-500 mb-2">Bienvenido a</p>
+              <p className="text-xs font-bold uppercase tracking-[0.3em] text-green-700 dark:text-green-400 mb-2">Bienvenido a</p>
               <h1 className="font-serif text-4xl md:text-5xl font-bold mb-4 text-black dark:text-white">
                 {welcomeTitle}
               </h1>
@@ -260,13 +393,11 @@ export default function Home() {
             />
             {/* Gradiente oscuro en la parte inferior */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-            {/* Franja de color arriba */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 via-white to-yellow-400" />
             {/* Texto sobre la imagen */}
             <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
               <div className="max-w-3xl">
                 <div className="flex items-center gap-3 mb-3">
-                  <BuildingLibraryIcon className="text-yellow-400 w-8 h-8" />
+                  <BuildingLibraryIcon className="text-yellow-400 w-7 h-7" />
                   <span className="text-xs font-bold uppercase tracking-[0.25em] text-yellow-300">Patrimonio histórico</span>
                 </div>
                 <h2 className="font-serif text-3xl md:text-5xl font-black text-white leading-tight mb-3">
@@ -294,13 +425,11 @@ export default function Home() {
         <div className="relative max-w-7xl mx-auto px-4">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-10 gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.3em] text-blue-500 mb-1">Descubre</p>
-              <h2 className="font-serif text-3xl md:text-4xl font-extrabold text-gray-800 dark:text-white flex items-center gap-2">
-                <StarIcon className="w-7 h-7 text-blue-500" /> Lugares Destacados
+              <h2 className="font-serif text-3xl md:text-4xl font-extrabold text-gray-800 dark:text-white">
+                Lugares Destacados
               </h2>
-              <div className="w-20 h-1.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mt-3"></div>
             </div>
-            <Link to="/mapa" className="text-blue-500 hover:text-blue-600 text-sm font-semibold flex items-center gap-1 group">
+            <Link to="/mapa" className="text-green-700 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-sm font-semibold flex items-center gap-1 group">
               Ver todos en el mapa <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition" />
             </Link>
           </div>
@@ -314,7 +443,7 @@ export default function Home() {
               {destacados.map((lugar) => {
                 const img = resolverImagen(lugar.imagen_url);
                 return (
-                  <div key={lugar.id} className="group relative bg-white dark:bg-[#242424] rounded-2xl shadow-xl dark:shadow-black/30 border border-transparent dark:border-gray-700 overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 cursor-pointer" onClick={() => openModal(lugar)}>
+                  <div key={lugar.id} className="group relative bg-white dark:bg-[#242424] rounded-2xl shadow-sm border border-black/5 dark:border-gray-700 overflow-hidden hover:shadow-xl dark:hover:shadow-black/40 transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => openModal(lugar)}>
                     <div className="relative h-56 overflow-hidden bg-gray-200 dark:bg-gray-700">
                       {img ? (
                         <img src={img} alt={lugar.nombre} loading="lazy" decoding="async" className="w-full h-full object-cover" />
@@ -323,13 +452,13 @@ export default function Home() {
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
                       {lugar.categoria && (
-                        <span className="absolute top-3 left-3 bg-blue-600 text-white text-xs px-3 py-1 rounded-full shadow-lg">
+                        <span className="absolute top-3 left-3 bg-green-700 text-white text-xs px-3 py-1 rounded-full shadow-lg">
                           {lugar.categoria}
                         </span>
                       )}
                     </div>
                     <div className="p-4">
-                      <h3 className="font-bold text-lg text-gray-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{lugar.nombre}</h3>
+                      <h3 className="font-bold text-lg text-gray-800 dark:text-white group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">{lugar.nombre}</h3>
                       <div className="flex justify-between items-center mt-2 text-sm text-gray-500 dark:text-gray-400">
                         {lugar.horario && <span className="flex items-center gap-1"><ClockIcon className="w-3.5 h-3.5" /> {lugar.horario}</span>}
                         {lugar.precio && <span className="flex items-center gap-1"><BanknotesIcon className="w-3.5 h-3.5" /> {lugar.precio}</span>}
@@ -346,22 +475,19 @@ export default function Home() {
 
       {/* ===== SECCIÓN 2 · NOTICIAS (banda oscura, estilo prensa) ===== */}
       {secciones.noticias && (
-        <div className="relative py-16 overflow-hidden bg-gradient-to-b from-gray-50 to-white dark:from-[#242424] dark:to-gray-800 border-t border-black/5 dark:border-white/10 transition-colors">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 blur-3xl"></div>
+        <div className="relative py-16 overflow-hidden bg-gray-50 dark:bg-gray-800 border-t border-black/5 dark:border-white/10 transition-colors">
           <div className="relative max-w-7xl mx-auto px-4">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-10 gap-3">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.3em] text-rose-500 dark:text-rose-400 mb-1">Actualidad</p>
-                <h2 className="font-serif text-3xl md:text-4xl font-extrabold text-gray-800 dark:text-white flex items-center gap-2"><NewspaperIcon className="w-7 h-7 text-rose-500" /> Noticias recientes</h2>
-                <div className="w-20 h-1.5 bg-rose-500 rounded-full mt-3"></div>
+                <h2 className="font-serif text-3xl md:text-4xl font-extrabold text-gray-800 dark:text-white">Noticias recientes</h2>
               </div>
-              <Link to="/noticias" className="text-rose-600 hover:text-rose-700 dark:text-rose-300 dark:hover:text-white text-sm font-semibold flex items-center gap-1 group">
+              <Link to="/noticias" className="text-green-700 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-sm font-semibold flex items-center gap-1 group">
                 Ver todas <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition" />
               </Link>
             </div>
 
             {noticias.length === 0 ? (
-              <div className="text-center py-12 text-gray-400 dark:text-blue-200/70">
+              <div className="text-center py-12 text-gray-400 dark:text-gray-400">
                 Aún no hay noticias publicadas. Vuelve pronto para ver las novedades de Chimbo.
               </div>
             ) : (
@@ -369,17 +495,17 @@ export default function Home() {
               {noticias.map((n) => {
                 const img = resolverImagen(n.image_url);
                 return (
-                  <Link to="/noticias" key={n.id} className="group bg-white dark:bg-[#242424] rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+                  <Link to={`/noticias/${n.id}`} key={n.id} className="group bg-white dark:bg-[#242424] rounded-2xl shadow-sm border border-black/5 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                     <div className="relative h-44 overflow-hidden bg-gray-200 dark:bg-gray-700">
                       {img ? <img src={img} alt={n.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                            : <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"><NewspaperIcon className="w-10 h-10 text-gray-400 dark:text-gray-500" /></div>}
-                      {n.categoria && <span className="absolute top-3 left-3 bg-blue-600/90 text-white text-xs px-3 py-1 rounded-full">{n.categoria}</span>}
+                      {n.categoria && <span className="absolute top-3 left-3 bg-green-700/90 text-white text-xs px-3 py-1 rounded-full">{n.categoria}</span>}
                       <span className={`absolute top-3 right-3 flex items-center gap-1 text-white text-xs px-3 py-1 rounded-full font-semibold ${esNoticiaPasada(n) ? 'bg-gray-600/80' : 'bg-emerald-500/90'}`}>
                         <span className="w-1.5 h-1.5 rounded-full bg-current" /> {esNoticiaPasada(n) ? 'Pasada' : 'Actual'}
                       </span>
                     </div>
                     <div className="p-5">
-                      <h3 className="font-bold text-lg text-gray-800 dark:text-white line-clamp-2 group-hover:text-blue-600 transition-colors">{n.title}</h3>
+                      <h3 className="font-bold text-lg text-gray-800 dark:text-white line-clamp-2 group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">{n.title}</h3>
                       <p className="text-xs text-gray-400 mt-1 flex items-center gap-1"><CalendarDaysIcon className="w-3.5 h-3.5" /> {fmtFecha(n.published_at)}</p>
                       <p className="text-sm text-gray-500 line-clamp-2 mt-2">{n.body?.substring(0, 110)}…</p>
                     </div>
@@ -398,17 +524,15 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-10 gap-3">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.3em] text-purple-500 dark:text-purple-300 mb-1">Agenda</p>
-                <h2 className="font-serif text-3xl md:text-4xl font-extrabold text-gray-800 dark:text-white flex items-center gap-2"><CalendarDaysIcon className="w-7 h-7 text-purple-500" /> Próximos eventos</h2>
-                <div className="w-20 h-1.5 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full mt-3"></div>
+                <h2 className="font-serif text-3xl md:text-4xl font-extrabold text-gray-800 dark:text-white">Próximos eventos</h2>
               </div>
-              <Link to="/eventos" className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 text-sm font-semibold flex items-center gap-1 group">
+              <Link to="/eventos" className="text-green-700 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-sm font-semibold flex items-center gap-1 group">
                 Ver todos <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition" />
               </Link>
             </div>
 
             {eventos.length === 0 ? (
-              <div className="text-center py-12 text-gray-400 dark:text-purple-200/70">
+              <div className="text-center py-12 text-gray-400 dark:text-gray-400">
                 Aún no hay eventos programados. Vuelve pronto para ver la agenda de San José de Chimbo.
               </div>
             ) : (
@@ -416,14 +540,14 @@ export default function Home() {
               {eventos.map((ev) => {
                 const img = resolverImagen(ev.image_url);
                 return (
-                  <Link to="/eventos" key={ev.id} className="group bg-white dark:bg-[#242424] rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+                  <Link to={`/eventos/${ev.id}`} key={ev.id} className="group bg-white dark:bg-[#242424] rounded-2xl shadow-sm border border-black/5 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                     <div className="relative h-44 overflow-hidden bg-gray-200 dark:bg-gray-700">
                       {img ? <img src={img} alt={ev.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                            : <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"><CalendarDaysIcon className="w-10 h-10 text-gray-400 dark:text-gray-500" /></div>}
-                      {ev.categoria && <span className="absolute top-3 left-3 bg-purple-600/90 text-white text-xs px-3 py-1 rounded-full">{ev.categoria}</span>}
+                      {ev.categoria && <span className="absolute top-3 left-3 bg-green-700/90 text-white text-xs px-3 py-1 rounded-full">{ev.categoria}</span>}
                       {ev.starts_at && (
                         <div className="absolute top-3 right-3 bg-white rounded-xl shadow-lg text-center px-2.5 py-1.5 leading-none">
-                          <div className="text-lg font-black text-purple-600">{new Date(ev.starts_at).getDate()}</div>
+                          <div className="text-lg font-black text-green-700">{new Date(ev.starts_at).getDate()}</div>
                           <div className="text-[10px] font-bold uppercase text-gray-500">{new Date(ev.starts_at).toLocaleDateString('es-ES', { month: 'short' })}</div>
                         </div>
                       )}
@@ -432,7 +556,7 @@ export default function Home() {
                       </span>
                     </div>
                     <div className="p-5">
-                      <h3 className="font-bold text-lg text-gray-800 dark:text-white line-clamp-2 group-hover:text-blue-600 transition-colors">{ev.title}</h3>
+                      <h3 className="font-bold text-lg text-gray-800 dark:text-white line-clamp-2 group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">{ev.title}</h3>
                       <p className="text-xs text-gray-400 mt-1 flex items-center gap-1"><CalendarDaysIcon className="w-3.5 h-3.5" /> {fmtFecha(ev.starts_at)}</p>
                       {ev.description && <p className="text-sm text-gray-500 line-clamp-2 mt-2">{ev.description.substring(0, 110)}…</p>}
                     </div>
@@ -444,6 +568,71 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* ===== SECCIÓN · VISITAS + VIDEO/FOTOS + INICIAR SESIÓN ===== */}
+      <div className="relative py-12 bg-gray-50 dark:bg-gray-800 border-t border-black/5 dark:border-white/10 transition-colors">
+        <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
+
+          {/* ── Columna 1: contador de visitas (animado) ── */}
+          <Reveal className="text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 mb-2">
+              <EyeIcon className="w-5 h-5 text-green-700 dark:text-green-400" />
+              <h2 className="font-serif text-2xl font-extrabold text-gray-800 dark:text-white">Visitas</h2>
+            </div>
+            {visitas !== null ? (
+              <p className="text-4xl md:text-5xl font-black text-green-700 dark:text-green-400 leading-none">
+                <CountUp value={visitas} />
+              </p>
+            ) : (
+              <div className="h-12 w-44 max-w-full mx-auto lg:mx-0 rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            )}
+            <p className="text-gray-500 dark:text-gray-400 text-xs mt-2 leading-relaxed">
+              personas han visitado el portal turístico de San José de Chimbo.
+            </p>
+          </Reveal>
+
+          {/* ── Columna 2: video + collage de fotos del cantón ── */}
+          <Reveal delay={100}>
+            <div className="flex gap-3 items-stretch h-[300px] sm:h-[360px] md:h-[420px]">
+              {/* Video vertical, autoplay silencioso en loop */}
+              <div className="relative w-2/5 shrink-0 rounded-2xl overflow-hidden shadow-sm border border-black/5 dark:border-gray-700 bg-black h-full group">
+                <video
+                  src={VIDEO_CHIMBO}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                />
+                <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/10" />
+              </div>
+
+              {/* Collage de fotos: la iglesia arriba, estatua y vista abajo */}
+              <div className="w-3/5 h-full grid grid-cols-2 grid-rows-2 gap-2">
+                {FOTOS_CHIMBO.map((img, idx) => (
+                  <img
+                    key={img.url}
+                    src={img.url}
+                    alt={img.alt}
+                    loading="lazy"
+                    decoding="async"
+                    className={`w-full h-full object-cover rounded-xl shadow-sm border border-black/5 dark:border-gray-700 hover:scale-105 transition-transform duration-500 ease-out ${idx === 0 ? 'col-span-2' : ''}`}
+                  />
+                ))}
+              </div>
+            </div>
+            <p className="text-gray-500 dark:text-gray-400 text-xs mt-2 text-center leading-relaxed">
+              Imágenes y video de San José de Chimbo.
+            </p>
+          </Reveal>
+
+          {/* ── Columna 3: acceso al panel de administración ── */}
+          <Reveal delay={200} className="md:col-span-2 lg:col-span-1 max-w-md w-full mx-auto lg:mx-0">
+            <AdminAccessCard />
+          </Reveal>
+        </div>
+      </div>
 
       {/* Modal de detalle */}
       {selectedPlace && (
@@ -458,7 +647,7 @@ export default function Home() {
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
               <div className="absolute bottom-4 left-4 flex flex-wrap gap-2">
-                {selectedPlace.categoria && <span className="text-sm bg-blue-500/80 text-white px-3 py-1 rounded-full">{selectedPlace.categoria}</span>}
+                {selectedPlace.categoria && <span className="text-sm bg-green-700/80 text-white px-3 py-1 rounded-full">{selectedPlace.categoria}</span>}
               </div>
             </div>
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-320px)]">
@@ -473,7 +662,7 @@ export default function Home() {
                 {selectedPlace.telefono && <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3"><p className="text-xs text-gray-500 dark:text-gray-400">Contacto</p><p className="font-semibold text-sm text-gray-800 dark:text-white flex items-center gap-1"><PhoneIcon className="w-4 h-4" /> {selectedPlace.telefono}</p></div>}
               </div>
               <div className="flex gap-3">
-                <Link to="/mapa" className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-sm transition text-center"><MapIcon className="w-4 h-4" /> Ver en el mapa</Link>
+                <Link to="/mapa" className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-green-700 hover:bg-green-800 active:scale-[0.98] text-white rounded-xl font-semibold text-sm transition text-center"><MapIcon className="w-4 h-4" /> Ver en el mapa</Link>
                 {selectedPlace.lat && selectedPlace.lng && (
                   <button onClick={() => window.open(`https://maps.google.com/?q=${selectedPlace.lat},${selectedPlace.lng}`, '_blank')} className="flex items-center gap-1.5 px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition"><MapPinIcon className="w-4 h-4" /> Google Maps</button>
                 )}

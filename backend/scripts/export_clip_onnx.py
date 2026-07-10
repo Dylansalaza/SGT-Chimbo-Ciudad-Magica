@@ -63,7 +63,11 @@ class ClipImageEncoder(torch.nn.Module):
         self.model = model
 
     def forward(self, pixel_values):
-        feats = self.model.get_image_features(pixel_values=pixel_values)
+        # No usamos get_image_features(): en transformers recientes devuelve el
+        # output completo del vision model en lugar del tensor proyectado.
+        vision_outputs = self.model.vision_model(pixel_values=pixel_values)
+        pooled = vision_outputs[1] if isinstance(vision_outputs, tuple) else vision_outputs.pooler_output
+        feats = self.model.visual_projection(pooled)
         return torch.nn.functional.normalize(feats, p=2, dim=-1)
 
 
@@ -83,6 +87,7 @@ def main():
         input_names=["pixel_values"], output_names=["image_embeds"],
         dynamic_axes={"pixel_values": {0: "batch"}, "image_embeds": {0: "batch"}},
         opset_version=17,
+        dynamo=False,  # exportador clásico: el nuevo (dynamo) falla con los outputs dict de HF
     )
 
     # ── 2) Cuantizar a int8 ──────────────────────────────────────────────────

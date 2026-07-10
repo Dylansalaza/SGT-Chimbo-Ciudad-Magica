@@ -1,82 +1,126 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<div class="bg-white rounded-xl shadow-lg p-6">
-    <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="fas fa-pen-to-square text-slate-400"></i> Editar Evento: <span class="text-blue-600">{{ $evento->title }}</span></h2>
+<div class="w-full flex flex-col">
 
-    <form method="POST" action="{{ route('admin.eventos.update', $evento->id) }}" id="eventoForm">
-        @csrf
-        @method('PUT')
-
-        <div class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium mb-1">Título del Evento *</label>
-                <input type="text" name="title" id="title" value="{{ old('title', $evento->title) }}" class="w-full p-2 border rounded" required>
+    {{-- Header de Pantalla Completa (mismo patrón que el resto del panel) --}}
+    <div class="sticky top-0 z-30 bg-[#00294d] text-white w-full px-10 py-8 shadow-lg border-b border-white/5">
+        <div class="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
+            <div class="space-y-1">
+                <a href="{{ route('admin.eventos.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition mb-1">
+                    <i class="fas fa-arrow-left text-[10px]"></i> Volver a Eventos
+                </a>
+                <h1 class="font-serif text-2xl font-extrabold tracking-tight md:text-3xl flex items-center gap-3">
+                    <i class="fas fa-pen-to-square text-lg text-slate-300"></i> Editar Evento
+                </h1>
+                <p class="text-sm text-slate-300 font-medium">{{ $evento->title }}</p>
             </div>
-
-            <div>
-                <label class="block text-sm font-medium mb-1">Categoría</label>
-                <input type="text" name="categoria" list="cats-eventos" value="{{ old('categoria', $evento->categoria) }}" class="w-full p-2 border rounded" placeholder="Ej: Cultural, Religioso, Deportivo...">
-                <datalist id="cats-eventos">
-                    <option value="Cultural"><option value="Religioso"><option value="Deportivo"><option value="Gastronómico"><option value="Musical"><option value="Feria">
-                </datalist>
-            </div>
-
-            <div class="grid md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Fecha de Inicio</label>
-                    <input type="datetime-local" name="starts_at" id="starts_at" 
-                           value="{{ old('starts_at', $evento->starts_at ? \Carbon\Carbon::parse($evento->starts_at)->format('Y-m-d\TH:i') : '') }}" 
-                           class="w-full p-2 border rounded">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Fecha de Finalización</label>
-                    <input type="datetime-local" name="ends_at" id="ends_at" 
-                           value="{{ old('ends_at', $evento->ends_at ? \Carbon\Carbon::parse($evento->ends_at)->format('Y-m-d\TH:i') : '') }}" 
-                           class="w-full p-2 border rounded">
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium mb-1">Descripción</label>
-                <textarea name="description" id="description" rows="4" class="w-full p-2 border rounded">{{ old('description', $evento->description) }}</textarea>
-            </div>
-
-            @php
-                $esVideoActual = $evento->image_url && \Illuminate\Support\Str::endsWith(strtolower($evento->image_url), ['.mp4', '.mov', '.webm']);
-            @endphp
-            <div>
-                <label class="block text-sm font-medium mb-2 flex items-center gap-1.5"><i class="fas fa-camera text-slate-400"></i> Foto o video de portada del evento</label>
-
-                <div id="dropzoneArea" class="border-2 border-dashed border-blue-500 rounded-xl p-6 text-center cursor-pointer bg-gray-50 hover:bg-blue-50 transition">
-                    <i class="fas fa-cloud-upload-alt text-4xl text-blue-500 mb-2 block"></i>
-                    <p class="text-gray-600">Arrastra una nueva foto o video aquí, o haz clic para cambiarla</p>
-                    <p class="text-xs text-gray-400 mt-1">JPG, PNG, GIF, WEBP o MP4/MOV/WEBM (máx. 25MB)</p>
-                    <input type="file" id="fileInput" accept="image/*,video/*" style="display: none;">
-                </div>
-
-                {{-- Preview e Input Oculto --}}
-                <div id="previewContainer" class="mt-4 {{ $evento->image_url ? '' : 'hidden' }} max-w-xs relative group border rounded-lg overflow-hidden shadow-sm">
-                    <img id="imagePreview" src="{{ $evento->image_url && !$esVideoActual ? url($evento->image_url) : '#' }}" class="w-full h-44 object-cover {{ $esVideoActual ? 'hidden' : '' }}">
-                    <video id="videoPreview" src="{{ $evento->image_url && $esVideoActual ? url($evento->image_url) : '' }}" class="w-full h-44 object-cover {{ $esVideoActual ? '' : 'hidden' }}" controls muted></video>
-                    <button type="button" id="btnRemoveImage" class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center opacity-80 group-hover:opacity-100 transition shadow"><i class="fas fa-xmark"></i></button>
-                </div>
-
-                <input type="hidden" name="image_url" id="image_url" value="{{ old('image_url', $evento->image_url) }}">
-            </div>
-
-            @include('admin.partials.galeria-uploader', ['uploadRoute' => 'admin.eventos.upload', 'existing' => $evento->images ?? []])
         </div>
+    </div>
 
-        <div class="mt-6 border-t pt-4">
-            <button type="submit" id="submitBtn" class="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition shadow-sm inline-flex items-center gap-2">
-                <i class="fas fa-floppy-disk"></i> Guardar Cambios
-            </button>
-            <a href="{{ route('admin.eventos.index') }}" class="px-5 py-2.5 bg-gray-500 text-white font-medium rounded-lg hover:bg-gray-600 transition ml-2">
-                Cancelar
-            </a>
+    <div class="p-8 w-full">
+        <div class="bg-white rounded-2xl card-premium-shadow max-w-4xl mx-auto">
+            <form method="POST" action="{{ route('admin.eventos.update', $evento->id) }}" id="eventoForm" class="p-8 sm:p-10 space-y-10">
+                @csrf
+                @method('PUT')
+
+                {{-- Sección: Información general --}}
+                <section class="space-y-5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i class="fas fa-circle-info"></i> Información general
+                    </h2>
+                    <div>
+                        <label for="title" class="block text-sm font-bold text-slate-700 mb-1.5">Título del Evento *</label>
+                        <input type="text" name="title" id="title" value="{{ old('title', $evento->title) }}"
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm transition" required>
+                    </div>
+                    <div>
+                        <label for="categoria" class="block text-sm font-bold text-slate-700 mb-1.5">Categoría</label>
+                        <input type="text" name="categoria" id="categoria" list="cats-eventos" value="{{ old('categoria', $evento->categoria) }}"
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm transition"
+                               placeholder="Ej: Cultural, Religioso, Deportivo...">
+                        <datalist id="cats-eventos">
+                            <option value="Cultural"><option value="Religioso"><option value="Deportivo"><option value="Gastronómico"><option value="Musical"><option value="Feria">
+                        </datalist>
+                    </div>
+                </section>
+
+                {{-- Sección: Fechas --}}
+                <section class="space-y-5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i class="fas fa-calendar-days"></i> Fechas del evento
+                    </h2>
+                    <div class="grid sm:grid-cols-2 gap-5">
+                        <div>
+                            <label for="starts_at" class="block text-sm font-bold text-slate-700 mb-1.5">Fecha de Inicio</label>
+                            <input type="datetime-local" name="starts_at" id="starts_at"
+                                   value="{{ old('starts_at', $evento->starts_at ? \Carbon\Carbon::parse($evento->starts_at)->format('Y-m-d\TH:i') : '') }}"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm transition">
+                        </div>
+                        <div>
+                            <label for="ends_at" class="block text-sm font-bold text-slate-700 mb-1.5">Fecha de Finalización</label>
+                            <input type="datetime-local" name="ends_at" id="ends_at"
+                                   value="{{ old('ends_at', $evento->ends_at ? \Carbon\Carbon::parse($evento->ends_at)->format('Y-m-d\TH:i') : '') }}"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm transition">
+                        </div>
+                    </div>
+                </section>
+
+                {{-- Sección: Descripción --}}
+                <section class="space-y-5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i class="fas fa-align-left"></i> Descripción
+                    </h2>
+                    <div>
+                        <label for="description" class="block text-sm font-bold text-slate-700 mb-1.5">Detalle del evento</label>
+                        <textarea name="description" id="description" rows="5"
+                                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm leading-relaxed transition">{{ old('description', $evento->description) }}</textarea>
+                    </div>
+                </section>
+
+                {{-- Sección: Multimedia --}}
+                @php
+                    $esVideoActual = $evento->image_url && \Illuminate\Support\Str::endsWith(strtolower($evento->image_url), ['.mp4', '.mov', '.webm']);
+                @endphp
+                <section class="space-y-5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i class="fas fa-camera"></i> Foto o video de portada
+                    </h2>
+
+                    <div id="dropzoneArea" class="border-2 border-dashed border-blue-400 rounded-2xl p-8 sm:p-10 text-center cursor-pointer bg-slate-50/60 hover:bg-blue-50 transition">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-blue-500 mb-3 block"></i>
+                        <p class="text-slate-600 text-sm font-medium">Arrastra una nueva foto o video aquí, o haz clic para cambiarla</p>
+                        <p class="text-xs text-slate-400 mt-1">JPG, PNG, GIF, WEBP o MP4/MOV/WEBM (máx. 25MB)</p>
+                        <input type="file" id="fileInput" accept="image/*,video/*" style="display: none;">
+                    </div>
+
+                    {{-- Preview e Input Oculto --}}
+                    <div id="previewContainer" class="{{ $evento->image_url ? '' : 'hidden' }} max-w-xs relative group border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                        <img id="imagePreview" src="{{ $evento->image_url && !$esVideoActual ? url($evento->image_url) : '#' }}" class="w-full h-44 object-cover {{ $esVideoActual ? 'hidden' : '' }}">
+                        <video id="videoPreview" src="{{ $evento->image_url && $esVideoActual ? url($evento->image_url) : '' }}" class="w-full h-44 object-cover {{ $esVideoActual ? '' : 'hidden' }}" controls muted></video>
+                        <button type="button" id="btnRemoveImage" class="absolute top-2 right-2 bg-rose-500 text-white rounded-full w-7 h-7 text-xs flex items-center justify-center opacity-90 group-hover:opacity-100 hover:bg-rose-600 transition shadow"><i class="fas fa-xmark"></i></button>
+                    </div>
+
+                    <input type="hidden" name="image_url" id="image_url" value="{{ old('image_url', $evento->image_url) }}">
+                </section>
+
+                {{-- Sección: Galería adicional --}}
+                <section class="space-y-5">
+                    @include('admin.partials.galeria-uploader', ['uploadRoute' => 'admin.eventos.upload', 'existing' => $evento->images ?? []])
+                </section>
+
+                {{-- Acciones --}}
+                <div class="flex items-center gap-3 pt-6 border-t border-slate-100">
+                    <button type="submit" id="submitBtn" class="px-6 py-2.5 bg-[#00294d] hover:bg-[#003d73] text-white font-bold rounded-xl text-sm transition-all shadow-md inline-flex items-center gap-2">
+                        <i class="fas fa-floppy-disk"></i> Guardar Cambios
+                    </button>
+                    <a href="{{ route('admin.eventos.index') }}" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold rounded-xl text-sm transition-all">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 </div>
 
 @push('scripts')
@@ -162,9 +206,9 @@
 
     btnRemoveImage.addEventListener('click', (e) => {
         e.preventDefault();
-        if(confirm('¿Deseas quitar la foto/video de este evento?')) {
-            limpiarCampoImagen();
-        }
+        confirmarAccion('¿Deseas quitar la foto/video de este evento?', limpiarCampoImagen, {
+            titulo: 'Quitar archivo', boton: 'Quitar', icono: 'fa-trash-alt'
+        });
     });
 
     function limpiarCampoImagen() {

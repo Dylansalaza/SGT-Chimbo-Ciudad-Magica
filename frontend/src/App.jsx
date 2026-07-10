@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:3000/api";
 
@@ -13,12 +13,36 @@ import Chatbot from "./components/Chatbot";           // Chatbot de asistencia t
 
 // Páginas importadas correctamente para el uso de los turistas
 import Home from "./pages/Home";
-import Eventos from "./pages/Eventos";  
-import Galerias from "./pages/Galerias";                    
-import Noticias from "./pages/Noticias";              
+import Eventos from "./pages/Eventos";
+import EventoDetalle from "./pages/EventoDetalle";
+import Galerias from "./pages/Galerias";
+import Noticias from "./pages/Noticias";
+import NoticiaDetalle from "./pages/NoticiaDetalle";
 import Login from "./pages/login"; // el archivo real es 'login.jsx' (Linux distingue mayúsculas)
 import MapaTurismo from "./pages/ChimboMap";
 
+
+// ============================================================================
+// COMPONENTE: PageTransition
+// Envuelve el contenido de las rutas. Al cambiar de ruta, el `key` fuerza un
+// remontaje del contenedor y la clase `page-enter` (definida en index.css)
+// reproduce una entrada rápida y suave (fade + leve desplazamiento, 250 ms,
+// ease-out). También sube el scroll al inicio en cada navegación. Respeta
+// `prefers-reduced-motion` (la animación se desactiva en index.css).
+// ============================================================================
+function PageTransition({ children }) {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [location.pathname]);
+
+  return (
+    <div key={location.pathname} className="page-enter">
+      {children}
+    </div>
+  );
+}
 
 // ============================================================================
 // COMPONENTE RAÍZ: App
@@ -49,6 +73,7 @@ export default function App() {
            ========================================== */}
         {/* pt-16 deja espacio para el navbar fijo (h-16) */}
         <main className="flex-grow pt-16">
+          <PageTransition>
           <Routes>
             {/* 🏠 Ruta de Bienvenida / Inicio */}
             <Route path="/" element={<Home />} />
@@ -58,12 +83,14 @@ export default function App() {
 
             {/* 🎉 NUEVA: Sección de Eventos programados en el cantón */}
             <Route path="/eventos" element={<Eventos />} />
+            <Route path="/eventos/:id" element={<EventoDetalle />} />
 
             {/* 🖼️ NUEVA: Galería de imágenes turísticas */}
             <Route path="/galerias" element={<Galerias />} />
 
             {/* 📰 Sección de Noticias locales para el turista */}
             <Route path="/noticias" element={<Noticias />} />
+            <Route path="/noticias/:id" element={<NoticiaDetalle />} />
 
             {/* 🔐 Login público (Opcional) */}
             <Route path="/login" element={<Login />} />
@@ -71,6 +98,7 @@ export default function App() {
             {/* 🔄 Redirección por defecto: Cualquier ruta no existente manda al Home */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </PageTransition>
         </main>
 
         {/* 🔻 PIE DE PÁGINA GLOBAL (visible en todas las vistas públicas) */}

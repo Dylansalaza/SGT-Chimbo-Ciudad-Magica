@@ -29,17 +29,17 @@ const FOOD_KEYS = ['gastro', 'restaurante', 'comida', 'cafetería', 'cafeteria',
 
 // ─────────────────────────────────────────────────────────────
 // Coordenadas de referencia para las secciones ESTÁTICAS del FAQ.
-// Estos nodos (talleres de madera, armeros de Tamboloma, hornado) NO
+// Estos nodos (talleres de madera, armería de Tambán, hornado) NO
 // corresponden a un registro de la BD, así que sus botones "Ver en el mapa"
 // necesitan coordenadas explícitas; sin ellas el mapa se abre pero no centra
 // en ningún punto. Los puntos del centro coinciden con el catálogo de lugares
-// (Parque Central / Mercado central). El de Tamboloma es APROXIMADO (~4 km del
-// centro por la vía Chimbo–Tamboloma): ajústalo con el GPS real cuando exista.
+// (Parque Central / Mercado central). El de Tambán es APROXIMADO (barrio en la
+// vía al Guayco): ajústalo con el GPS real cuando exista.
 // ─────────────────────────────────────────────────────────────
 const COORDS = {
   centroChimbo: { lat: -1.6769, lng: -79.0389 }, // Parque Central / Bolívar y García Moreno
   mercado:      { lat: -1.6775, lng: -79.0378 }, // Mercado central (plaza gastronómica)
-  tamboloma:    { lat: -1.6520, lng: -79.0180 }, // ⚠ APROXIMADO — verificar GPS real
+  tamban:       { lat: -1.6740, lng: -79.0420 }, // Barrio Tambán, vía al Guayco — ⚠ APROXIMADO, verificar GPS real
 };
 
 // Mapa de emojis usados como icono al inicio de las etiquetas de los botones
@@ -103,7 +103,7 @@ const STATIC_SECTIONS = {
     text: "**Artesanías de Chimbo**\n\n¿Qué te interesa conocer?",
     buttons: [
       { label: "🪵 Torneros de madera",   next: "madera" },
-      { label: "🔧 Armeros de Tamboloma", next: "armeros" },
+      { label: "🔧 Armería de Tambán",    next: "armeros" },
       { label: "🎆 Pirotecnia",           next: "pirotecnia" },
       { label: "🏠 Menú principal",        next: "root" },
     ],
@@ -125,17 +125,17 @@ const STATIC_SECTIONS = {
     ],
   },
   armeros: {
-    text: "**Armeros de Tamboloma**\n\nLa comunidad de Tamboloma es reconocida a nivel nacional por la fabricación artesanal de herramientas. Una tradición de generación en generación.",
+    text: "**Armería de Tambán**\n\nTambán, barrio de San José de Chimbo, en la provincia de Bolívar, fue conocido durante décadas como la tierra de la armería en Ecuador. Desde inicios del siglo XX, en ese sitio se fabricaron escopetas, carabinas y revólveres artesanales.",
     buttons: [
-      { label: "📍 Cómo llegar",        next: "tamboloma_ubicacion" },
+      { label: "📍 Cómo llegar",        next: "tamban_ubicacion" },
       { label: "← Volver",              next: "artesanias" },
       { label: "🏠 Menú principal",      next: "root" },
     ],
   },
-  tamboloma_ubicacion: {
-    text: "**Tamboloma — Cómo llegar:**\n\nA 4 km del centro de Chimbo por vía Chimbo–Tamboloma.\nAccesible en vehículo o a pie.\n\nVisitar de Lunes a Sábado, 08h00–17h00.",
+  tamban_ubicacion: {
+    text: "**Tambán — Cómo llegar:**\n\nBarrio de San José de Chimbo, en la vía al Santuario del Guayco, a pocos minutos del centro.\nAccesible en vehículo o a pie.",
     buttons: [
-      { label: "🗺️ Ver en el mapa",   action: "mapa", ...COORDS.tamboloma, nombre: "Tamboloma — Armeros" },
+      { label: "🗺️ Ver en el mapa",   action: "mapa", ...COORDS.tamban, nombre: "Tambán — Armería artesanal" },
       { label: "← Volver",             next: "armeros" },
       { label: "🏠 Menú principal",     next: "root" },
     ],

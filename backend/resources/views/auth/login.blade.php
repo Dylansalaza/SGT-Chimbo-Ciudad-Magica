@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login - Sistema de Gestión Turística</title>
-    
+    <link rel="icon" type="image/svg+xml" href="{{ asset('media/logo/logo-icon.svg') }}">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -87,11 +88,7 @@
         <div class="w-1/2 flex flex-col items-center justify-center relative pr-8">
             
             <div class="flex flex-col items-center justify-center">
-                <span class="text-white text-[56px] font-black italic tracking-tight drop-shadow-md leading-none">SGT</span>
-                <span class="text-[#e11d48] text-[28px] font-black tracking-wider drop-shadow-md mt-1">CHIMBO</span>
-                <p class="text-[10px] text-slate-300 font-sans tracking-[0.35em] uppercase mt-3 text-center font-bold opacity-75">
-                    Gestión Turística
-                </p>
+                <img src="{{ asset('media/logo/logo-horizontal-dark.svg') }}" alt="SGT Chimbo — Sistema de Gestión Turístico" class="w-64 drop-shadow-md">
             </div>
 
         </div>

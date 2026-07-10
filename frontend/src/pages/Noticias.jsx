@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   MagnifyingGlassIcon,
   XMarkIcon,
-  CalendarDaysIcon,
   ArrowRightIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
 } from '@heroicons/react/24/solid';
 
 const LARAVEL_URL = 'http://127.0.0.1:3000';
@@ -47,27 +45,18 @@ function esNoticiaPasada(n) {
     return dia < hoy;
 }
 
-// Arma el array de imágenes de una noticia (portada + galería adicional) ya
-// resueltas a URL completa, para alimentar el carrusel del modal.
-function galeriaDe(noticia) {
-    const imgs = [];
-    if (noticia.image_url) imgs.push(resolverImagen(noticia.image_url));
-    (noticia.images || []).forEach(u => { const r = resolverImagen(u); if (r) imgs.push(r); });
-    return imgs;
-}
-
 // ============================================================================
 // COMPONENTE PRINCIPAL: Noticias (ruta /noticias)
 // Boletín estilo periódico: la noticia más reciente se muestra como nota
 // principal (destacada) y el resto en columnas tipo diario. Incluye filtros
 // (texto, categoría, rango de fechas), badge de estado (🟢 actual el día que
-// se publicó / ⚪ pasada al día siguiente) y un modal de lectura completa.
+// se publicó / ⚪ pasada al día siguiente). Cada noticia abre su propia
+// página completa en /noticias/:id (ver NoticiaDetalle.jsx).
 // ============================================================================
 export default function Noticias() {
-    const [noticias, setNoticias]                = useState([]); // Lista completa traída del backend
-    const [cargando, setCargando]                = useState(true);
-    const [noticiaSeleccionada, setSeleccionada] = useState(null); // Noticia abierta en el modal
-    const [imgActiva, setImgActiva]              = useState(0);    // Índice de la imagen activa en el carrusel del modal
+    const navigate = useNavigate();
+    const [noticias, setNoticias] = useState([]); // Lista completa traída del backend
+    const [cargando, setCargando] = useState(true);
 
     // Filtros
     const [texto, setTexto]           = useState('');
@@ -112,8 +101,8 @@ export default function Noticias() {
     const hayFiltro = texto || categoria !== 'Todas' || fechaDesde || fechaHasta;
     // Restablece todos los filtros a su valor inicial
     const limpiar = () => { setTexto(''); setCategoria('Todas'); setFechaDesde(''); setFechaHasta(''); };
-    // Abre el modal de lectura completa de una noticia, reiniciando el carrusel
-    const abrir = (n) => { setSeleccionada(n); setImgActiva(0); };
+    // Navega a la página completa de lectura de una noticia
+    const abrir = (n) => navigate(`/noticias/${n.id}`);
 
     if (cargando) {
         return (
@@ -130,7 +119,8 @@ export default function Noticias() {
     const resto = filtradas.slice(1);
 
     return (
-        <div className="max-w-5xl mx-auto px-4 py-8 bg-[#fcfbf7] dark:bg-[#242424] transition-colors" style={{ fontFamily: SERIF }}>
+        <div className="bg-[#fcfbf7] dark:bg-[#242424] transition-colors">
+        <div className="max-w-7xl mx-auto px-4 py-8" style={{ fontFamily: SERIF }}>
 
             {/* ===== MASTHEAD ===== */}
             <header className="mb-3">
@@ -237,84 +227,7 @@ export default function Noticias() {
                     )}
                 </>
             )}
-
-            {/* ===== MODAL con carrusel ===== */}
-            {noticiaSeleccionada && (() => {
-                const imgs = galeriaDe(noticiaSeleccionada);
-                const prev = (e) => { e.stopPropagation(); setImgActiva(i => (i - 1 + imgs.length) % imgs.length); };
-                const next = (e) => { e.stopPropagation(); setImgActiva(i => (i + 1) % imgs.length); };
-                return (
-                    <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4" onClick={() => setSeleccionada(null)} style={{ fontFamily: SERIF }}>
-                        <div className="relative max-w-3xl w-full bg-[#fcfbf7] dark:bg-[#242424] flex flex-col max-h-[92vh] my-4 border-4 border-double border-gray-800 dark:border-gray-500" onClick={e => e.stopPropagation()}>
-                            <button onClick={() => setSeleccionada(null)} className="absolute top-3 right-3 z-20 bg-gray-900 text-white rounded-full w-9 h-9 flex items-center justify-center"><XMarkIcon className="w-4 h-4" /></button>
-
-                            {/* Carrusel */}
-                            {imgs.length > 0 && (
-                                <div className="shrink-0 mx-2 mt-2">
-                                    <div className="relative h-56 md:h-72 bg-gray-900 overflow-hidden select-none">
-                                        {imgs.map((src, idx) => (
-                                            <img key={idx} src={src} alt={`${noticiaSeleccionada.title} ${idx + 1}`}
-                                                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${idx === imgActiva ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
-                                        ))}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
-
-                                        {imgs.length > 1 && (
-                                            <>
-                                                <button onClick={prev}
-                                                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/75 text-white rounded-full w-9 h-9 flex items-center justify-center backdrop-blur-sm transition-all hover:scale-110">
-                                                    <ChevronLeftIcon className="w-4 h-4" />
-                                                </button>
-                                                <button onClick={next}
-                                                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/75 text-white rounded-full w-9 h-9 flex items-center justify-center backdrop-blur-sm transition-all hover:scale-110">
-                                                    <ChevronRightIcon className="w-4 h-4" />
-                                                </button>
-                                                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                                                    {imgs.map((_, idx) => (
-                                                        <button key={idx} onClick={e => { e.stopPropagation(); setImgActiva(idx); }}
-                                                            className={`rounded-full transition-all duration-300 ${idx === imgActiva ? 'bg-white w-4 h-2' : 'bg-white/50 w-2 h-2 hover:bg-white/80'}`} />
-                                                    ))}
-                                                </div>
-                                                <span className="absolute top-3 left-3 z-10 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full backdrop-blur-sm">
-                                                    {imgActiva + 1} / {imgs.length}
-                                                </span>
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {/* Miniaturas */}
-                                    {imgs.length > 1 && (
-                                        <div className="flex gap-2 px-2 py-2 overflow-x-auto bg-gray-100 dark:bg-[#242424]">
-                                            {imgs.map((src, idx) => (
-                                                <img key={idx} src={src} onClick={() => setImgActiva(idx)}
-                                                    className={`h-14 w-20 object-cover cursor-pointer shrink-0 border-2 transition-all ${idx === imgActiva ? 'border-gray-900 dark:border-gray-300 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`} />
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Texto con scroll */}
-                            <div className="flex-1 overflow-y-auto min-h-0">
-                                <div className="px-6 md:px-10 py-5">
-                                    {noticiaSeleccionada.categoria && (
-                                        <p className="text-center text-[11px] uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400" style={{ fontFamily: "'Manrope', sans-serif" }}>{noticiaSeleccionada.categoria}</p>
-                                    )}
-                                    <h2 className="text-center font-black text-gray-900 dark:text-white leading-tight mt-1" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.2rem)' }}>{noticiaSeleccionada.title}</h2>
-                                    <p className="flex items-center justify-center gap-2 text-center text-xs text-gray-500 dark:text-gray-400 italic mt-1 mb-4 border-b border-gray-300 dark:border-gray-700 pb-3">
-                                        <span className="flex items-center gap-1"><CalendarDaysIcon className="w-3.5 h-3.5" /> {formatearFecha(noticiaSeleccionada.published_at)}</span>
-                                        <span className={`flex items-center gap-1 not-italic font-semibold px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide ${esNoticiaPasada(noticiaSeleccionada) ? 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'}`}>
-                                            <span className="w-1.5 h-1.5 rounded-full bg-current" /> {esNoticiaPasada(noticiaSeleccionada) ? 'Noticia pasada' : 'Noticia actual'}
-                                        </span>
-                                    </p>
-                                    <div className="text-justify text-gray-800 dark:text-gray-300 leading-relaxed whitespace-pre-wrap first-letter:text-5xl first-letter:font-black first-letter:mr-2 first-letter:float-left first-letter:leading-none pb-4">
-                                        {noticiaSeleccionada.body}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                );
-            })()}
+        </div>
         </div>
     );
 }

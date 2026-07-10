@@ -1,107 +1,154 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<div class="bg-white rounded-xl shadow-lg p-6">
-    <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="fas fa-pen-to-square text-slate-400"></i> Editar Lugar Turístico: <span class="text-orange-500">{{ $lugar->nombre }}</span></h2>
-    
-    <form method="POST" action="{{ route('admin.lugares.update', $lugar->id) }}" id="lugarForm">
-        @csrf
-        @method('PUT')
-        
-        <div class="grid md:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-medium mb-1">Nombre del lugar *</label>
-                <input type="text" name="nombre" id="nombre" value="{{ old('nombre', $lugar->nombre) }}" class="w-full p-2 border rounded" required>
+<div class="w-full flex flex-col">
+
+    {{-- Header de Pantalla Completa (mismo patrón que el resto del panel) --}}
+    <div class="sticky top-0 z-30 bg-[#00294d] text-white w-full px-10 py-8 shadow-lg border-b border-white/5">
+        <div class="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
+            <div class="space-y-1">
+                <a href="{{ route('admin.lugares.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition mb-1">
+                    <i class="fas fa-arrow-left text-[10px]"></i> Volver a Lugares Turísticos
+                </a>
+                <h1 class="font-serif text-2xl font-extrabold tracking-tight md:text-3xl flex items-center gap-3">
+                    <i class="fas fa-pen-to-square text-lg text-slate-300"></i> Editar Lugar Turístico
+                </h1>
+                <p class="text-sm text-slate-300 font-medium">{{ $lugar->nombre }}</p>
             </div>
-            <div>
-                <label class="block text-sm font-medium mb-1">Categoría *</label>
-                <div class="flex gap-2">
-                    <select name="categoria" id="categoria" class="w-full p-2 border rounded" required>
-                        <option value="">Seleccionar categoría</option>
-                        @foreach($categorias as $cat)
-                            <option value="{{ $cat->nombre }}" {{ old('categoria', $lugar->categoria) == $cat->nombre ? 'selected' : '' }}>
-                                {{ $cat->icono }} {{ $cat->nombre }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <a href="{{ route('admin.categorias.index') }}"
-                       title="Gestionar categorías"
-                       class="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded border text-sm font-semibold whitespace-nowrap transition">
-                        <i class="fas fa-tags"></i> Gestionar
+        </div>
+    </div>
+
+    <div class="p-8 w-full">
+        <div class="bg-white rounded-2xl card-premium-shadow max-w-5xl mx-auto">
+            <form method="POST" action="{{ route('admin.lugares.update', $lugar->id) }}" id="lugarForm" class="p-8 sm:p-10 space-y-10">
+                @csrf
+                @method('PUT')
+
+                {{-- Sección: Información general --}}
+                <section class="space-y-5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i class="fas fa-circle-info"></i> Información general
+                    </h2>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div>
+                            <label for="nombre" class="block text-sm font-bold text-slate-700 mb-1.5">Nombre del lugar *</label>
+                            <input type="text" name="nombre" id="nombre" value="{{ old('nombre', $lugar->nombre) }}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm transition" required>
+                        </div>
+                        <div>
+                            <label for="categoria" class="block text-sm font-bold text-slate-700 mb-1.5">Categoría *</label>
+                            <div class="flex gap-2">
+                                <select name="categoria" id="categoria" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm transition" required>
+                                    <option value="">Seleccionar categoría</option>
+                                    @foreach($categorias as $cat)
+                                        <option value="{{ $cat->nombre }}" {{ old('categoria', $lugar->categoria) == $cat->nombre ? 'selected' : '' }}>
+                                            {{ $cat->icono }} {{ $cat->nombre }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <a href="{{ route('admin.categorias.index') }}"
+                                   title="Gestionar categorías"
+                                   class="flex items-center gap-1.5 px-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 text-sm font-semibold whitespace-nowrap transition">
+                                    <i class="fas fa-tags"></i> Gestionar
+                                </a>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="descripcion" class="block text-sm font-bold text-slate-700 mb-1.5">Descripción *</label>
+                            <textarea name="descripcion" id="descripcion" rows="4" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm leading-relaxed transition" required>{{ old('descripcion', $lugar->descripcion) }}</textarea>
+                        </div>
+                    </div>
+                </section>
+
+                {{-- Sección: Datos de contacto --}}
+                <section class="space-y-5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i class="fas fa-address-card"></i> Datos de contacto y visita
+                    </h2>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div>
+                            <label for="direccion" class="block text-sm font-bold text-slate-700 mb-1.5">Dirección</label>
+                            <input type="text" name="direccion" id="direccion" value="{{ old('direccion', $lugar->direccion) }}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm transition">
+                        </div>
+                        <div>
+                            <label for="telefono" class="block text-sm font-bold text-slate-700 mb-1.5">Teléfono</label>
+                            <input type="text" name="telefono" id="telefono" value="{{ old('telefono', $lugar->telefono) }}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm transition">
+                        </div>
+                        <div>
+                            <label for="horario" class="block text-sm font-bold text-slate-700 mb-1.5">Horario</label>
+                            <input type="text" name="horario" id="horario" value="{{ old('horario', $lugar->horario) }}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm transition" placeholder="Ej: 8:00 - 18:00">
+                        </div>
+                        <div>
+                            <label for="precio" class="block text-sm font-bold text-slate-700 mb-1.5">Precio</label>
+                            <input type="text" name="precio" id="precio" value="{{ old('precio', $lugar->precio) }}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm transition" placeholder="Ej: Gratis, $5, $20">
+                        </div>
+                    </div>
+                </section>
+
+                {{-- Sección: Ubicación --}}
+                <section class="space-y-5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i class="fas fa-map-location-dot"></i> Ubicación geográfica
+                    </h2>
+                    <p class="text-sm text-slate-500 -mt-2">Haz clic en el mapa para cambiar la posición del marcador.</p>
+                    <div id="map" style="height: 400px; width: 100%; border-radius: 1rem; z-index: 1;"></div>
+                    <div id="coordenadas" class="text-sm text-slate-500"></div>
+                    <input type="hidden" name="lat" id="lat" value="{{ old('lat', $lugar->lat) }}" required>
+                    <input type="hidden" name="lng" id="lng" value="{{ old('lng', $lugar->lng) }}" required>
+                </section>
+
+                {{-- Sección: Imagen principal --}}
+                <section class="space-y-5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i class="fas fa-camera"></i> Imagen del lugar
+                    </h2>
+
+                    <div id="dropzoneArea" class="border-2 border-dashed border-blue-400 rounded-2xl p-8 sm:p-10 text-center cursor-pointer bg-slate-50/60 hover:bg-blue-50 transition {{ $lugar->imagen_url ? 'hidden' : '' }}">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-blue-500 mb-3 block"></i>
+                        <p class="text-slate-600 text-sm font-medium">Arrastra una nueva imagen aquí o haz clic para seleccionar</p>
+                        <p class="text-xs text-slate-400 mt-1">JPG, PNG, GIF (máx. 2MB) — también puedes pegar con Ctrl+V</p>
+                        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                    </div>
+
+                    <div id="previewContainer" class="{{ $lugar->imagen_url ? '' : 'hidden' }}">
+                        <img id="previewImg" src="{{ $lugar->imagen_url }}" class="w-48 h-32 object-cover rounded-xl shadow-md border border-slate-200">
+                        <button type="button" id="removeImageBtn" class="mt-2 text-rose-500 text-xs font-bold hover:underline flex items-center gap-1">
+                            <i class="fas fa-trash-alt"></i> Eliminar e intercambiar imagen
+                        </button>
+                    </div>
+                    <input type="hidden" name="imagen_url" id="imagenUrl" value="{{ old('imagen_url', $lugar->imagen_url) }}">
+                </section>
+
+                {{-- Sección: Galería para reconocimiento por IA --}}
+                <section class="space-y-5">
+                    @include('admin.partials.galeria-uploader', [
+                        'uploadRoute' => 'admin.lugares.upload',
+                        'field'       => 'galeria',
+                        'existing'    => $lugar->galeria ?? [],
+                        'titulo'      => '<i class="fas fa-robot text-slate-400"></i> Fotos de referencia para el reconocimiento por imagen',
+                        'ayuda'       => 'Sube VARIAS fotos reales del lugar (distintos ángulos). Cuantas más fotos, mejor lo reconoce la IA. Luego reindexa con /refresh.',
+                    ])
+                </section>
+
+                {{-- Sección: Visibilidad --}}
+                <section>
+                    <label class="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer w-fit hover:bg-slate-100 transition">
+                        <input type="checkbox" name="destacado" value="1" class="w-5 h-5 accent-orange-500" {{ old('destacado', $lugar->destacado) ? 'checked' : '' }}>
+                        <span class="text-sm font-semibold text-slate-700 flex items-center gap-1.5"><i class="fas fa-star text-slate-400"></i> Mostrar como “Destacado” en el inicio (Home)</span>
+                    </label>
+                </section>
+
+                {{-- Acciones --}}
+                <div class="flex items-center gap-3 pt-6 border-t border-slate-100">
+                    <button type="submit" class="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl text-sm transition-all shadow-md inline-flex items-center gap-2">
+                        <i class="fas fa-floppy-disk"></i> Guardar Cambios
+                    </button>
+                    <a href="{{ route('admin.lugares.index') }}" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold rounded-xl text-sm transition-all">
+                        Cancelar
                     </a>
                 </div>
-            </div>
-            <div class="col-span-2">
-                <label class="block text-sm font-medium mb-1">Descripción *</label>
-                <textarea name="descripcion" id="descripcion" rows="3" class="w-full p-2 border rounded" required>{{ old('descripcion', $lugar->descripcion) }}</textarea>
-            </div>
-            <div>
-                <label class="block text-sm font-medium mb-1">Dirección</label>
-                <input type="text" name="direccion" id="direccion" value="{{ old('direccion', $lugar->direccion) }}" class="w-full p-2 border rounded">
-            </div>
-            <div>
-                <label class="block text-sm font-medium mb-1">Teléfono</label>
-                <input type="text" name="telefono" id="telefono" value="{{ old('telefono', $lugar->telefono) }}" class="w-full p-2 border rounded">
-            </div>
-            <div>
-                <label class="block text-sm font-medium mb-1">Horario</label>
-                <input type="text" name="horario" id="horario" value="{{ old('horario', $lugar->horario) }}" class="w-full p-2 border rounded" placeholder="Ej: 8:00 - 18:00">
-            </div>
-            <div>
-                <label class="block text-sm font-medium mb-1">Precio</label>
-                <input type="text" name="precio" id="precio" value="{{ old('precio', $lugar->precio) }}" class="w-full p-2 border rounded" placeholder="Ej: Gratis, $5, $20">
-            </div>
-            
-            <div class="col-span-2">
-                <label class="block text-sm font-medium mb-2 flex items-center gap-1.5"><i class="fas fa-map-location-dot text-slate-400"></i> Ubicación geográfica (Haz clic para cambiar la posición del marcador)</label>
-                <div id="map" style="height: 400px; width: 100%; border-radius: 1rem; z-index: 1;"></div>
-                <div id="coordenadas" class="mt-2 text-sm text-gray-500"></div>
-                <input type="hidden" name="lat" id="lat" value="{{ old('lat', $lugar->lat) }}" required>
-                <input type="hidden" name="lng" id="lng" value="{{ old('lng', $lugar->lng) }}" required>
-            </div>
-            
-            <div class="col-span-2">
-                <label class="block text-sm font-medium mb-2 flex items-center gap-1.5"><i class="fas fa-camera text-slate-400"></i> Imagen del lugar</label>
-                
-                <div id="dropzoneArea" class="border-2 border-dashed border-blue-500 rounded-xl p-8 text-center cursor-pointer bg-gray-50 transition hover:bg-blue-50 {{ $lugar->imagen_url ? 'hidden' : '' }}">
-                    <i class="fas fa-cloud-upload-alt text-4xl text-blue-500 mb-2 block"></i>
-                    <p class="text-gray-600">Arrastra una nueva imagen aquí o haz clic para seleccionar</p>
-                    <p class="text-xs text-gray-400 mt-1">JPG, PNG, GIF (máx. 2MB) — también puedes pegar con Ctrl+V</p>
-                    <input type="file" id="fileInput" accept="image/*" style="display: none;">
-                </div>
-
-                <div id="previewContainer" class="mt-3 {{ $lugar->imagen_url ? '' : 'hidden' }}">
-                    <img id="previewImg" src="{{ $lugar->imagen_url }}" class="w-48 h-32 object-cover rounded-lg shadow-md border">
-                    <button type="button" id="removeImageBtn" class="mt-2 text-red-500 text-xs font-bold hover:underline flex items-center gap-1">
-                        <i class="fas fa-trash-alt"></i> Eliminar e intercambiar imagen
-                    </button>
-                </div>
-                <input type="hidden" name="imagen_url" id="imagenUrl" value="{{ old('imagen_url', $lugar->imagen_url) }}">
-            </div>
+            </form>
         </div>
-        
-        @include('admin.partials.galeria-uploader', [
-            'uploadRoute' => 'admin.lugares.upload',
-            'field'       => 'galeria',
-            'existing'    => $lugar->galeria ?? [],
-            'titulo'      => '<i class="fas fa-robot text-slate-400"></i> Fotos de referencia para el reconocimiento por imagen',
-            'ayuda'       => 'Sube VARIAS fotos reales del lugar (distintos ángulos). Cuantas más fotos, mejor lo reconoce la IA. Luego reindexa con /refresh.',
-        ])
-
-        <label class="mt-4 flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer w-fit">
-            <input type="checkbox" name="destacado" value="1" class="w-5 h-5" {{ old('destacado', $lugar->destacado) ? 'checked' : '' }}>
-            <span class="text-sm font-semibold text-slate-700 flex items-center gap-1.5"><i class="fas fa-star text-slate-400"></i> Mostrar como “Destacado” en el inicio (Home)</span>
-        </label>
-
-        <div class="mt-6 border-t pt-4">
-            <button type="submit" class="px-5 py-2.5 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 transition shadow-sm inline-flex items-center gap-2">
-                <i class="fas fa-floppy-disk"></i> Guardar Cambios
-            </button>
-            <a href="{{ route('admin.lugares.index') }}" class="px-5 py-2.5 bg-gray-500 text-white font-medium rounded-lg hover:bg-gray-600 transition ml-2">
-                Cancelar
-            </a>
-        </div>
-    </form>
+    </div>
 </div>
 
 @push('scripts')

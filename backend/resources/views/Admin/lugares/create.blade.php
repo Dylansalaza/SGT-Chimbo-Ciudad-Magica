@@ -1,111 +1,160 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<div class="bg-white rounded-xl shadow-lg p-6">
-    <div class="flex items-center justify-between gap-4 mb-4 flex-wrap">
-        <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-location-dot text-slate-400"></i> Agregar Nuevo Lugar Turístico</h2>
+<div class="w-full flex flex-col">
 
-        {{-- 📥 Botón para precargar el formulario desde una Ficha MINTUR (.xlsx/.xlsm).
-             No crea el lugar automáticamente: solo llena los campos de abajo para
-             que el admin los revise y luego presione "Agregar Lugar". --}}
-        <label id="importarFichaBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold cursor-pointer hover:bg-indigo-700 transition shadow-sm">
-            <i class="fas fa-file-import"></i>
-            <span id="importarFichaTexto">Importar</span>
-            <input type="file" id="fichaInput" accept=".xlsx,.xlsm,.xls" class="hidden">
-        </label>
-    </div>
-    <p id="importarFichaAyuda" class="text-xs text-gray-400 -mt-2 mb-4">
-        Sube la "Ficha de Levantamiento y Jerarquización de Atractivos Turísticos" (formato oficial MINTUR) y se precargarán automáticamente los campos que apliquen.
-    </p>
-
-    <form method="POST" action="{{ route('admin.lugares.store') }}" id="lugarForm">
-        @csrf
-
-        <div class="grid md:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-medium mb-1">Nombre del lugar *</label>
-                <input type="text" name="nombre" id="nombre" class="w-full p-2 border rounded" required>
+    {{-- Header de Pantalla Completa (mismo patrón que el resto del panel) --}}
+    <div class="sticky top-0 z-30 bg-[#00294d] text-white w-full px-10 py-8 shadow-lg border-b border-white/5">
+        <div class="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
+            <div class="space-y-1">
+                <a href="{{ route('admin.lugares.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition mb-1">
+                    <i class="fas fa-arrow-left text-[10px]"></i> Volver a Lugares Turísticos
+                </a>
+                <h1 class="font-serif text-2xl font-extrabold tracking-tight md:text-3xl flex items-center gap-3">
+                    <i class="fas fa-location-dot text-lg text-slate-300"></i> Agregar Nuevo Lugar Turístico
+                </h1>
+                <p class="text-sm text-slate-300 font-medium">Completa los datos o impórtalos desde una Ficha MINTUR.</p>
             </div>
-            <div>
-                <label class="block text-sm font-medium mb-1">Categoría *</label>
-                <div class="flex gap-2">
-                    <select name="categoria" id="categoria" class="w-full p-2 border rounded" required>
-                        <option value="">Seleccionar categoría</option>
-                        @foreach($categorias as $cat)
-                            <option value="{{ $cat->nombre }}">{{ $cat->icono }} {{ $cat->nombre }}</option>
-                        @endforeach
-                    </select>
-                    <a href="{{ route('admin.categorias.index') }}"
-                       title="Gestionar categorías"
-                       class="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded border text-sm font-semibold whitespace-nowrap transition">
-                        <i class="fas fa-tags"></i> Gestionar
+
+            {{-- 📥 Botón para precargar el formulario desde una Ficha MINTUR (.xlsx/.xlsm).
+                 No crea el lugar automáticamente: solo llena los campos de abajo para
+                 que el admin los revise y luego presione "Agregar Lugar". --}}
+            <label id="importarFichaBtn" class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer transition shadow-md self-start sm:self-center">
+                <i class="fas fa-file-import"></i>
+                <span id="importarFichaTexto">Importar Ficha</span>
+                <input type="file" id="fichaInput" accept=".xlsx,.xlsm,.xls" class="hidden">
+            </label>
+        </div>
+        <p id="importarFichaAyuda" class="text-xs text-slate-300 mt-3 max-w-2xl">
+            Sube la "Ficha de Levantamiento y Jerarquización de Atractivos Turísticos" (formato oficial MINTUR) y se precargarán automáticamente los campos que apliquen.
+        </p>
+    </div>
+
+    <div class="p-8 w-full">
+        <div class="bg-white rounded-2xl card-premium-shadow max-w-5xl mx-auto">
+            <form method="POST" action="{{ route('admin.lugares.store') }}" id="lugarForm" class="p-8 sm:p-10 space-y-10">
+                @csrf
+
+                {{-- Sección: Información general --}}
+                <section class="space-y-5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i class="fas fa-circle-info"></i> Información general
+                    </h2>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div>
+                            <label for="nombre" class="block text-sm font-bold text-slate-700 mb-1.5">Nombre del lugar *</label>
+                            <input type="text" name="nombre" id="nombre" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm transition" required>
+                        </div>
+                        <div>
+                            <label for="categoria" class="block text-sm font-bold text-slate-700 mb-1.5">Categoría *</label>
+                            <div class="flex gap-2">
+                                <select name="categoria" id="categoria" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm transition" required>
+                                    <option value="">Seleccionar categoría</option>
+                                    @foreach($categorias as $cat)
+                                        <option value="{{ $cat->nombre }}">{{ $cat->icono }} {{ $cat->nombre }}</option>
+                                    @endforeach
+                                </select>
+                                <a href="{{ route('admin.categorias.index') }}"
+                                   title="Gestionar categorías"
+                                   class="flex items-center gap-1.5 px-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 text-sm font-semibold whitespace-nowrap transition">
+                                    <i class="fas fa-tags"></i> Gestionar
+                                </a>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="descripcion" class="block text-sm font-bold text-slate-700 mb-1.5">Descripción *</label>
+                            <textarea name="descripcion" id="descripcion" rows="4" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm leading-relaxed transition" required></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                {{-- Sección: Datos de contacto --}}
+                <section class="space-y-5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i class="fas fa-address-card"></i> Datos de contacto y visita
+                    </h2>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div>
+                            <label for="direccion" class="block text-sm font-bold text-slate-700 mb-1.5">Dirección</label>
+                            <input type="text" name="direccion" id="direccion" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm transition">
+                        </div>
+                        <div>
+                            <label for="telefono" class="block text-sm font-bold text-slate-700 mb-1.5">Teléfono</label>
+                            <input type="text" name="telefono" id="telefono" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm transition">
+                        </div>
+                        <div>
+                            <label for="horario" class="block text-sm font-bold text-slate-700 mb-1.5">Horario</label>
+                            <input type="text" name="horario" id="horario" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm transition" placeholder="Ej: 8:00 - 18:00">
+                        </div>
+                        <div>
+                            <label for="precio" class="block text-sm font-bold text-slate-700 mb-1.5">Precio</label>
+                            <input type="text" name="precio" id="precio" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none text-sm transition" placeholder="Ej: Gratis, $5, $20">
+                        </div>
+                    </div>
+                </section>
+
+                {{-- Sección: Ubicación --}}
+                <section class="space-y-5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i class="fas fa-map-location-dot"></i> Ubicación geográfica
+                    </h2>
+                    <p class="text-sm text-slate-500 -mt-2">Haz clic en el mapa para marcar la ubicación.</p>
+                    <div id="map" style="height: 400px; width: 100%; border-radius: 1rem; z-index: 1;"></div>
+                    <div id="coordenadas" class="text-sm text-slate-500"></div>
+                    <input type="hidden" name="lat" id="lat" required>
+                    <input type="hidden" name="lng" id="lng" required>
+                </section>
+
+                {{-- Sección: Imagen principal --}}
+                <section class="space-y-5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <i class="fas fa-camera"></i> Imagen del lugar
+                    </h2>
+                    <div id="dropzoneArea" class="border-2 border-dashed border-blue-400 rounded-2xl p-8 sm:p-10 text-center cursor-pointer bg-slate-50/60 hover:bg-blue-50 transition">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-blue-500 mb-3 block"></i>
+                        <p class="text-slate-600 text-sm font-medium">Arrastra una imagen aquí o haz clic para seleccionar</p>
+                        <p class="text-xs text-slate-400 mt-1">JPG, PNG, GIF (máx. 2MB) — también puedes pegar con Ctrl+V</p>
+                        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                    </div>
+                    <div id="previewContainer" class="hidden">
+                        <img id="previewImg" class="w-32 h-32 object-cover rounded-xl shadow border border-slate-200">
+                        <button type="button" id="removeImageBtn" class="mt-2 text-rose-500 text-xs font-bold hover:underline flex items-center gap-1">
+                            <i class="fas fa-trash-alt"></i> Eliminar imagen
+                        </button>
+                    </div>
+                    <input type="hidden" name="imagen_url" id="imagenUrl">
+                </section>
+
+                {{-- Sección: Galería para reconocimiento por IA --}}
+                <section class="space-y-5">
+                    @include('admin.partials.galeria-uploader', [
+                        'uploadRoute' => 'admin.lugares.upload',
+                        'field'       => 'galeria',
+                        'titulo'      => '<i class="fas fa-robot text-slate-400"></i> Fotos de referencia para el reconocimiento por imagen',
+                        'ayuda'       => 'Sube VARIAS fotos reales del lugar (distintos ángulos). Cuantas más fotos, mejor lo reconoce la IA. Luego reindexa con /refresh.',
+                    ])
+                </section>
+
+                {{-- Sección: Visibilidad --}}
+                <section>
+                    <label class="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer w-fit hover:bg-slate-100 transition">
+                        <input type="checkbox" name="destacado" value="1" class="w-5 h-5 accent-orange-500">
+                        <span class="text-sm font-semibold text-slate-700 flex items-center gap-1.5"><i class="fas fa-star text-slate-400"></i> Mostrar como “Destacado” en el inicio (Home)</span>
+                    </label>
+                </section>
+
+                {{-- Acciones --}}
+                <div class="flex items-center gap-3 pt-6 border-t border-slate-100">
+                    <button type="submit" class="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl text-sm transition-all shadow-md inline-flex items-center gap-2">
+                        <i class="fas fa-plus"></i> Agregar Lugar
+                    </button>
+                    <a href="{{ route('admin.lugares.index') }}" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold rounded-xl text-sm transition-all">
+                        Cancelar
                     </a>
                 </div>
-            </div>
-            <div class="col-span-2">
-                <label class="block text-sm font-medium mb-1">Descripción *</label>
-                <textarea name="descripcion" id="descripcion" rows="3" class="w-full p-2 border rounded" required></textarea>
-            </div>
-            <div>
-                <label class="block text-sm font-medium mb-1">Dirección</label>
-                <input type="text" name="direccion" id="direccion" class="w-full p-2 border rounded">
-            </div>
-            <div>
-                <label class="block text-sm font-medium mb-1">Teléfono</label>
-                <input type="text" name="telefono" id="telefono" class="w-full p-2 border rounded">
-            </div>
-            <div>
-                <label class="block text-sm font-medium mb-1">Horario</label>
-                <input type="text" name="horario" id="horario" class="w-full p-2 border rounded" placeholder="Ej: 8:00 - 18:00">
-            </div>
-            <div>
-                <label class="block text-sm font-medium mb-1">Precio</label>
-                <input type="text" name="precio" id="precio" class="w-full p-2 border rounded" placeholder="Ej: Gratis, $5, $20">
-            </div>
-            
-            <!-- Mapa interactivo -->
-            <div class="col-span-2">
-                <label class="block text-sm font-medium mb-2 flex items-center gap-1.5"><i class="fas fa-map-location-dot text-slate-400"></i> Haz clic en el mapa para marcar la ubicación</label>
-                <div id="map" style="height: 400px; width: 100%; border-radius: 1rem; z-index: 1;"></div>
-                <div id="coordenadas" class="mt-2 text-sm text-gray-500"></div>
-                <input type="hidden" name="lat" id="lat" required>
-                <input type="hidden" name="lng" id="lng" required>
-            </div>
-            
-            <!-- Imagen del lugar -->
-            <div class="col-span-2">
-                <label class="block text-sm font-medium mb-2 flex items-center gap-1.5"><i class="fas fa-camera text-slate-400"></i> Imagen del lugar (arrastra, haz clic o pega)</label>
-                <div id="dropzoneArea" class="border-2 border-dashed border-blue-500 rounded-xl p-8 text-center cursor-pointer bg-gray-50 transition hover:bg-blue-50">
-                    <i class="fas fa-cloud-upload-alt text-4xl text-blue-500 mb-2 block"></i>
-                    <p class="text-gray-600">Arrastra una imagen aquí o haz clic para seleccionar</p>
-                    <p class="text-xs text-gray-400 mt-1">JPG, PNG, GIF (máx. 2MB) — también puedes pegar con Ctrl+V</p>
-                    <input type="file" id="fileInput" accept="image/*" style="display: none;">
-                </div>
-                <div id="previewContainer" class="mt-3 hidden">
-                    <img id="previewImg" class="w-32 h-32 object-cover rounded shadow">
-                    <button type="button" id="removeImageBtn" class="mt-1 text-red-500 text-sm hover:underline">Eliminar imagen</button>
-                </div>
-                <input type="hidden" name="imagen_url" id="imagenUrl">
-            </div>
+            </form>
         </div>
-        
-        @include('admin.partials.galeria-uploader', [
-            'uploadRoute' => 'admin.lugares.upload',
-            'field'       => 'galeria',
-            'titulo'      => '<i class="fas fa-robot text-slate-400"></i> Fotos de referencia para el reconocimiento por imagen',
-            'ayuda'       => 'Sube VARIAS fotos reales del lugar (distintos ángulos). Cuantas más fotos, mejor lo reconoce la IA. Luego reindexa con /refresh.',
-        ])
-
-        <label class="mt-4 flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer w-fit">
-            <input type="checkbox" name="destacado" value="1" class="w-5 h-5">
-            <span class="text-sm font-semibold text-slate-700 flex items-center gap-1.5"><i class="fas fa-star text-slate-400"></i> Mostrar como “Destacado” en el inicio (Home)</span>
-        </label>
-
-        <div class="mt-4">
-            <button type="submit" class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">Agregar Lugar</button>
-            <a href="{{ route('admin.lugares.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 ml-2">Cancelar</a>
-        </div>
-    </form>
+    </div>
 </div>
 
 @push('scripts')
@@ -346,8 +395,8 @@
             });
         }
 
-        // Aviso informativo (no error) visible mínimo 7 segundos.
-        showToast('info', 'Ficha importada. Revisa los campos y ajusta lo que falte antes de guardar.', 7000);
+        // Aviso informativo (no error) visible 7 segundos.
+        showAlerta('info', 'Ficha importada. Revisa los campos y ajusta lo que falte antes de guardar.', 7000);
     }
 </script>
 @endpush

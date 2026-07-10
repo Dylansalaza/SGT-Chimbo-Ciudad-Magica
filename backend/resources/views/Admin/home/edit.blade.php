@@ -219,23 +219,28 @@
         }
 
         if (e.target.closest('.borrar-btn')) {
-            if (!confirm('¿Borrar esta imagen definitivamente del servidor? Esta acción no se puede deshacer.')) return;
-            try {
-                const resp = await fetch(`{{ url('/admin/home/images') }}/${encodeURIComponent(nombre)}`, {
-                    method: 'DELETE',
-                    headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-                });
-                const json = await resp.json();
-                if (resp.ok) {
-                    card.remove();
-                } else {
-                    alert(json.error || 'No se pudo borrar la imagen.');
-                }
-            } catch (err) {
-                alert('Error de red al intentar borrar la imagen.');
-            }
+            confirmarAccion('¿Borrar esta imagen definitivamente del servidor? Esta acción no se puede deshacer.', () => borrarImagenDelServidor(card, nombre), {
+                titulo: 'Borrar imagen', boton: 'Borrar', icono: 'fa-trash-alt'
+            });
         }
     });
+
+    async function borrarImagenDelServidor(card, nombre) {
+        try {
+            const resp = await fetch(`{{ url('/admin/home/images') }}/${encodeURIComponent(nombre)}`, {
+                method: 'DELETE',
+                headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+            });
+            const json = await resp.json();
+            if (resp.ok) {
+                card.remove();
+            } else {
+                alert(json.error || 'No se pudo borrar la imagen.');
+            }
+        } catch (err) {
+            alert('Error de red al intentar borrar la imagen.');
+        }
+    }
 </script>
 @endpush
 @endsection

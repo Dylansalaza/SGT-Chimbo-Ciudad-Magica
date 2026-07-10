@@ -12,16 +12,16 @@
     $extVideo = ['mp4', 'mov', 'webm'];
 @endphp
 
-<div class="mt-2">
-    <label class="block text-sm font-medium mb-2 flex items-center gap-1.5">{!! $titulo !!}</label>
-    <p class="text-xs text-gray-400 mb-2">{{ $ayuda }}</p>
+<div>
+    <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 mb-4 border-b border-slate-100">{!! $titulo !!}</h2>
+    <p class="text-sm text-slate-500 -mt-2 mb-4">{{ $ayuda }}</p>
 
-    <label class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-green-400 rounded-lg text-sm font-semibold text-green-600 cursor-pointer hover:bg-green-50">
+    <label class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-emerald-300 rounded-xl text-sm font-bold text-emerald-600 cursor-pointer hover:bg-emerald-50 transition">
         <i class="fas fa-plus"></i> Agregar fotos o videos
         <input type="file" id="galeriaInput" accept="image/*,video/*" multiple class="hidden">
     </label>
 
-    <div id="galeriaPreviews" class="flex flex-wrap gap-3 mt-3">
+    <div id="galeriaPreviews" class="flex flex-wrap gap-3 mt-4">
         @foreach($existing as $url)
             @php
                 $u = is_array($url) ? ($url['url'] ?? '') : $url;

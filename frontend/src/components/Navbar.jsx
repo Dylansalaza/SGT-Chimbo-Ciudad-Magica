@@ -10,7 +10,6 @@ import {
   ChartBarIcon,
   UserCircleIcon,
   XMarkIcon,
-  BuildingLibraryIcon,
 } from '@heroicons/react/24/solid';
 
 // Base del backend (para enlazar al panel admin de Laravel)
@@ -18,8 +17,9 @@ const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http:/
 
 // Lee el usuario logueado (guardado en localStorage al iniciar sesión)
 const getCurrentUser = () => {
-  // El login guarda la clave 'user' (antes se leía 'usuario' y nunca coincidía).
-  const user = localStorage.getItem('user');
+  // El login guarda la clave 'user'. Si el usuario NO marcó "Recordarme",
+  // la sesión vive en sessionStorage (se borra al cerrar la pestaña).
+  const user = localStorage.getItem('user') || sessionStorage.getItem('user');
   return user ? JSON.parse(user) : null;
 };
 
@@ -51,7 +51,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const user = getCurrentUser();
-  const authenticated = !!localStorage.getItem('token');
+  const authenticated = !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
   const admin = isAdmin();
 
   // Estado para capturar el scroll
@@ -87,7 +87,9 @@ export default function Navbar() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    navigate('/login');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    navigate('/');
   };
 
   return (
@@ -100,20 +102,14 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
 
           {/* LOGO Y TÍTULO */}
-          <Link to="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-md">
-              <BuildingLibraryIcon className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-white leading-none">SGT</h1>
-              <p className="text-xs text-gray-400 leading-none">Sistema Turístico</p>
-            </div>
+          <Link to="/" className="flex items-center shrink-0">
+            <img src="/media/logo/logo-horizontal-dark.svg" alt="SGT Chimbo — Sistema de Gestión Turístico" className="h-10 w-auto" />
           </Link>
 
           {/* ENLACES DE NAVEGACIÓN — solo en pantallas grandes */}
           <div className="hidden lg:flex items-center space-x-8 font-semibold">
             {NAV_LINKS.map((l) => (
-              <Link key={l.to} to={l.to} className="flex items-center gap-1.5 whitespace-nowrap text-gray-200 hover:text-blue-400 transition-colors">
+              <Link key={l.to} to={l.to} className="flex items-center gap-1.5 whitespace-nowrap text-gray-200 hover:text-emerald-400 transition-colors">
                 <l.Icon className="w-4 h-4" /> {l.label}
               </Link>
             ))}
@@ -122,7 +118,7 @@ export default function Navbar() {
                 Usamos <a> normal porque /admin NO es una ruta de React. */}
             {admin && (
               <div className="flex items-center space-x-4 ml-4 pl-4 border-l border-white/20">
-                <a href={`${BACKEND_URL}/admin`} className="flex items-center gap-1.5 whitespace-nowrap text-purple-400 hover:text-purple-300 text-sm">
+                <a href={`${BACKEND_URL}/admin`} className="flex items-center gap-1.5 whitespace-nowrap text-yellow-400 hover:text-yellow-300 text-sm">
                   <ChartBarIcon className="w-4 h-4" /> Panel Admin
                 </a>
               </div>
@@ -176,7 +172,7 @@ export default function Navbar() {
               <Link
                 key={l.to}
                 to={l.to}
-                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-gray-200 hover:bg-white/10 hover:text-blue-400 transition-colors font-semibold"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-gray-200 hover:bg-white/10 hover:text-emerald-400 transition-colors font-semibold"
               >
                 <l.Icon className="w-4 h-4" /> {l.label}
               </Link>
@@ -185,7 +181,7 @@ export default function Navbar() {
             {admin && (
               <a
                 href={`${BACKEND_URL}/admin`}
-                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-purple-400 hover:bg-white/10 hover:text-purple-300 transition-colors font-semibold"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-yellow-400 hover:bg-white/10 hover:text-yellow-300 transition-colors font-semibold"
               >
                 <ChartBarIcon className="w-4 h-4" /> Panel Admin
               </a>

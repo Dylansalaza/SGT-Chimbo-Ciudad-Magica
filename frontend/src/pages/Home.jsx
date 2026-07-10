@@ -276,9 +276,9 @@ export default function Home() {
           si el admin no configuró ninguna, no se muestra nada. */}
       {cargandoHome ? (
         <div className="bg-black">
-          <div className="h-[420px] sm:h-[480px] md:h-[560px] lg:h-[640px] w-full bg-gradient-to-br from-gray-800 to-gray-900 animate-pulse flex items-center justify-center">
-            <PhotoIcon className="w-16 h-16 text-white/10" />
-          </div>
+          {/* Placeholder negro liso del mismo alto: reserva el espacio sin
+              nada en medio, para que no haya salto al llegar las imágenes. */}
+          <div className="h-[420px] sm:h-[480px] md:h-[560px] lg:h-[640px] w-full" />
         </div>
       ) : carousel.length > 0 && (
       <div className="bg-black">

@@ -180,6 +180,7 @@ export default function Home() {
   const [welcomeTitle, setWelcomeTitle] = useState('San José de Chimbo'); // Título de la sección Bienvenida
   const [welcomeText, setWelcomeText]   = useState('');                  // Texto descriptivo de Bienvenida (opcional)
   const [carousel, setCarousel]         = useState(CARRUSEL_DEFAULT);    // Slides del carrusel principal
+  const [cargandoHome, setCargandoHome] = useState(true);               // true mientras se pide /home (para el placeholder del carrusel)
   const [destacados, setDestacados]     = useState([]);                 // Lugares marcados como "destacado"
   const [noticias, setNoticias]         = useState([]);                 // Últimas noticias publicadas
   const [eventos, setEventos]           = useState([]);                 // Próximos eventos programados
@@ -241,6 +242,9 @@ export default function Home() {
         if (data.secciones) setSecciones({ destacados: true, noticias: true, eventos: true, ...data.secciones });
       } catch (err) {
         console.error('Error cargando el Home:', err);
+      } finally {
+        // Pase lo que pase, dejamos de mostrar el placeholder del carrusel.
+        setCargandoHome(false);
       }
     };
     cargar();
@@ -266,8 +270,17 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-[#242424] dark:to-gray-800">
 
-      {/* Carrusel principal (solo si hay diapositivas configuradas en el admin) */}
-      {carousel.length > 0 && (
+      {/* Carrusel principal. Mientras se pide /home mostramos un placeholder
+          del MISMO alto, para que la página no "salte" cuando lleguen las
+          imágenes. Ya cargado: si hay diapositivas se muestra el carrusel;
+          si el admin no configuró ninguna, no se muestra nada. */}
+      {cargandoHome ? (
+        <div className="bg-black">
+          <div className="h-[420px] sm:h-[480px] md:h-[560px] lg:h-[640px] w-full bg-gradient-to-br from-gray-800 to-gray-900 animate-pulse flex items-center justify-center">
+            <PhotoIcon className="w-16 h-16 text-white/10" />
+          </div>
+        </div>
+      ) : carousel.length > 0 && (
       <div className="bg-black">
         <Swiper
           modules={[Autoplay, Pagination, Navigation, EffectFade]}

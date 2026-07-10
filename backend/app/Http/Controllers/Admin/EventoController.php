@@ -137,10 +137,9 @@ class EventoController extends Controller
             'file' => 'required|file|mimes:jpeg,png,jpg,gif,webp,mp4,mov,webm|max:25600',
         ]);
 
-        $file          = $request->file('file');
-        $nombreArchivo = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
-
-        $path = $file->storeAs('eventos', $nombreArchivo, 'public');
+        $file = $request->file('file');
+        // Las fotos se convierten a WebP; los videos se guardan tal cual.
+        $path = \App\Support\ImageOptimizer::storeWebp($file, 'eventos');
 
         return response()->json([
             'url'  => '/storage/' . $path,

@@ -165,7 +165,11 @@
             <div class="p-5 pt-5 border-b border-white/10 flex flex-col items-center justify-center bg-black/10">
                 {{-- Logo completo (visible cuando el menú está abierto) --}}
                 <div class="sidebar-collapsible flex items-center justify-center">
-                    <img src="{{ asset('media/logo/logo-horizontal-dark.svg') }}" alt="SGT Chimbo — Sistema de Gestión Turístico" class="h-11 w-auto">
+                    <div class="flex flex-col leading-none">
+                        <span class="font-extrabold italic text-white text-xl tracking-tight">SGT</span>
+                        <span class="font-extrabold text-rose-600 text-sm tracking-wide leading-tight">CHIMBO</span>
+                        <span class="text-[8px] font-semibold tracking-[0.3em] text-slate-300 mt-1">GESTIÓN TURÍSTICA</span>
+                    </div>
                 </div>
                 {{-- Logo mini (visible solo cuando el menú está cerrado) --}}
                 <div class="sidebar-mini hidden items-center justify-center">

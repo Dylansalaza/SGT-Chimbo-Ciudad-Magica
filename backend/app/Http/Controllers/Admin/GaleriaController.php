@@ -94,10 +94,9 @@ class GaleriaController extends Controller
             'file' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $file          = $request->file('file');
-        $nombreArchivo = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
-
-        $path = $file->storeAs('galerias', $nombreArchivo, 'public');
+        $file = $request->file('file');
+        // Convierte la foto a WebP (más liviano) cuando es posible.
+        $path = \App\Support\ImageOptimizer::storeWebp($file, 'galerias');
 
         return response()->json(['url' => '/storage/' . $path]);
     }

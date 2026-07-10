@@ -102,8 +102,12 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
 
           {/* LOGO Y TÍTULO */}
-          <Link to="/" className="flex items-center shrink-0">
-            <img src="/media/logo/logo-horizontal-dark.svg" alt="SGT Chimbo — Sistema de Gestión Turístico" className="h-10 w-auto" />
+          <Link to="/" className="flex items-center shrink-0" aria-label="SGT Chimbo — Gestión Turística">
+            <div className="flex flex-col leading-none">
+              <span className="font-extrabold italic text-white text-xl tracking-tight">SGT</span>
+              <span className="font-extrabold text-rose-600 text-sm tracking-wide leading-tight">CHIMBO</span>
+              <span className="text-[8px] font-semibold tracking-[0.3em] text-slate-300 mt-1">GESTIÓN TURÍSTICA</span>
+            </div>
           </Link>
 
           {/* ENLACES DE NAVEGACIÓN — solo en pantallas grandes */}

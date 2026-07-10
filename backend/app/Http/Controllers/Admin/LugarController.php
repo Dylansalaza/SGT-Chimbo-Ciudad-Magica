@@ -128,9 +128,9 @@ class LugarController extends Controller
         ]);
 
         $file = $request->file('file');
-        $nombreArchivo = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
-        $path = $file->storeAs('lugares', $nombreArchivo, 'public');
-        $url = asset('storage/lugares/' . $nombreArchivo);
+        // Convierte la foto a WebP (más liviano) cuando es posible.
+        $path = \App\Support\ImageOptimizer::storeWebp($file, 'lugares');
+        $url = asset('storage/' . $path);
         
         return response()->json(['url' => $url]);
     }

@@ -13,8 +13,8 @@
         </div>
     </div>
 
-    <div class="p-8 w-full max-w-4xl">
-        <div class="bg-white rounded-2xl p-8 card-premium-shadow">
+    <div class="p-8 w-full">
+        <div class="bg-white rounded-2xl p-8 card-premium-shadow max-w-5xl mx-auto">
 
             <form method="POST" action="{{ route('admin.home.update') }}">
                 @csrf
@@ -36,12 +36,16 @@
                 </div>
 
                 {{-- Carrusel --}}
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-1">
                     <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i class="fas fa-images text-[#00294d]"></i> Carrusel principal</h2>
                     <button type="button" onclick="agregarSlide()" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold uppercase tracking-wider">
                         <i class="fas fa-plus"></i> Agregar diapositiva
                     </button>
                 </div>
+                <p class="text-xs text-slate-400 mb-4">
+                    <i class="fas fa-circle-info text-[#00294d]/60"></i>
+                    Estas imágenes se muestran <span class="font-semibold text-slate-500">a pantalla completa al inicio del Home</span>, en el mismo orden que aparecen aquí (de arriba hacia abajo). Sube o cambia la imagen de cada diapositiva; el título y subtítulo se ven encima de la foto.
+                </p>
 
                 <div id="slides" class="space-y-4 mb-8"></div>
 
@@ -124,24 +128,41 @@
 </div>
 
 <template id="tpl-slide">
-    <div class="slide border border-slate-200 rounded-xl p-4 bg-slate-50/40">
-        <div class="flex gap-4">
-            <div class="w-32 shrink-0">
-                <div class="preview w-32 h-24 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center text-slate-300 text-2xl">
-                    <i class="fas fa-image"></i>
+    <div class="slide relative border border-slate-200 rounded-2xl p-4 bg-white shadow-sm">
+        {{-- Cabecera: número de posición + quitar --}}
+        <div class="flex items-center justify-between mb-3">
+            <span class="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#00294d] bg-slate-100 px-3 py-1 rounded-full">
+                <i class="fas fa-clone text-[10px]"></i> Diapositiva <span class="slide-pos">1</span>
+            </span>
+            <button type="button" class="remove-btn text-rose-500 hover:text-rose-700 text-xs font-bold flex items-center gap-1"><i class="fas fa-trash-alt"></i> Quitar</button>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+            {{-- Imagen grande + subir --}}
+            <div class="sm:w-72 shrink-0">
+                <div class="preview relative w-full h-44 rounded-xl bg-slate-100 border-2 border-dashed border-slate-200 overflow-hidden flex flex-col items-center justify-center gap-1 text-slate-400">
+                    <i class="fas fa-image text-3xl"></i>
+                    <span class="text-[11px] font-semibold">Sin imagen</span>
                 </div>
                 <input type="hidden" class="url-input" name="">
                 <label class="mt-2 block">
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-600 cursor-pointer hover:bg-slate-50">
-                        <i class="fas fa-upload text-[10px]"></i> Subir
+                    <span class="inline-flex w-full items-center justify-center gap-1.5 px-3 py-2 bg-[#00294d] hover:bg-[#001d38] text-white rounded-lg text-xs font-bold cursor-pointer transition">
+                        <i class="fas fa-upload text-[10px]"></i> Subir / cambiar imagen
                     </span>
                     <input type="file" accept="image/*" class="file-input hidden">
                 </label>
             </div>
-            <div class="flex-1 space-y-2">
-                <input type="text" class="title-input w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="Título de la diapositiva">
-                <input type="text" class="subtitle-input w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="Subtítulo">
-                <button type="button" class="remove-btn text-rose-500 hover:text-rose-700 text-xs font-bold"><i class="fas fa-trash-alt"></i> Quitar</button>
+
+            {{-- Textos que se ven encima de la imagen --}}
+            <div class="flex-1 space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Título (se ve grande sobre la imagen)</label>
+                    <input type="text" class="title-input w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="Ej. San José de Chimbo">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Subtítulo (opcional)</label>
+                    <input type="text" class="subtitle-input w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="Ej. Naturaleza, cultura y aventura en los Andes">
+                </div>
             </div>
         </div>
     </div>
@@ -170,7 +191,7 @@
         urlInput.value = data.url || '';
         titleInput.value = data.title || '';
         subInput.value = data.subtitle || '';
-        if (data.url) preview.innerHTML = `<img src="{{ url('/') }}${data.url.startsWith('/') ? '' : '/'}${data.url}" class="w-full h-full object-cover">`;
+        if (data.url) { preview.classList.remove('border-dashed'); preview.innerHTML = `<img src="{{ url('/') }}${data.url.startsWith('/') ? '' : '/'}${data.url}" class="w-full h-full object-cover">`; }
 
         slide.querySelector('.file-input').addEventListener('change', async (e) => {
             const file = e.target.files[0];
@@ -183,6 +204,7 @@
                 const json = await resp.json();
                 if (json.url) {
                     urlInput.value = json.url;
+                    preview.classList.remove('border-dashed');
                     preview.innerHTML = `<img src="{{ url('/') }}${json.url}" class="w-full h-full object-cover">`;
                 } else {
                     preview.innerHTML = '<span class="text-rose-400 text-xs">Error</span>';
@@ -192,8 +214,15 @@
             }
         });
 
-        slide.querySelector('.remove-btn').addEventListener('click', () => slide.remove());
+        slide.querySelector('.remove-btn').addEventListener('click', () => { slide.remove(); renumerar(); });
         document.getElementById('slides').appendChild(slide);
+        renumerar();
+    }
+
+    // Numera cada diapositiva según su orden actual (1, 2, 3…) para que se vea
+    // claramente en qué posición del carrusel aparecerá cada imagen.
+    function renumerar() {
+        document.querySelectorAll('#slides .slide .slide-pos').forEach((el, i) => { el.textContent = i + 1; });
     }
 
     function agregarSlide() { nuevaSlide(); }

@@ -118,8 +118,8 @@ class HomeController extends Controller
         ]);
 
         $file = $request->file('file');
-        $nombre = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
-        $path = $file->storeAs('home', $nombre, 'public');
+        // Convierte la foto a WebP (más liviano) cuando es posible.
+        $path = \App\Support\ImageOptimizer::storeWebp($file, 'home');
 
         return response()->json(['url' => '/storage/' . $path]);
     }

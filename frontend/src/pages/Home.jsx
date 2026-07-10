@@ -45,35 +45,10 @@ function resolverImagen(url) {
   return LARAVEL_URL + '/storage/' + url;
 }
 
-// Carrusel por defecto con imágenes reales de San José de Chimbo, Ecuador
-// Fuente: Wikimedia Commons — licencia libre
-const CARRUSEL_DEFAULT = [
-  {
-    url: 'https://commons.wikimedia.org/w/index.php?title=Special:Redirect/file/Chimbo%2C_Ecuador.JPG&width=1400',
-    title: 'San José de Chimbo',
-    subtitle: 'Naturaleza, cultura y aventura en los Andes del Ecuador',
-  },
-  {
-    url: 'https://commons.wikimedia.org/w/index.php?title=Special:Redirect/file/Parque_Central_de_San_Jos%C3%A9_de_Chimbo.jpg&width=1400',
-    title: 'Parque Central',
-    subtitle: 'El corazón histórico de nuestra ciudad',
-  },
-  {
-    url: 'https://commons.wikimedia.org/w/index.php?title=Special:Redirect/file/El_Torre%C3%B3n_San_Jos%C3%A9_de_Chimbo.jpg&width=1400',
-    title: 'El Torreón',
-    subtitle: 'Patrimonio cultural de San José de Chimbo',
-  },
-  {
-    url: 'https://commons.wikimedia.org/w/index.php?title=Special:Redirect/file/Vista_de_San_Jos%C3%A9_de_Chimbo.jpg&width=1400',
-    title: 'Vista panorámica',
-    subtitle: 'Un destino lleno de historia y tradición',
-  },
-  {
-    url: 'https://commons.wikimedia.org/w/index.php?title=Special:Redirect/file/Calle_Tres_de_Marzo_en_San_Jos%C3%A9_de_Chimbo.jpg&width=1400',
-    title: 'Calle Tres de Marzo',
-    subtitle: 'Recorre las calles con historia de Chimbo',
-  },
-];
+// El carrusel principal se administra 100% desde el panel (Editar Home).
+// Ya no hay imágenes por defecto: si el backend aún no devuelve diapositivas,
+// simplemente no se muestra el carrusel (ver la condición carousel.length > 0).
+const CARRUSEL_DEFAULT = [];
 
 // ============================================================================
 // COMPONENTE: Reveal
@@ -161,7 +136,7 @@ function AdminAccessCard() {
   const usuario = userRaw ? JSON.parse(userRaw) : null;
 
   return (
-    <div className="bg-white dark:bg-[#242424] rounded-2xl shadow-sm border border-black/5 dark:border-gray-700 p-5 text-center hover:shadow-md transition-shadow duration-300">
+    <div className="bg-white dark:bg-[#242424] rounded-2xl shadow-sm border border-black/5 dark:border-white/10 p-5 text-center hover:shadow-md transition-shadow duration-300">
       <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-green-50 dark:bg-green-900/30 flex items-center justify-center">
         <BuildingLibraryIcon className="w-5 h-5 text-green-700 dark:text-green-400" />
       </div>
@@ -291,7 +266,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-[#242424] dark:to-gray-800">
 
-      {/* Carrusel principal */}
+      {/* Carrusel principal (solo si hay diapositivas configuradas en el admin) */}
+      {carousel.length > 0 && (
       <div className="bg-black">
         <Swiper
           modules={[Autoplay, Pagination, Navigation, EffectFade]}
@@ -321,6 +297,7 @@ export default function Home() {
           ))}
         </Swiper>
       </div>
+      )}
 
       {/* Bienvenida */}
       <div className="relative py-16 md:py-24 overflow-hidden border-t border-black/5 dark:border-white/10">
@@ -380,7 +357,7 @@ export default function Home() {
       </div>
 
       {/* ===== ÍCONO DISTINTIVO: IGLESIA MATRIZ DE SAN JOSÉ DE CHIMBO ===== */}
-      <div className="relative py-16 border-t border-black/5 dark:border-white/10">
+      <div className="relative py-16 bg-gray-50 dark:bg-gray-800 border-t border-black/5 dark:border-white/10 transition-colors">
         <div className="max-w-7xl mx-auto px-4">
           <div className="relative h-[320px] md:h-[400px] rounded-3xl overflow-hidden shadow-xl">
             <img
@@ -443,7 +420,7 @@ export default function Home() {
               {destacados.map((lugar) => {
                 const img = resolverImagen(lugar.imagen_url);
                 return (
-                  <div key={lugar.id} className="group relative bg-white dark:bg-[#242424] rounded-2xl shadow-sm border border-black/5 dark:border-gray-700 overflow-hidden hover:shadow-xl dark:hover:shadow-black/40 transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => openModal(lugar)}>
+                  <div key={lugar.id} className="group relative bg-white dark:bg-[#242424] rounded-2xl shadow-sm border border-black/5 dark:border-white/10 overflow-hidden hover:shadow-xl dark:hover:shadow-black/40 transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => openModal(lugar)}>
                     <div className="relative h-56 overflow-hidden bg-gray-200 dark:bg-gray-700">
                       {img ? (
                         <img src={img} alt={lugar.nombre} loading="lazy" decoding="async" className="w-full h-full object-cover" />
@@ -495,7 +472,7 @@ export default function Home() {
               {noticias.map((n) => {
                 const img = resolverImagen(n.image_url);
                 return (
-                  <Link to={`/noticias/${n.id}`} key={n.id} className="group bg-white dark:bg-[#242424] rounded-2xl shadow-sm border border-black/5 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  <Link to={`/noticias/${n.id}`} key={n.id} className="group bg-white dark:bg-[#242424] rounded-2xl shadow-sm border border-black/5 dark:border-white/10 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                     <div className="relative h-44 overflow-hidden bg-gray-200 dark:bg-gray-700">
                       {img ? <img src={img} alt={n.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                            : <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"><NewspaperIcon className="w-10 h-10 text-gray-400 dark:text-gray-500" /></div>}
@@ -540,7 +517,7 @@ export default function Home() {
               {eventos.map((ev) => {
                 const img = resolverImagen(ev.image_url);
                 return (
-                  <Link to={`/eventos/${ev.id}`} key={ev.id} className="group bg-white dark:bg-[#242424] rounded-2xl shadow-sm border border-black/5 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  <Link to={`/eventos/${ev.id}`} key={ev.id} className="group bg-white dark:bg-[#242424] rounded-2xl shadow-sm border border-black/5 dark:border-white/10 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                     <div className="relative h-44 overflow-hidden bg-gray-200 dark:bg-gray-700">
                       {img ? <img src={img} alt={ev.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                            : <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"><CalendarDaysIcon className="w-10 h-10 text-gray-400 dark:text-gray-500" /></div>}
@@ -595,7 +572,7 @@ export default function Home() {
           <Reveal delay={100}>
             <div className="flex gap-3 items-stretch h-[300px] sm:h-[360px] md:h-[420px]">
               {/* Video vertical, autoplay silencioso en loop */}
-              <div className="relative w-2/5 shrink-0 rounded-2xl overflow-hidden shadow-sm border border-black/5 dark:border-gray-700 bg-black h-full group">
+              <div className="relative w-2/5 shrink-0 rounded-2xl overflow-hidden shadow-sm border border-black/5 dark:border-white/10 bg-black h-full group">
                 <video
                   src={VIDEO_CHIMBO}
                   autoPlay
@@ -617,7 +594,7 @@ export default function Home() {
                     alt={img.alt}
                     loading="lazy"
                     decoding="async"
-                    className={`w-full h-full object-cover rounded-xl shadow-sm border border-black/5 dark:border-gray-700 hover:scale-105 transition-transform duration-500 ease-out ${idx === 0 ? 'col-span-2' : ''}`}
+                    className={`w-full h-full object-cover rounded-xl shadow-sm border border-black/5 dark:border-white/10 hover:scale-105 transition-transform duration-500 ease-out ${idx === 0 ? 'col-span-2' : ''}`}
                   />
                 ))}
               </div>

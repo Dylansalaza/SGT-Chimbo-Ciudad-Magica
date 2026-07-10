@@ -42,7 +42,13 @@ export default function Footer() {
 
           {/* Marca */}
           <div className="lg:col-span-2">
-            <img src="/media/logo/logo-horizontal-dark.svg" alt="SGT Chimbo — Sistema de Gestión Turístico" className="h-11 w-auto mb-3" />
+            <div className="flex items-center mb-3">
+              <div className="flex flex-col leading-none">
+                <span className="font-extrabold italic text-white text-xl tracking-tight">SGT</span>
+                <span className="font-extrabold text-rose-600 text-sm tracking-wide leading-tight">CHIMBO</span>
+                <span className="text-[8px] font-semibold tracking-[0.3em] text-slate-300 mt-1">GESTIÓN TURÍSTICA</span>
+              </div>
+            </div>
             <p className="text-sm text-gray-400 leading-relaxed max-w-sm">
               Sistema de Gestión Turística del cantón Chimbo, provincia de Bolívar, Ecuador.
               Historia colonial, naturaleza andina y tradición artesanal en un mismo destino.
@@ -97,10 +103,13 @@ export default function Footer() {
             className="relative bg-white dark:bg-[#1c1c1c] rounded-2xl shadow-2xl shadow-black/40 w-full max-w-md overflow-hidden animate-modal-pop"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Barra de acento superior con brillo azul en movimiento */}
+            <div className="animated-accent-bar h-1.5" />
+
             {/* ── Cabecera con degradado e ícono institucional ── */}
-            <div className="relative bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 px-8 pt-8 pb-14 text-center overflow-hidden">
-              {/* Textura sutil: círculos difusos para dar profundidad al degradado */}
-              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+            <div className="animated-gradient relative px-8 pt-8 pb-14 text-center overflow-hidden">
+              {/* Textura sutil: resplandores difusos (uno verde, uno dorado) para dar profundidad */}
+              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[#F2C230]/25 blur-2xl pointer-events-none" />
               <div className="absolute -bottom-16 -left-10 w-40 h-40 rounded-full bg-black/10 blur-2xl pointer-events-none" />
 
               <button
@@ -112,12 +121,12 @@ export default function Footer() {
                 <XMarkIcon className="w-4 h-4" />
               </button>
 
-              <div className="relative w-16 h-16 mx-auto mb-4 bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center ring-1 ring-inset ring-white/20 shadow-lg">
-                <BuildingLibraryIcon className="w-8 h-8 text-white" />
+              <div className="relative w-16 h-16 mx-auto mb-4 bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center ring-1 ring-inset ring-[#F2C230]/50 shadow-lg">
+                <BuildingLibraryIcon className="w-8 h-8 text-[#F2C230]" />
               </div>
 
               <h2 className="relative font-serif text-2xl font-bold text-white leading-tight">Sistema de Gestión Turística</h2>
-              <span className="relative inline-block bg-white/15 backdrop-blur-sm text-white text-[11px] font-bold uppercase tracking-widest px-3 py-1 rounded-full mt-3 ring-1 ring-inset ring-white/20">
+              <span className="relative inline-block bg-[#F2C230] text-[#00294d] text-[11px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full mt-3 shadow-md shadow-black/20">
                 SGT Chimbo · v1.0
               </span>
             </div>
@@ -126,8 +135,8 @@ export default function Footer() {
             <div className="relative px-6 -mt-8 pb-6">
               <div className="bg-white dark:bg-[#242424] rounded-xl shadow-lg shadow-black/10 border border-black/5 dark:border-white/10 divide-y divide-gray-100 dark:divide-gray-700">
                 <div className="flex items-center gap-3 px-4 py-3.5">
-                  <div className="w-8 h-8 shrink-0 rounded-lg bg-green-50 dark:bg-green-900/30 flex items-center justify-center">
-                    <UserGroupIcon className="w-4 h-4 text-green-700 dark:text-green-400" />
+                  <div className="w-8 h-8 shrink-0 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                    <UserGroupIcon className="w-4 h-4 text-blue-700 dark:text-blue-400" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-[10px] uppercase tracking-wide text-gray-400 leading-none mb-1">Desarrollado por</p>
@@ -135,8 +144,8 @@ export default function Footer() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 px-4 py-3.5">
-                  <div className="w-8 h-8 shrink-0 rounded-lg bg-green-50 dark:bg-green-900/30 flex items-center justify-center">
-                    <AcademicCapIcon className="w-4 h-4 text-green-700 dark:text-green-400" />
+                  <div className="w-8 h-8 shrink-0 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
+                    <AcademicCapIcon className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-[10px] uppercase tracking-wide text-gray-400 leading-none mb-1">Carrera</p>
@@ -144,8 +153,8 @@ export default function Footer() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 px-4 py-3.5">
-                  <div className="w-8 h-8 shrink-0 rounded-lg bg-green-50 dark:bg-green-900/30 flex items-center justify-center">
-                    <BuildingLibraryIcon className="w-4 h-4 text-green-700 dark:text-green-400" />
+                  <div className="w-8 h-8 shrink-0 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                    <BuildingLibraryIcon className="w-4 h-4 text-blue-700 dark:text-blue-400" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-[10px] uppercase tracking-wide text-gray-400 leading-none mb-1">Universidad</p>

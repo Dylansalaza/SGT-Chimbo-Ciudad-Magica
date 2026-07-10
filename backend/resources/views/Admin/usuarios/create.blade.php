@@ -16,8 +16,8 @@
         </div>
     </div>
 
-    <div class="p-8 w-full max-w-2xl">
-        <div class="bg-white rounded-2xl p-8 card-premium-shadow">
+    <div class="p-8 w-full">
+        <div class="bg-white rounded-2xl p-8 card-premium-shadow max-w-2xl mx-auto">
 
 
 

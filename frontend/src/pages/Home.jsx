@@ -25,7 +25,7 @@ import {
 } from '@heroicons/react/24/solid';
 
 const API_URL     = import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000/api';
-const LARAVEL_URL = API_URL.replace('/api', '');
+const LARAVEL_URL = API_URL.replace(/\/api$/, '');
 
 // Video vertical grabado en Chimbo, mostrado en la sección Visitas del Home
 const VIDEO_CHIMBO = '/media/plaza-chimbo.mp4';

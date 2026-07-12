@@ -9,6 +9,7 @@
 .env
 .env.*
 !.env.example
+!.env.*.example
 *.key
 
 # ── Entornos y dependencias ─────────────────────────────────
@@ -52,6 +53,14 @@ Thumbs.db
 .idea/
 .vscode/
 .claude/settings.local.json
+
+# ── Copias de respaldo / recuperación de antivirus ──────────
+# AVG (y algunos editores) dejan copias .backup/.restore/.bak/.orig de los .php
+# del proyecto por un falso positivo. Son basura, nunca deben versionarse.
+*.backup
+*.restore
+*.bak
+*.orig
 
 # Entorno virtual de exportacion CLIP (venv, no es codigo del sistema)
 backend/.venv-export/

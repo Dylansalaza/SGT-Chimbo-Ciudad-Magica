@@ -5,27 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;  // <--- Agrega esta línea
+use Illuminate\Support\Facades\Auth;
 
+/**
+ * Autenticación de la aplicación. Cubre dos flujos con el MISMO endpoint /login:
+ *   - Web (formulario Blade del panel): inicia sesión de servidor y redirige.
+ *   - SPA (React público): emite un token Sanctum ('access_token').
+ *
+ * NOTA: no existe registro público de usuarios a propósito. Las cuentas de
+ * funcionarios se crean únicamente desde el panel admin (Admin\UsuarioController),
+ * donde se asigna el rol correspondiente. Cualquier alta sin rol sería un riesgo
+ * de escalada de privilegios, por eso no se expone un register() aquí.
+ */
 class AuthController extends Controller
 {
-    public function register(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-
-        return response()->json(['message' => 'Usuario creado'], 201);
-    }
-
     public function login(Request $request)
     {
         $request->validate([

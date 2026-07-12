@@ -11,9 +11,14 @@
                 <p class="text-sm text-slate-300 font-medium">Monitoreo en tiempo real del tráfico, estadísticas generales y estado de los módulos del Sistema de Gestión Turística.</p>
             </div>
             <div class="flex items-center gap-3 self-start sm:self-center">
+                {{-- Reportes: solo el Admin de Turismo tiene permiso (rol:admin_turismo).
+                     Sin este @if, el botón aparecía también al Administrador del sistema
+                     y le daba 403 al pulsarlo. --}}
+                @if(auth()->user()?->isAdminTurismo())
                 <a href="{{ route('admin.reportes.index') }}" class="inline-flex items-center gap-2 bg-white text-[#00913f] px-5 py-2.5 rounded-xl text-xs font-black tracking-wider shadow-md uppercase hover:bg-slate-100 transition">
                     <i class="fas fa-chart-line"></i> Reportes
                 </a>
+                @endif
                 <div class="inline-flex items-center gap-3 bg-green-600 border border-green-500 text-white px-5 py-2.5 rounded-xl text-xs font-black tracking-wider shadow-md uppercase">
                     <span class="w-2.5 h-2.5 bg-white rounded-full animate-ping"></span>
                     SISTEMA EN LÍNEA

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import StaggerGrid from '../components/StaggerGrid';
+import Reveal from '../components/Reveal';
 import {
   MagnifyingGlassIcon,
   XMarkIcon,
@@ -10,7 +12,9 @@ import {
   ArrowRightIcon,
 } from '@heroicons/react/24/solid';
 
-const LARAVEL_URL = 'http://127.0.0.1:3000';
+// Base del backend Laravel, derivada de VITE_API_URL (quitando el sufijo /api).
+// En producción VITE_API_URL apunta al dominio HTTPS real; en local cae al 127.0.0.1.
+const LARAVEL_URL = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000/api').replace('/api', '');
 const SERIF = "'Playfair Display', Georgia, serif";
 
 // Detecta si una URL de portada/galería es un video (por su extensión), para
@@ -100,9 +104,14 @@ export default function Eventos() {
     // sobre la lista completa de eventos. Se recalcula solo cuando cambia
     // algo relevante (useMemo evita recalcular en cada render).
     const filtrados = useMemo(() => {
+        // Normaliza a minúsculas y sin acentos, para que el filtro por texto
+        // reconozca las categorías (y título/descripción) aunque el usuario
+        // escriba sin tildes: "gastronomica" encuentra "Gastronómica".
+        const norm = (s) => (s || '').normalize('NFD').replace(/\p{Mn}/gu, '').toLowerCase();
+        const q = norm(texto);
         return eventos.filter(ev => {
-            const t = `${ev.title} ${ev.description || ''}`.toLowerCase();
-            const okTexto = !texto || t.includes(texto.toLowerCase());
+            const t = norm(`${ev.title} ${ev.description || ''} ${ev.categoria || ''}`);
+            const okTexto = !q || t.includes(q);
             const okCat   = categoria === 'Todas' || ev.categoria === categoria;
             // Coincide si el evento (su rango) se cruza con el rango del filtro
             const ini = aDiaLocal(ev.starts_at);
@@ -119,63 +128,77 @@ export default function Eventos() {
     // Navega a la página completa de un evento
     const abrir = (ev) => navigate(`/eventos/${ev.id}`);
 
-    if (cargando) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto" />
-                    <p className="mt-4 text-gray-500">Cargando eventos...</p>
-                </div>
-            </div>
-        );
-    }
-
+    // Nota: NO hacemos early-return al cargar. El masthead y los filtros son
+    // estáticos (no dependen de datos), así que se renderizan SIEMPRE en la misma
+    // posición; solo la zona de resultados muestra un skeleton mientras carga.
+    // Así el contenido superior no aparece tarde empujando todo hacia abajo (CLS).
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="max-w-5xl mx-auto" style={{ fontFamily: SERIF }}>
                 {/* ===== MASTHEAD ===== */}
-                <header className="mb-3">
+                <Reveal as="header" className="mb-3">
+                    <div className="h-1 w-full bg-gray-900 dark:bg-gray-500 rounded-full mb-1.5" />
                     <div className="border-y-[3px] border-double border-gray-900 dark:border-gray-500 py-2 my-1 text-center">
                         <h1 className="text-gray-900 dark:text-white leading-none" style={{ fontWeight: 900, fontSize: 'clamp(2.5rem, 8vw, 5rem)', letterSpacing: '-0.02em' }}>
                             Eventos Turísticos
                         </h1>
                     </div>
                     <div className="flex items-center gap-3 text-center justify-center text-[10px] md:text-xs uppercase tracking-[0.35em] text-gray-600 dark:text-gray-400 my-1" style={{ fontFamily: "'Manrope', sans-serif" }}>
-                        <span className="flex-1 border-t border-gray-400 dark:border-gray-600" />
+                        <span className="flex-1 border-t border-gray-400 dark:border-white/20" />
                         <span>Agenda cultural de San José de Chimbo</span>
-                        <span className="flex-1 border-t border-gray-400 dark:border-gray-600" />
+                        <span className="flex-1 border-t border-gray-400 dark:border-white/20" />
                     </div>
-                </header>
+                </Reveal>
 
                 {/* ===== FILTROS (compactos) ===== */}
                 <div className="flex flex-wrap items-end gap-2 mb-8 text-xs" style={{ fontFamily: "'Manrope', sans-serif" }}>
                     <div className="relative flex-1 min-w-[160px]">
                         <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
                         <input type="text" value={texto} onChange={e => setTexto(e.target.value)} placeholder="Buscar..."
-                            className="w-full pl-8 pr-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#242424] text-gray-800 dark:text-gray-100" />
+                            className="w-full pl-8 pr-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#242424] text-gray-800 dark:text-gray-100 outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-colors" />
                     </div>
-                    <select value={categoria} onChange={e => setCategoria(e.target.value)} className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#242424] text-gray-800 dark:text-gray-100">
+                    <select value={categoria} onChange={e => setCategoria(e.target.value)} className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#242424] text-gray-800 dark:text-gray-100 outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-colors">
                         {categorias.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
-                    <input type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#242424] text-gray-800 dark:text-gray-100" />
+                    <input type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#242424] text-gray-800 dark:text-gray-100 outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-colors" />
                     <span className="text-gray-400">–</span>
-                    <input type="date" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#242424] text-gray-800 dark:text-gray-100" />
+                    <input type="date" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#242424] text-gray-800 dark:text-gray-100 outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-colors" />
                     {hayFiltro && <button onClick={limpiar} className="flex items-center gap-1 px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600"><XMarkIcon className="w-3.5 h-3.5" /> Limpiar</button>}
                 </div>
             </div>
 
-            {filtrados.length === 0 ? (
-                <div className="text-center py-12">
-                    <p className="text-gray-500 text-lg">{hayFiltro ? 'No hay eventos con esos filtros' : 'No hay eventos registrados'}</p>
+            {cargando ? (
+                /* Skeleton de la grilla: mismas dimensiones que las tarjetas
+                   reales (imagen h-56 + cuerpo), para que al llegar los datos
+                   no cambie la altura y no haya salto de layout. */
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[...Array(6)].map((_, i) => (
+                        <div key={i} className="rounded-2xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10 bg-white dark:bg-[#242424]">
+                            <div className="h-56 bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                            <div className="p-5 space-y-3">
+                                <div className="h-5 w-3/4 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+                                <div className="h-3 w-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+                                <div className="h-3 w-2/3 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : filtrados.length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center py-16 px-6 rounded-2xl border border-dashed border-green-300/60 dark:border-green-800/60 bg-green-50/40 dark:bg-green-900/10" style={{ fontFamily: "'Manrope', sans-serif" }}>
+                    <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center mb-3">
+                        <CalendarDaysIcon className="w-6 h-6 text-green-700 dark:text-green-400" />
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300 font-medium">{hayFiltro ? 'No hay eventos con esos filtros' : 'No hay eventos registrados'}</p>
+                    {hayFiltro && <button onClick={limpiar} className="btn-press mt-3 text-sm font-semibold text-green-700 dark:text-green-400 hover:underline">Limpiar filtros</button>}
                 </div>
             ) : (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <StaggerGrid className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filtrados.map((evento) => {
                         const imgSrc = resolverImagen(evento.image_url);
                         const pasado = esEventoPasado(evento);
                         return (
                             <div key={evento.id} onClick={() => abrir(evento)}
-                                className="group relative bg-white dark:bg-[#242424] rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 cursor-pointer">
+                                className="group relative bg-white dark:bg-[#242424] rounded-2xl shadow-green-md ring-1 ring-black/5 dark:ring-white/10 overflow-hidden hover:shadow-green-lg hover:-translate-y-1.5 transition-[transform,box-shadow] duration-300 ease-out cursor-pointer">
                                 <div className="relative h-56 overflow-hidden bg-gray-200 dark:bg-gray-700">
                                     {imgSrc
                                         ? (esVideoUrl(evento.image_url)
@@ -189,7 +212,7 @@ export default function Eventos() {
                                     )}
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                                     {evento.categoria && (
-                                        <span className="absolute top-3 left-3 bg-blue-600/90 text-white text-xs px-3 py-1 rounded-full">{evento.categoria}</span>
+                                        <span className="absolute top-3 left-3 bg-green-700/95 backdrop-blur-sm text-white text-xs font-medium px-3 py-1 rounded-full ring-1 ring-inset ring-white/20">{evento.categoria}</span>
                                     )}
                                     {(evento.images?.length > 0) && (
                                         <span className="absolute top-3 right-3 flex items-center gap-1 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full"><PhotoIcon className="w-3.5 h-3.5" /> {evento.images.length + 1}</span>
@@ -200,16 +223,16 @@ export default function Eventos() {
                                     </span>
                                 </div>
                                 <div className="p-5">
-                                    <h2 className="text-xl font-bold mb-2 line-clamp-2 text-gray-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{evento.title}</h2>
+                                    <h2 className="text-xl font-bold mb-2 line-clamp-2 text-gray-800 dark:text-white group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">{evento.title}</h2>
                                     {evento.description && (
                                         <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-3 mb-3">{evento.description.substring(0, 150)}…</p>
                                     )}
-                                    <span className="mt-2 text-blue-500 text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all">Ver detalles <ArrowRightIcon className="w-4 h-4" /></span>
+                                    <span className="mt-2 text-green-700 dark:text-green-400 text-sm font-semibold flex items-center gap-1.5 group-hover:gap-2.5 transition-[gap] duration-200 ease-out">Ver detalles <ArrowRightIcon className="w-4 h-4" /></span>
                                 </div>
                             </div>
                         );
                     })}
-                </div>
+                </StaggerGrid>
             )}
 
         </div>

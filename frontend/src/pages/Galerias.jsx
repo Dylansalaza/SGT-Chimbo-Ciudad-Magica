@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import Reveal from '../components/Reveal';
 import { XMarkIcon, PlayIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
 
-const LARAVEL_URL = 'http://127.0.0.1:3000';
+// Base del backend Laravel, derivada de VITE_API_URL (quitando el sufijo /api).
+// En producción VITE_API_URL apunta al dominio HTTPS real; en local cae al 127.0.0.1.
+const LARAVEL_URL = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000/api').replace('/api', '');
 const SERIF = "'Playfair Display', Georgia, serif";
 
 // Detecta si una URL es un video (por su extensión), para decidir si se
@@ -24,20 +27,14 @@ function resolverImagen(url) {
     return LARAVEL_URL + '/storage/' + url;          // solo el nombre del archivo
 }
 
-// Devuelve el día local en formato 'YYYY-MM-DD' (igual que <input type="date">)
-function aDiaLocal(fecha) {
-    if (!fecha) return null;
-    const d = new Date(fecha);
-    if (isNaN(d)) return null;
-    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
-    return local.toISOString().slice(0, 10);
-}
-
-const CATEGORIAS = ['Todas', 'Naturaleza', 'Cultura', 'Gastronomía', 'Fiestas', 'Arquitectura'];
+// Las categorías del filtro ya NO son una lista fija: se generan dinámicamente
+// a partir de las categorías que realmente traen las galerías (ver `categorias`
+// dentro del componente), así nunca se desincronizan con las de eventos/noticias.
 
 // ============================================================================
 // COMPONENTE PRINCIPAL: Galerias (ruta /galerias)
-// Muestra las galerías de fotos/videos en un layout tipo "masonry" (columnas).
+// Muestra las galerías de fotos/videos en una grilla simétrica (tarjetas de
+// igual tamaño).
 // Al hacer clic en una galería se abre un modal con todas sus imágenes, y al
 // hacer clic en una imagen se abre un lightbox de pantalla completa navegable
 // con teclado (flechas ← → y Escape).
@@ -46,7 +43,6 @@ export default function Galerias() {
     const [galerias, setGalerias]             = useState([]); // Lista completa traída del backend
     const [cargando, setCargando]             = useState(true);
     const [filtro, setFiltro]                 = useState('Todas'); // Categoría seleccionada
-    const [fechaFiltro, setFechaFiltro]       = useState(''); // 'YYYY-MM-DD'
     const [galeriaAbierta, setGaleriaAbierta] = useState(null); // Galería abierta en el modal
     const [lbIndex, setLbIndex]               = useState(null); // Índice de la imagen abierta en el lightbox (null = lightbox cerrado)
 
@@ -65,11 +61,24 @@ export default function Galerias() {
         return () => window.removeEventListener('keydown', handleKey);
     }, [lbIndex, galeriaAbierta]);
 
-    // Trae todas las galerías publicadas desde la API pública de Laravel
+    // Trae TODAS las galerías publicadas desde la API pública de Laravel.
+    // La API pagina (10 por página), así que recorremos todas las páginas hasta
+    // `last_page` y las acumulamos; si algún día la API devolviera un array
+    // plano, también se soporta. Las portadas usan loading="lazy", por lo que
+    // traer todos los álbumes es liviano (no descarga todas las fotos).
     const cargarGalerias = async () => {
         try {
-            const response = await axios.get(`${LARAVEL_URL}/api/galleries`);
-            setGalerias(response.data.data || response.data || []);
+            let pagina = 1;
+            let ultima = 1;
+            const acumuladas = [];
+            do {
+                const { data } = await axios.get(`${LARAVEL_URL}/api/galleries?page=${pagina}`);
+                const items = Array.isArray(data) ? data : (data.data || []);
+                acumuladas.push(...items);
+                ultima = Array.isArray(data) ? 1 : (data.last_page || 1);
+                pagina++;
+            } while (pagina <= ultima);
+            setGalerias(acumuladas);
         } catch (error) {
             console.error('Error cargando galerías:', error);
         } finally {
@@ -77,94 +86,89 @@ export default function Galerias() {
         }
     };
 
-    // Filtra las galerías por categoría seleccionada y/o por fecha de creación
-    const galeriasFiltradas = galerias.filter((g) => {
-        const okCategoria = filtro === 'Todas' || g.category === filtro;
-        const okFecha     = !fechaFiltro || aDiaLocal(g.created_at) === fechaFiltro;
-        return okCategoria && okFecha;
-    });
+    // Categorías del filtro: se generan a partir de las que realmente traen las
+    // galerías cargadas (deduplicadas y ordenadas), con "Todas" al inicio. Así
+    // aparecen solas cuando creas eventos/noticias con categorías nuevas.
+    const categorias = ['Todas', ...Array.from(
+        new Set(galerias.map(g => g.category).filter(Boolean))
+    ).sort((a, b) => a.localeCompare(b, 'es'))];
 
-    if (cargando) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto" />
-                    <p className="mt-4 text-gray-500">Cargando galerías...</p>
-                </div>
-            </div>
-        );
-    }
+    // Filtra las galerías por la categoría seleccionada.
+    const galeriasFiltradas = filtro === 'Todas'
+        ? galerias
+        : galerias.filter((g) => g.category === filtro);
 
-    // Layout del masonry: alterna tarjetas tall y wide
-    const layoutClasses = ['tall', '', '', 'wide', '', '', ''];
+    // Nota: NO hacemos early-return al cargar. El masthead y los filtros son
+    // estáticos; se renderizan SIEMPRE en la misma posición y solo el mosaico
+    // muestra un skeleton mientras carga (evita que el contenido superior
+    // aparezca tarde empujando todo hacia abajo → CLS).
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
 
             <div className="max-w-5xl mx-auto" style={{ fontFamily: SERIF }}>
                 {/* ===== MASTHEAD ===== */}
-                <header className="mb-3">
+                <Reveal as="header" className="mb-3">
+                    <div className="h-1 w-full bg-gray-900 dark:bg-gray-500 rounded-full mb-1.5" />
                     <div className="border-y-[3px] border-double border-gray-900 dark:border-gray-500 py-2 my-1 text-center">
                         <h1 className="text-gray-900 dark:text-white leading-none" style={{ fontWeight: 900, fontSize: 'clamp(2.5rem, 8vw, 5rem)', letterSpacing: '-0.02em' }}>
                             Galería de Fotos
                         </h1>
                     </div>
                     <div className="flex items-center gap-3 text-center justify-center text-[10px] md:text-xs uppercase tracking-[0.35em] text-gray-600 dark:text-gray-400 my-1" style={{ fontFamily: "'Manrope', sans-serif" }}>
-                        <span className="flex-1 border-t border-gray-400 dark:border-gray-600" />
+                        <span className="flex-1 border-t border-gray-400 dark:border-white/20" />
                         <span>Recuerdos visuales de San José de Chimbo</span>
-                        <span className="flex-1 border-t border-gray-400 dark:border-gray-600" />
+                        <span className="flex-1 border-t border-gray-400 dark:border-white/20" />
                     </div>
-                </header>
+                </Reveal>
 
                 {/* ── Filtros ── */}
                 <div className="flex gap-2 flex-wrap mb-8 items-center text-xs" style={{ fontFamily: "'Manrope', sans-serif" }}>
-                    {CATEGORIAS.map(cat => (
+                    {categorias.map(cat => (
                         <button
                             key={cat}
                             onClick={() => setFiltro(cat)}
-                            className={`px-3 py-1.5 border transition-all duration-200
+                            className={`btn-press px-3 py-1.5 border
                                 ${filtro === cat
-                                    ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-gray-900 dark:border-white'
-                                    : 'bg-white dark:bg-[#242424] text-gray-700 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                    ? 'bg-green-700 text-white border-green-700 shadow-green-md'
+                                    : 'bg-white dark:bg-[#242424] text-gray-700 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:border-green-500 hover:text-green-700 dark:hover:text-green-400'
                                 }`}
                         >
                             {cat}
                         </button>
                     ))}
-
-                    {/* Filtro por fecha / día */}
-                    <span className="ml-auto flex items-center gap-2 text-gray-500 dark:text-gray-300">
-                        <input
-                            type="date"
-                            value={fechaFiltro}
-                            onChange={(e) => setFechaFiltro(e.target.value)}
-                            className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#242424] text-gray-800 dark:text-gray-100"
-                        />
-                        {fechaFiltro && (
-                            <button
-                                onClick={() => setFechaFiltro('')}
-                                className="flex items-center gap-1 px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600"
-                            >
-                                <XMarkIcon className="w-3.5 h-3.5" /> Limpiar
-                            </button>
-                        )}
-                    </span>
                 </div>
             </div>
 
-            {galeriasFiltradas.length === 0 ? (
-                <div className="text-center py-16 border border-dashed border-gray-200 dark:border-gray-700 rounded-2xl">
-                    <p className="text-gray-400 text-lg">
-                        {fechaFiltro || filtro !== 'Todas' ? 'No hay galerías con ese filtro' : 'No hay galerías registradas'}
+            {cargando ? (
+                /* Skeleton con el MISMO mosaico (columnas + gaps parejos) que el
+                   contenido real, para que no haya salto al llegar. */
+                <div className="columns-2 md:columns-3 lg:columns-4 [column-gap:1rem]">
+                    {['4/5','1/1','3/4','5/6','3/4','1/1','4/5','5/6'].map((ar, i) => (
+                        <div
+                            key={i}
+                            className="mb-4 break-inside-avoid rounded-2xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10 bg-gray-200 dark:bg-gray-700 animate-pulse"
+                            style={{ aspectRatio: ar }}
+                        />
+                    ))}
+                </div>
+            ) : galeriasFiltradas.length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center py-16 px-6 border border-dashed border-green-300/60 dark:border-green-800/60 bg-green-50/40 dark:bg-green-900/10 rounded-2xl" style={{ fontFamily: "'Manrope', sans-serif" }}>
+                    <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center mb-3">
+                        <PlayIcon className="w-6 h-6 text-green-700 dark:text-green-400" />
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300 font-medium">
+                        {filtro !== 'Todas' ? 'No hay galerías en esta categoría' : 'No hay galerías registradas'}
                     </p>
-                    <p className="text-gray-300 text-sm mt-1">
-                        {fechaFiltro || filtro !== 'Todas' ? 'Prueba con otra fecha o categoría' : 'Pronto agregaremos contenido'}
+                    <p className="text-gray-400 text-sm mt-1">
+                        {filtro !== 'Todas' ? 'Prueba con otra categoría' : 'Pronto agregaremos contenido'}
                     </p>
                 </div>
             ) : (
                 <>
-                    {/* ── Masonry estilo librería de fotos ── */}
-                    <div className="columns-2 md:columns-3 lg:columns-4 [column-gap:1rem]">
+                    {/* ── Mosaico: imágenes en su proporción real, con espacio
+                        parejo (column-gap 1rem = margen inferior mb-4). ── */}
+                    <div className="animate-fade-in-up columns-2 md:columns-3 lg:columns-4 [column-gap:1rem]">
                         {galeriasFiltradas.map((galeria, idx) => {
                             const imgsRaw = galeria.images || [];
                             const imgs    = imgsRaw.map(resolverImagen).filter(Boolean);
@@ -174,7 +178,7 @@ export default function Galerias() {
                                 <div
                                     key={galeria.id}
                                     onClick={() => { setGaleriaAbierta(galeria); setLbIndex(null); }}
-                                    className="group relative mb-4 break-inside-avoid rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700 bg-white dark:bg-[#242424]"
+                                    className="group relative mb-4 break-inside-avoid rounded-2xl overflow-hidden cursor-pointer shadow-green-sm hover:shadow-green-lg transition-[box-shadow] duration-300 ease-out ring-1 ring-black/5 dark:ring-white/10 bg-white dark:bg-[#242424]"
                                 >
                                     {portadaEsVideo ? (
                                         <video
@@ -201,7 +205,7 @@ export default function Galerias() {
                                     )}
                                     {idx === 0 && (
                                         <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/55 text-white text-xs px-2.5 py-1 rounded-full">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span> Destacada
+                                            <span className="w-1.5 h-1.5 rounded-full bg-gold-400"></span> Destacada
                                         </div>
                                     )}
                                     <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/30 to-transparent">
@@ -236,6 +240,9 @@ export default function Galerias() {
                                 className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                             ><XMarkIcon className="w-4 h-4" /></button>
                         </div>
+                        {/* Mosaico en proporción real (columnas), con gaps
+                            uniformes de 10px en ambas direcciones (columnGap =
+                            margen inferior). Click en una imagen abre el lightbox. */}
                         <div className="p-4" style={{ columns: 2, columnGap: '10px' }}>
                             {(galeriaAbierta.images || []).map((img, idx) => {
                                 const src = resolverImagen(img);
@@ -246,8 +253,8 @@ export default function Galerias() {
                                             src={src}
                                             controls
                                             preload="metadata"
-                                            className="w-full block rounded-lg mb-2.5 cursor-pointer hover:opacity-90 transition border border-gray-100 dark:border-gray-700"
-                                            style={{ breakInside: 'avoid' }}
+                                            className="w-full block rounded-lg cursor-pointer hover:opacity-90 transition border border-gray-100 dark:border-gray-700"
+                                            style={{ breakInside: 'avoid', marginBottom: '10px' }}
                                             onClick={e => { e.stopPropagation(); setLbIndex(idx); }}
                                         />
                                     );
@@ -259,8 +266,8 @@ export default function Galerias() {
                                         alt={`${galeriaAbierta.title} ${idx + 1}`}
                                         loading="lazy"
                                         decoding="async"
-                                        className="w-full block rounded-lg mb-2.5 cursor-zoom-in hover:opacity-90 transition border border-gray-100 dark:border-gray-700"
-                                        style={{ breakInside: 'avoid' }}
+                                        className="w-full block rounded-lg cursor-zoom-in hover:opacity-90 transition border border-gray-100 dark:border-gray-700"
+                                        style={{ breakInside: 'avoid', marginBottom: '10px' }}
                                         onClick={e => { e.stopPropagation(); setLbIndex(idx); }}
                                         onError={e => { e.target.onerror=null; e.target.src='https://picsum.photos/id/30/400/300'; }}
                                     />
@@ -293,11 +300,11 @@ export default function Galerias() {
                         {imgs.length > 1 && (
                             <>
                                 <button onClick={prev}
-                                    className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/20 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all hover:scale-110">
+                                    className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/20 text-white rounded-full w-12 h-12 flex items-center justify-center transition-transform duration-200 ease-out hover:scale-110 active:scale-95">
                                     <ChevronLeftIcon className="w-6 h-6" />
                                 </button>
                                 <button onClick={next}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/20 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all hover:scale-110">
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/20 text-white rounded-full w-12 h-12 flex items-center justify-center transition-transform duration-200 ease-out hover:scale-110 active:scale-95">
                                     <ChevronRightIcon className="w-6 h-6" />
                                 </button>
                                 <span className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 bg-black/50 text-white text-xs px-3 py-1 rounded-full">

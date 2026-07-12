@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import StaggerGrid from '../components/StaggerGrid';
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -12,7 +13,9 @@ import {
   ChevronRightIcon,
 } from '@heroicons/react/24/solid';
 
-const LARAVEL_URL = 'http://127.0.0.1:3000';
+// Base del backend Laravel, derivada de VITE_API_URL (quitando el sufijo /api).
+// En producción VITE_API_URL apunta al dominio HTTPS real; en local cae al 127.0.0.1.
+const LARAVEL_URL = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000/api').replace('/api', '');
 const SERIF = "'Playfair Display', Georgia, serif";
 
 // Detecta si una URL de portada/galería es un video (por su extensión)
@@ -110,8 +113,8 @@ export default function EventoDetalle() {
         return (
             <div className="flex justify-center items-center h-64">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto" />
-                    <p className="mt-4 text-gray-500 dark:text-gray-400">Cargando evento...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-2 border-green-200 border-t-green-600 mx-auto" />
+                    <p className="mt-4 text-gray-500 dark:text-gray-400">Cargando evento…</p>
                 </div>
             </div>
         );
@@ -122,7 +125,7 @@ export default function EventoDetalle() {
             <div className="max-w-2xl mx-auto px-4 py-20 text-center" style={{ fontFamily: SERIF }}>
                 <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-3">Evento no encontrado</h1>
                 <p className="text-gray-500 dark:text-gray-400 mb-6">Puede que haya sido retirado o el enlace sea incorrecto.</p>
-                <Link to="/eventos" className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-blue-600 text-white rounded-full font-semibold text-sm hover:bg-blue-700 transition">
+                <Link to="/eventos" className="btn-press inline-flex items-center gap-1.5 px-5 py-2.5 bg-green-700 text-white rounded-full font-semibold text-sm hover:bg-green-800 shadow-green-md">
                     <ArrowLeftIcon className="w-4 h-4" /> Volver a Eventos
                 </Link>
             </div>
@@ -146,9 +149,9 @@ export default function EventoDetalle() {
                 <ArrowLeftIcon className="w-4 h-4" /> Volver a Eventos
             </button>
 
-            <article>
+            <article className="animate-fade-in-up">
                 {evento.categoria && (
-                    <p className="text-center text-[11px] uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400 mb-2" style={{ fontFamily: "'Manrope', sans-serif" }}>
+                    <p className="text-center text-[11px] uppercase tracking-[0.3em] text-green-700 dark:text-green-400 mb-2 font-bold" style={{ fontFamily: "'Manrope', sans-serif" }}>
                         {evento.categoria}
                     </p>
                 )}
@@ -157,7 +160,7 @@ export default function EventoDetalle() {
                 </h1>
                 <div className="flex flex-wrap items-center justify-center gap-2 text-center text-xs mt-3 mb-6 border-b border-gray-300 dark:border-gray-700 pb-6" style={{ fontFamily: "'Manrope', sans-serif" }}>
                     <span className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-3 py-1 rounded-full"><CalendarDaysIcon className="w-3.5 h-3.5" /> Inicio: {formatearFecha(evento.starts_at)}</span>
-                    {evento.ends_at && <span className="flex items-center gap-1 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full"><FlagIcon className="w-3.5 h-3.5" /> Fin: {formatearFecha(evento.ends_at)}</span>}
+                    {evento.ends_at && <span className="flex items-center gap-1 bg-gold-50 dark:bg-gold-500/10 text-gold-700 dark:text-gold-300 px-3 py-1 rounded-full"><FlagIcon className="w-3.5 h-3.5" /> Fin: {formatearFecha(evento.ends_at)}</span>}
                     <span className={`flex items-center gap-1 font-semibold px-3 py-1 rounded-full uppercase tracking-wide text-[10px] ${pasado ? 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'}`}>
                         <span className="w-1.5 h-1.5 rounded-full bg-current" /> {pasado ? 'Evento pasado' : 'Evento actual'}
                     </span>
@@ -170,20 +173,20 @@ export default function EventoDetalle() {
                             {imgs.map((src, idx) => (
                                 esVideoUrl(src) ? (
                                     <video key={idx} src={src} controls={idx === imgActiva} muted playsInline preload="metadata"
-                                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${idx === imgActiva ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
+                                        className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-500 ${idx === imgActiva ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
                                 ) : (
                                     <img key={idx} src={src} alt={`${evento.title} ${idx + 1}`}
-                                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${idx === imgActiva ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
+                                        className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-500 ${idx === imgActiva ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
                                 )
                             ))}
                             {imgs.length > 1 && (
                                 <>
                                     <button onClick={prev} aria-label="Anterior"
-                                        className="absolute left-3 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/75 text-white rounded-full w-10 h-10 flex items-center justify-center backdrop-blur-sm transition-all hover:scale-110">
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/75 text-white rounded-full w-10 h-10 flex items-center justify-center backdrop-blur-sm transition-transform duration-200 ease-out hover:scale-110 active:scale-95">
                                         <ChevronLeftIcon className="w-5 h-5" />
                                     </button>
                                     <button onClick={next} aria-label="Siguiente"
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/75 text-white rounded-full w-10 h-10 flex items-center justify-center backdrop-blur-sm transition-all hover:scale-110">
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/75 text-white rounded-full w-10 h-10 flex items-center justify-center backdrop-blur-sm transition-transform duration-200 ease-out hover:scale-110 active:scale-95">
                                         <ChevronRightIcon className="w-5 h-5" />
                                     </button>
                                     <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
@@ -202,7 +205,7 @@ export default function EventoDetalle() {
                             <div className="flex gap-2 mt-2 overflow-x-auto">
                                 {imgs.map((src, idx) => (
                                     <div key={idx} onClick={() => setImgActiva(idx)}
-                                        className={`relative h-16 w-24 shrink-0 rounded cursor-pointer border-2 transition-all overflow-hidden ${idx === imgActiva ? 'border-blue-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}>
+                                        className={`relative h-16 w-24 shrink-0 rounded cursor-pointer border-2 transition-[transform,border-color,opacity] duration-200 ease-out overflow-hidden ${idx === imgActiva ? 'border-green-600 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}>
                                         {esVideoUrl(src) ? (
                                             <>
                                                 <video src={src} muted playsInline preload="metadata" className="h-full w-full object-cover" />
@@ -226,11 +229,11 @@ export default function EventoDetalle() {
 
             {/* ===== Otros eventos ===== */}
             {sugeridos.length > 0 && (
-                <section className="border-t-2 border-gray-900 dark:border-gray-600 pt-6 mt-8">
+                <section className="border-t-2 border-green-800 dark:border-green-700 pt-6 mt-8">
                     <h2 className="text-center font-black text-gray-900 dark:text-white mb-6" style={{ fontSize: 'clamp(1.3rem, 3vw, 1.8rem)' }}>
                         Otros eventos
                     </h2>
-                    <div className="grid sm:grid-cols-3 gap-6" style={{ fontFamily: "'Manrope', sans-serif" }}>
+                    <StaggerGrid className="grid sm:grid-cols-3 gap-6" style={{ fontFamily: "'Manrope', sans-serif" }}>
                         {sugeridos.map(ev => {
                             const imgSrc = resolverImagen(ev.image_url);
                             return (
@@ -242,16 +245,16 @@ export default function EventoDetalle() {
                                                 : <img src={imgSrc} alt={ev.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />)
                                             : <div className="w-full h-full flex items-center justify-center"><PhotoIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" /></div>}
                                     </div>
-                                    <h3 className="font-bold text-sm text-gray-900 dark:text-white leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" style={{ fontFamily: SERIF }}>
+                                    <h3 className="font-bold text-sm text-gray-900 dark:text-white leading-snug group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors" style={{ fontFamily: SERIF }}>
                                         {ev.title}
                                     </h3>
-                                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-500 mt-1 group-hover:gap-1.5 transition-all">
+                                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 dark:text-green-400 mt-1 group-hover:gap-1.5 transition-[gap] duration-200 ease-out">
                                         Ver detalles <ArrowRightIcon className="w-3 h-3" />
                                     </span>
                                 </Link>
                             );
                         })}
-                    </div>
+                    </StaggerGrid>
                 </section>
             )}
         </div>

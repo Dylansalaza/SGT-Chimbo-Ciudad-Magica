@@ -4,7 +4,7 @@
 <div class="w-full flex flex-col">
 
     {{-- Header de Pantalla Completa (mismo patrón que el resto del panel) --}}
-    <div class="sticky top-0 z-30 bg-[#00294d] text-white w-full px-10 py-8 shadow-lg border-b border-white/5">
+    <div class="sticky top-0 z-30 header-corporate text-white w-full px-10 shadow-lg border-b border-white/5">
         <div class="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
             <div class="space-y-1">
                 <a href="{{ route('admin.eventos.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition mb-1">
@@ -30,18 +30,15 @@
                     </h2>
                     <div>
                         <label for="title" class="block text-sm font-bold text-slate-700 mb-1.5">Título *</label>
-                        <input type="text" name="title" id="title" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm transition" required>
+                        <input type="text" name="title" id="title" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00913f] focus:ring-2 focus:ring-[#00913f]/20 outline-none text-sm transition" required>
                     </div>
                     <div>
                         <label for="categoria" class="block text-sm font-bold text-slate-700 mb-1.5">Categoría</label>
-                        <input type="text" name="categoria" id="categoria" list="cats-eventos" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm transition" placeholder="Ej: Cultural, Religioso, Deportivo...">
-                        <datalist id="cats-eventos">
-                            <option value="Cultural"><option value="Religioso"><option value="Deportivo"><option value="Gastronómico"><option value="Musical"><option value="Feria">
-                        </datalist>
+                        @include('admin.partials.categoria-select', ['categorias' => $categorias])
                     </div>
                     <div>
                         <label for="description" class="block text-sm font-bold text-slate-700 mb-1.5">Descripción</label>
-                        <textarea name="description" id="description" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm leading-relaxed transition"></textarea>
+                        <textarea name="description" id="description" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00913f] focus:ring-2 focus:ring-[#00913f]/20 outline-none text-sm leading-relaxed transition"></textarea>
                     </div>
                 </section>
 
@@ -53,19 +50,19 @@
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
                             <label for="starts_date" class="block text-sm font-bold text-slate-700 mb-1.5">Fecha Inicio</label>
-                            <input type="date" name="starts_date" id="starts_date" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm transition">
+                            <input type="date" name="starts_date" id="starts_date" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00913f] focus:ring-2 focus:ring-[#00913f]/20 outline-none text-sm transition">
                         </div>
                         <div>
                             <label for="starts_time" class="block text-sm font-bold text-slate-700 mb-1.5">Hora Inicio</label>
-                            <input type="time" name="starts_time" id="starts_time" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm transition">
+                            <input type="time" name="starts_time" id="starts_time" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00913f] focus:ring-2 focus:ring-[#00913f]/20 outline-none text-sm transition">
                         </div>
                         <div>
                             <label for="ends_date" class="block text-sm font-bold text-slate-700 mb-1.5">Fecha Fin</label>
-                            <input type="date" name="ends_date" id="ends_date" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm transition">
+                            <input type="date" name="ends_date" id="ends_date" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00913f] focus:ring-2 focus:ring-[#00913f]/20 outline-none text-sm transition">
                         </div>
                         <div>
                             <label for="ends_time" class="block text-sm font-bold text-slate-700 mb-1.5">Hora Fin</label>
-                            <input type="time" name="ends_time" id="ends_time" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm transition">
+                            <input type="time" name="ends_time" id="ends_time" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00913f] focus:ring-2 focus:ring-[#00913f]/20 outline-none text-sm transition">
                         </div>
                     </div>
                 </section>
@@ -76,8 +73,8 @@
                         <i class="fas fa-camera"></i> Foto o video de portada
                     </h2>
 
-                    <div id="dropzoneArea" class="border-2 border-dashed border-blue-400 rounded-2xl p-8 sm:p-10 text-center cursor-pointer bg-slate-50/60 hover:bg-blue-50 transition">
-                        <i class="fas fa-cloud-upload-alt text-4xl text-blue-500 mb-3 block"></i>
+                    <div id="dropzoneArea" class="border-2 border-dashed border-green-400 rounded-2xl p-8 sm:p-10 text-center cursor-pointer bg-slate-50/60 hover:bg-green-50 transition">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-green-500 mb-3 block"></i>
                         <p class="text-slate-600 text-sm font-medium">Arrastra una foto o video aquí, o haz clic para seleccionar</p>
                         <p class="text-xs text-slate-400 mt-1">JPG, PNG, GIF, WEBP o MP4/MOV/WEBM (máx. 25MB)</p>
                         <input type="file" id="fileInput" accept="image/*,video/*" style="display: none;">
@@ -86,8 +83,8 @@
                     <div id="previewContainer" class="hidden">
                         <img id="previewImg" class="w-32 h-32 object-cover rounded-xl shadow border border-slate-200 hidden">
                         <video id="previewVideo" class="w-48 h-32 object-cover rounded-xl shadow border border-slate-200 hidden" controls muted></video>
-                        <p id="previewUrl" class="text-xs text-blue-600 mt-2"></p>
-                        <button type="button" id="removeImageBtn" class="mt-1 text-rose-500 text-xs font-bold hover:underline flex items-center gap-1">
+                        <p id="previewUrl" class="text-xs text-green-600 mt-2"></p>
+                        <button type="button" id="removeImageBtn" class="mt-1 text-red-500 text-xs font-bold hover:underline flex items-center gap-1">
                             <i class="fas fa-trash-alt"></i> Eliminar
                         </button>
                     </div>
@@ -102,7 +99,7 @@
 
                 {{-- Acciones --}}
                 <div class="flex items-center gap-3 pt-6 border-t border-slate-100">
-                    <button type="submit" class="px-6 py-2.5 bg-[#00294d] hover:bg-[#003d73] text-white font-bold rounded-xl text-sm transition-all shadow-md inline-flex items-center gap-2">
+                    <button type="submit" class="px-6 py-2.5 bg-[#00913f] hover:bg-[#059c45] text-white font-bold rounded-xl text-sm transition-all shadow-md inline-flex items-center gap-2">
                         <i class="fas fa-plus"></i> Crear Evento
                     </button>
                     <a href="{{ route('admin.eventos.index') }}" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold rounded-xl text-sm transition-all">
@@ -129,9 +126,9 @@
         dropzoneArea.addEventListener(event, e => { e.preventDefault(); e.stopPropagation(); });
     });
 
-    dropzoneArea.addEventListener('dragenter', () => dropzoneArea.classList.add('bg-blue-100'));
-    dropzoneArea.addEventListener('dragleave', () => dropzoneArea.classList.remove('bg-blue-100'));
-    dropzoneArea.addEventListener('drop',      () => dropzoneArea.classList.remove('bg-blue-100'));
+    dropzoneArea.addEventListener('dragenter', () => dropzoneArea.classList.add('bg-green-100'));
+    dropzoneArea.addEventListener('dragleave', () => dropzoneArea.classList.remove('bg-green-100'));
+    dropzoneArea.addEventListener('drop',      () => dropzoneArea.classList.remove('bg-green-100'));
 
     dropzoneArea.addEventListener('drop',  e  => handleFiles(e.dataTransfer.files));
     dropzoneArea.addEventListener('click', () => fileInput.click());

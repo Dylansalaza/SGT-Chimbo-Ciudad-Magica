@@ -70,17 +70,25 @@ class TouristPlaceController extends Controller
     /** Crea un lugar turístico vía API (uso programático/externo). */
     public function store(Request $request)
     {
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'categoria' => 'required|string',
+        // Validamos y usamos SOLO los datos validados (nunca $request->all(),
+        // que permitiría mass-assignment de campos internos como `activo`).
+        $datos = $request->validate([
+            'nombre'      => 'required|string|max:255',
+            'categoria'   => 'required|string|max:255',
             'descripcion' => 'required|string',
-            'lat' => 'required|numeric',
-            'lng' => 'required|numeric',
-            'direccion' => 'required|string',
-            'imagen_url' => 'required|url',
+            'lat'         => 'required|numeric|between:-90,90',
+            'lng'         => 'required|numeric|between:-180,180',
+            'direccion'   => 'required|string|max:255',
+            'telefono'    => 'nullable|string|max:50',
+            'horario'     => 'nullable|string|max:255',
+            'precio'      => 'nullable|string|max:100',
+            'imagen_url'  => 'required|url',
+            'destacado'   => 'nullable|boolean',
+            'galeria'     => 'nullable|array',
+            'galeria.*'   => 'string',
         ]);
 
-        $place = TouristPlace::create($request->all());
+        $place = TouristPlace::create($datos);
         // 🔄 Limpiamos la caché porque hay un nuevo elemento
         Cache::forget($this->cacheKey);
         return response()->json($place, 201);
@@ -90,10 +98,28 @@ class TouristPlaceController extends Controller
     public function update(Request $request, $id)
     {
         $place = TouristPlace::findOrFail($id);
-        $place->update($request->all());
+
+        // Igual que en store: validación explícita y whitelist. En un PUT los
+        // campos pueden venir parciales, por eso usamos `sometimes`.
+        $datos = $request->validate([
+            'nombre'      => 'sometimes|required|string|max:255',
+            'categoria'   => 'sometimes|required|string|max:255',
+            'descripcion' => 'sometimes|required|string',
+            'lat'         => 'sometimes|required|numeric|between:-90,90',
+            'lng'         => 'sometimes|required|numeric|between:-180,180',
+            'direccion'   => 'sometimes|nullable|string|max:255',
+            'telefono'    => 'sometimes|nullable|string|max:50',
+            'horario'     => 'sometimes|nullable|string|max:255',
+            'precio'      => 'sometimes|nullable|string|max:100',
+            'imagen_url'  => 'sometimes|required|url',
+            'destacado'   => 'sometimes|boolean',
+            'galeria'     => 'sometimes|array',
+            'galeria.*'   => 'string',
+        ]);
+
+        $place->update($datos);
         // 🔄 Limpiamos la caché para que los cambios modificados se actualicen
         Cache::forget($this->cacheKey);
-
 
         return response()->json($place);
     }

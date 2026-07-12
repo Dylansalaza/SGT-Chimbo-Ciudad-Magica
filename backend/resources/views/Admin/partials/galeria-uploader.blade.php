@@ -16,7 +16,7 @@
     <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 mb-4 border-b border-slate-100">{!! $titulo !!}</h2>
     <p class="text-sm text-slate-500 -mt-2 mb-4">{{ $ayuda }}</p>
 
-    <label class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-emerald-300 rounded-xl text-sm font-bold text-emerald-600 cursor-pointer hover:bg-emerald-50 transition">
+    <label class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-green-300 rounded-xl text-sm font-bold text-green-600 cursor-pointer hover:bg-green-50 transition">
         <i class="fas fa-plus"></i> Agregar fotos o videos
         <input type="file" id="galeriaInput" accept="image/*,video/*" multiple class="hidden">
     </label>
@@ -36,7 +36,7 @@
                     <img src="{{ $src }}" class="w-full h-full object-cover">
                 @endif
                 <input type="hidden" name="{{ $field }}[]" value="{{ $u }}">
-                <button type="button" class="galeria-remove absolute top-1 right-1 bg-rose-500 text-white w-5 h-5 rounded-full text-xs leading-none"><i class="fas fa-xmark"></i></button>
+                <button type="button" class="galeria-remove absolute top-1 right-1 bg-red-500 text-white w-5 h-5 rounded-full text-xs leading-none"><i class="fas fa-xmark"></i></button>
             </div>
         @endforeach
     </div>
@@ -62,7 +62,7 @@
         div.innerHTML = `
             ${media}
             <input type="hidden" name="${FIELD}[]" value="${url}">
-            <button type="button" class="galeria-remove absolute top-1 right-1 bg-rose-500 text-white w-5 h-5 rounded-full text-xs leading-none"><i class="fas fa-xmark"></i></button>`;
+            <button type="button" class="galeria-remove absolute top-1 right-1 bg-red-500 text-white w-5 h-5 rounded-full text-xs leading-none"><i class="fas fa-xmark"></i></button>`;
         previews.appendChild(div);
     }
 

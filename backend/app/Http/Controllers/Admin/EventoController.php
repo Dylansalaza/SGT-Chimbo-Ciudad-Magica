@@ -18,14 +18,38 @@ class EventoController extends Controller
     /** Lista todos los eventos para la tabla del admin. */
     public function index()
     {
-        $eventos = Event::orderBy('created_at', 'desc')->get();
+        // Ordena por la FECHA del evento (más reciente arriba). Si dos comparten
+        // fecha —o alguno no tiene fecha— se desempata por la de creación.
+        $eventos = Event::orderByDesc('starts_at')->orderByDesc('created_at')->get();
         return view('admin.eventos.index', compact('eventos'));
     }
 
     /** Muestra el formulario para registrar un nuevo evento. */
     public function create()
     {
-        return view('admin.eventos.create');
+        return view('admin.eventos.create', ['categorias' => $this->categoriasDisponibles()]);
+    }
+
+    /**
+     * Lista de categorías para el <select> de eventos: combina un conjunto base
+     * con las que ya se han usado en eventos existentes, sin duplicados y
+     * ordenadas alfabéticamente.
+     */
+    private function categoriasDisponibles(): array
+    {
+        $base = ['Cultural', 'Religioso', 'Deportivo', 'Gastronómico', 'Musical', 'Feria'];
+
+        $usadas = Event::query()
+            ->whereNotNull('categoria')
+            ->where('categoria', '!=', '')
+            ->distinct()
+            ->pluck('categoria')
+            ->all();
+
+        $todas = array_unique(array_merge($base, $usadas));
+        sort($todas, SORT_NATURAL | SORT_FLAG_CASE);
+
+        return $todas;
     }
 
     /** Valida y guarda un evento nuevo, combinando fecha+hora en un solo timestamp. */
@@ -79,7 +103,10 @@ class EventoController extends Controller
     public function edit($id)
     {
         $evento = Event::findOrFail($id);
-        return view('admin.eventos.edit', compact('evento'));
+        return view('admin.eventos.edit', [
+            'evento'     => $evento,
+            'categorias' => $this->categoriasDisponibles(),
+        ]);
     }
 
     /**
@@ -100,12 +127,27 @@ class EventoController extends Controller
             'title'       => 'required|string|max:255',
             'categoria'   => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'starts_at'   => 'nullable|date',
-            'ends_at'     => 'nullable|date',
+            'starts_date' => 'nullable|date',
+            'starts_time' => 'nullable|string',
+            'ends_date'   => 'nullable|date',
+            'ends_time'   => 'nullable|string',
             'image_url'   => 'nullable|string',
             'images'      => 'nullable|array',
             'images.*'    => 'string',
         ]);
+
+        // Combinamos fecha y hora si existen (igual que en store). Si no, null.
+        $starts_at = null;
+        if ($request->starts_date) {
+            $hora = $request->starts_time ?? '00:00';
+            $starts_at = $request->starts_date . ' ' . $hora . ':00';
+        }
+
+        $ends_at = null;
+        if ($request->ends_date) {
+            $hora = $request->ends_time ?? '00:00';
+            $ends_at = $request->ends_date . ' ' . $hora . ':00';
+        }
 
         $evento = Event::findOrFail($id);
 
@@ -113,8 +155,8 @@ class EventoController extends Controller
             'title'       => $request->title,
             'categoria'   => $request->categoria,
             'description' => $request->description,
-            'starts_at'   => $request->starts_at,
-            'ends_at'     => $request->ends_at,
+            'starts_at'   => $starts_at,
+            'ends_at'     => $ends_at,
             'image_url'   => $request->image_url,
             'images'      => array_values(array_filter($request->input('images', []))),
         ]);

@@ -9,6 +9,7 @@ use App\Models\Gallery;
 use App\Models\TouristPlace;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Estadísticas públicas de la página (visitas y contenidos).
@@ -16,7 +17,23 @@ use Illuminate\Http\JsonResponse;
  */
 class StatsController extends Controller
 {
+    /**
+     * GET /api/stats (público). El cálculo recorre 7 días + 6 meses de la
+     * tabla `visits` (~16 consultas agregadas). Como es un endpoint público
+     * y los números cambian poco minuto a minuto, se cachea 5 minutos: así una
+     * ráfaga de visitas no dispara cientos de consultas. La llave incluye la
+     * fecha de hoy para que el corte diario/mensual se recalcule al cambiar el día.
+     */
     public function index(): JsonResponse
+    {
+        return response()->json(
+            Cache::remember('stats_publicas_' . Carbon::today()->toDateString(), now()->addMinutes(5),
+                fn () => $this->calcular())
+        );
+    }
+
+    /** Cálculo real de las estadísticas (se ejecuta solo cuando la caché expira). */
+    private function calcular(): array
     {
         $hoy = Carbon::today();
 
@@ -41,7 +58,7 @@ class StatsController extends Controller
             ];
         }
 
-        return response()->json([
+        return [
             'totales' => [
                 'historico' => Visit::count(),
                 'mes'       => Visit::whereYear('created_at', $hoy->year)->whereMonth('created_at', $hoy->month)->count(),
@@ -55,6 +72,6 @@ class StatsController extends Controller
             ],
             'semana' => $semana,
             'meses'  => $meses,
-        ]);
+        ];
     }
 }

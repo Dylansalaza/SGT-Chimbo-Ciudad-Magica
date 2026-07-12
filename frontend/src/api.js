@@ -18,9 +18,6 @@ export const getTouristPlaces = async () => {
  */
 // src/api.js
 export const buscarLugarPorImagen = async (fileObject) => {
-  // DIAGNÓSTICO: Si esto muestra "string" o "undefined" en tu consola, el error es del Hook/Componente
-  console.log("Tipo de objeto enviado a la API:", typeof fileObject, fileObject);
-
   const formData = new FormData();
   formData.append('image', fileObject); // Tiene que ser el objeto File crudo
 

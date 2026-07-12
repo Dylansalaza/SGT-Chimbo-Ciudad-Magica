@@ -3,20 +3,48 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Event;
+use App\Models\News;
+use App\Models\TouristPlace;
 use App\Models\Visit;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
 /**
- * Reportes de visitas a la página (diario, mensual y totales).
- * La vista está optimizada para imprimir / guardar como PDF.
+ * Reportes institucionales del Sistema de Gestión Turística.
+ *
+ * Cada reporte tiene DOS salidas que comparten el mismo generador de datos:
+ *   · vista en pantalla (dentro del panel) para previsualizar.
+ *   · PDF formal generado en el servidor con dompdf (membrete municipal,
+ *     tablas, totales, numeración de página y área de firma).
+ *
+ * Además se conserva la exportación CSV del detalle de visitas (abre en Excel).
  */
 class ReporteController extends Controller
 {
-    public function visitas()
+    /** Opciones comunes de dompdf para todos los reportes. */
+    private function pdf(string $vista, array $datos)
+    {
+        return Pdf::loadView($vista, $datos)
+            ->setPaper('a4', 'portrait')
+            ->setOption(['isRemoteEnabled' => true, 'defaultFont' => 'DejaVu Sans']);
+    }
+
+    // ────────────────────────────────────────────────────────────────────
+    //  HUB DE REPORTES
+    // ────────────────────────────────────────────────────────────────────
+    public function index()
+    {
+        return view('admin.reportes.index');
+    }
+
+    // ────────────────────────────────────────────────────────────────────
+    //  VISITAS
+    // ────────────────────────────────────────────────────────────────────
+    private function datosVisitas(): array
     {
         $hoy = Carbon::today();
 
-        // Totales
         $totales = [
             'historico' => Visit::count(),
             'unicos'    => Visit::distinct('ip_address')->count('ip_address'),
@@ -29,30 +57,173 @@ class ReporteController extends Controller
         for ($i = 29; $i >= 0; $i--) {
             $d = $hoy->copy()->subDays($i);
             $diario[] = [
-                'fecha'    => $d->format('d/m/Y'),
-                'dia'      => ucfirst($d->isoFormat('dddd')),
-                'visitas'  => Visit::whereDate('created_at', $d)->count(),
+                'fecha'   => $d->format('d/m/Y'),
+                'dia'     => ucfirst($d->isoFormat('dddd')),
+                'visitas' => Visit::whereDate('created_at', $d)->count(),
             ];
         }
 
         // Últimos 12 meses (mensual)
         $mensual = [];
+        $maxMes  = 0;
         for ($i = 11; $i >= 0; $i--) {
             $m = $hoy->copy()->subMonths($i);
-            $mensual[] = [
-                'mes'     => ucfirst($m->isoFormat('MMMM YYYY')),
-                'visitas' => Visit::whereYear('created_at', $m->year)->whereMonth('created_at', $m->month)->count(),
-            ];
+            $n = Visit::whereYear('created_at', $m->year)->whereMonth('created_at', $m->month)->count();
+            $mensual[] = ['mes' => ucfirst($m->isoFormat('MMMM YYYY')), 'visitas' => $n];
+            $maxMes = max($maxMes, $n);
         }
 
-        $generado = Carbon::now()->isoFormat('D [de] MMMM [de] YYYY, HH:mm');
-
-        return view('admin.reportes.visitas', compact('totales', 'diario', 'mensual', 'generado'));
+        return [
+            'totales'  => $totales,
+            'diario'   => $diario,
+            'mensual'  => $mensual,
+            'maxMes'   => $maxMes,
+            'periodo'  => 'Del ' . $hoy->copy()->subDays(29)->isoFormat('D [de] MMMM [de] YYYY')
+                        . ' al ' . $hoy->isoFormat('D [de] MMMM [de] YYYY'),
+            'generado' => Carbon::now()->isoFormat('D [de] MMMM [de] YYYY, HH:mm'),
+        ];
     }
 
-    /**
-     * Exporta el detalle diario (últimos 90 días) en CSV (se abre en Excel).
-     */
+    public function visitas()
+    {
+        return view('admin.reportes.visitas', $this->datosVisitas());
+    }
+
+    public function visitasPdf()
+    {
+        $datos = $this->datosVisitas();
+        return $this->pdf('admin.reportes.pdf.visitas', $datos)
+            ->download('reporte-visitas-' . Carbon::today()->format('Y-m-d') . '.pdf');
+    }
+
+    // ────────────────────────────────────────────────────────────────────
+    //  EVENTOS
+    // ────────────────────────────────────────────────────────────────────
+    private function datosEventos(): array
+    {
+        $ahora   = Carbon::now();
+        $eventos = Event::orderByDesc('starts_at')->get();
+
+        $filas = $eventos->map(function ($e) use ($ahora) {
+            $ref     = $e->ends_at ?? $e->starts_at;
+            $pasado  = $ref && Carbon::parse($ref)->lt($ahora);
+            return [
+                'title'     => $e->title,
+                'categoria' => $e->categoria ?: '—',
+                'inicio'    => $e->starts_at ? Carbon::parse($e->starts_at)->isoFormat('D/MM/YYYY HH:mm') : '—',
+                'fin'       => $e->ends_at ? Carbon::parse($e->ends_at)->isoFormat('D/MM/YYYY HH:mm') : '—',
+                'estado'    => $pasado ? 'Finalizado' : 'Vigente',
+                'pasado'    => $pasado,
+            ];
+        })->all();
+
+        return [
+            'filas'   => $filas,
+            'totales' => [
+                'total'     => count($filas),
+                'vigentes'  => collect($filas)->where('pasado', false)->count(),
+                'pasados'   => collect($filas)->where('pasado', true)->count(),
+            ],
+            'porCategoria' => $eventos->groupBy(fn ($e) => $e->categoria ?: 'Sin categoría')
+                                      ->map->count()->sortDesc()->all(),
+            'generado' => Carbon::now()->isoFormat('D [de] MMMM [de] YYYY, HH:mm'),
+        ];
+    }
+
+    public function eventos()
+    {
+        return view('admin.reportes.eventos', $this->datosEventos());
+    }
+
+    public function eventosPdf()
+    {
+        return $this->pdf('admin.reportes.pdf.eventos', $this->datosEventos())
+            ->download('reporte-eventos-' . Carbon::today()->format('Y-m-d') . '.pdf');
+    }
+
+    // ────────────────────────────────────────────────────────────────────
+    //  NOTICIAS
+    // ────────────────────────────────────────────────────────────────────
+    private function datosNoticias(): array
+    {
+        $hoy      = Carbon::today();
+        $noticias = News::orderByDesc('published_at')->get();
+
+        $filas = $noticias->map(fn ($n) => [
+            'title'     => $n->title,
+            'categoria' => $n->categoria ?: '—',
+            'fecha'     => $n->published_at ? Carbon::parse($n->published_at)->isoFormat('D [de] MMMM [de] YYYY') : '—',
+        ])->all();
+
+        return [
+            'filas'   => $filas,
+            'totales' => [
+                'total' => count($filas),
+                'mes'   => $noticias->filter(fn ($n) => $n->published_at
+                            && Carbon::parse($n->published_at)->year === $hoy->year
+                            && Carbon::parse($n->published_at)->month === $hoy->month)->count(),
+            ],
+            'porCategoria' => $noticias->groupBy(fn ($n) => $n->categoria ?: 'Sin categoría')
+                                       ->map->count()->sortDesc()->all(),
+            'generado' => Carbon::now()->isoFormat('D [de] MMMM [de] YYYY, HH:mm'),
+        ];
+    }
+
+    public function noticias()
+    {
+        return view('admin.reportes.noticias', $this->datosNoticias());
+    }
+
+    public function noticiasPdf()
+    {
+        return $this->pdf('admin.reportes.pdf.noticias', $this->datosNoticias())
+            ->download('reporte-noticias-' . Carbon::today()->format('Y-m-d') . '.pdf');
+    }
+
+    // ────────────────────────────────────────────────────────────────────
+    //  LUGARES TURÍSTICOS
+    // ────────────────────────────────────────────────────────────────────
+    private function datosLugares(): array
+    {
+        $lugares = TouristPlace::orderBy('nombre')->get();
+
+        $filas = $lugares->map(fn ($l) => [
+            'nombre'    => $l->nombre,
+            'categoria' => $l->categoria ?: '—',
+            'direccion' => $l->direccion ?: '—',
+            'telefono'  => $l->telefono ?: '—',
+            'activo'    => (bool) $l->activo,
+            'destacado' => (bool) $l->destacado,
+        ])->all();
+
+        return [
+            'filas'   => $filas,
+            'totales' => [
+                'total'     => count($filas),
+                'activos'   => collect($filas)->where('activo', true)->count(),
+                'inactivos' => collect($filas)->where('activo', false)->count(),
+                'destacados'=> collect($filas)->where('destacado', true)->count(),
+            ],
+            'porCategoria' => $lugares->groupBy(fn ($l) => $l->categoria ?: 'Sin categoría')
+                                      ->map->count()->sortDesc()->all(),
+            'generado' => Carbon::now()->isoFormat('D [de] MMMM [de] YYYY, HH:mm'),
+        ];
+    }
+
+    public function lugares()
+    {
+        return view('admin.reportes.lugares', $this->datosLugares());
+    }
+
+    public function lugaresPdf()
+    {
+        return $this->pdf('admin.reportes.pdf.lugares', $this->datosLugares())
+            ->download('reporte-lugares-' . Carbon::today()->format('Y-m-d') . '.pdf');
+    }
+
+    // ────────────────────────────────────────────────────────────────────
+    //  CSV (detalle diario de visitas, se abre en Excel)
+    // ────────────────────────────────────────────────────────────────────
     public function visitasCsv()
     {
         $hoy = Carbon::today();
@@ -70,8 +241,7 @@ class ReporteController extends Controller
 
         $callback = function () use ($filas) {
             $out = fopen('php://output', 'w');
-            // BOM para que Excel reconozca acentos en UTF-8
-            fwrite($out, "\xEF\xBB\xBF");
+            fwrite($out, "\xEF\xBB\xBF"); // BOM para acentos en Excel
             fputcsv($out, ['Fecha', 'Dia', 'Visitas']);
             foreach ($filas as $f) {
                 fputcsv($out, $f);

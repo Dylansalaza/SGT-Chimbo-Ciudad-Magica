@@ -8,11 +8,11 @@ const BASE_INDEX = 1; // 100%
 
 // ============================================================================
 // COMPONENTE: AccessibilityWidget
-// NOTA: actualmente no está montado en ningún lugar de la app (se quitó del
-// Navbar a pedido del usuario), pero se deja el código listo por si se quiere
-// reactivar más adelante. Controla únicamente el tamaño del texto (el alto
-// contraste dejó de ser manual: ahora se activa solo en modo oscuro, ver
-// index.css). Botón ♿ que despliega un panel con controles A−/A+ .
+// Montado en el Navbar (junto al ThemeToggle). Controla el tamaño del texto:
+// botón ♿ que despliega un panel con controles A−/A+ que escalan el font-size
+// del <html> (y por tanto todo el sitio, que usa rem). El alto contraste se
+// gestiona aparte: automático en modo oscuro (ver index.css) y con el botón
+// manual HighContrastToggle, también en el Navbar.
 // ============================================================================
 export default function AccessibilityWidget() {
   const [abierto, setAbierto] = useState(false); // Si el panel desplegable está visible

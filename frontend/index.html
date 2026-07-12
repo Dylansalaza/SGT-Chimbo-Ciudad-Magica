@@ -5,9 +5,44 @@
     <link rel="icon" type="image/svg+xml" href="/media/logo/logo-icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chimbo Ciudad Mágica</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800;900&display=swap" rel="stylesheet" />
+    <!-- El backend (API + imágenes de /storage, incluida la del carrusel que
+         suele ser el LCP) vive en OTRO origen (Vercel sirve el frontend; la API
+         está en su propio dominio). Este script, durante el parseo del HTML:
+           1) inyecta preconnect + dns-prefetch al origen del backend, para
+              calentar la conexión (DNS+TCP+TLS) antes de que arranque el JS;
+           2) arranca la petición de /home en paralelo con la descarga del
+              bundle de React (Home.jsx reutiliza window.__homePromise en vez de
+              volver a pedir), así la imagen del carrusel (LCP) se descubre antes.
+         Vite sustituye %VITE_API_URL% en build. Si la variable NO está definida
+         (build local sin .env), el guard hace no-op y el build NO se rompe
+         (antes los <link href="%VITE_API_URL%"> estáticos hacían fallar el build
+         entero con "URI malformed"). -->
+    <script>
+      (function () {
+        var base = '%VITE_API_URL%';
+        if (!base || base.indexOf('%') === 0) return; // sin URL en build: no-op
+        try {
+          var origen = new URL(base).origin; // para preconnect solo cuenta el host
+          ['preconnect', 'dns-prefetch'].forEach(function (rel) {
+            var l = document.createElement('link');
+            l.rel = rel;
+            l.href = origen;
+            if (rel === 'preconnect') l.crossOrigin = '';
+            document.head.appendChild(l);
+          });
+          window.__homePromise = fetch(base + '/home').then(function (r) { return r.json(); }).catch(function () { return null; });
+        } catch (e) {}
+      })();
+    </script>
+    <!-- Fuentes AUTO-HOSPEDADAS y PRECARGADAS: al servirse desde el mismo origen
+         y precargarse, están listas en el primer pintado → la fuente correcta se
+         usa desde el inicio, sin fallback→swap tardío y sin salto de layout
+         (CLS). Las @font-face están en index.css. -->
+    <link rel="preload" href="/fonts/manrope.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/playfairdisplay.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- Imagen principal del collage de bienvenida (suele ser el elemento LCP):
+         se precarga para que se descubra de inmediato y mejore el LCP. -->
+    <link rel="preload" href="/media/welcome/chimbo.webp" as="image" fetchpriority="high" />
   </head>
   <body>
     <div id="root"></div>

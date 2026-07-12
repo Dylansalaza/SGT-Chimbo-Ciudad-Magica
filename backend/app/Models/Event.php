@@ -28,4 +28,12 @@ class Event extends Model
     {
         return $this->hasOne(Gallery::class);
     }
+
+    // Al crear/editar/borrar un evento, la caché de /home queda obsoleta.
+    protected static function booted(): void
+    {
+        $olvidar = fn () => \App\Http\Controllers\HomeController::olvidarCache();
+        static::saved($olvidar);
+        static::deleted($olvidar);
+    }
 }

@@ -4,7 +4,7 @@
 <div class="w-full flex flex-col">
 
     {{-- Header de Pantalla Completa (mismo patrón que el resto del panel) --}}
-    <div class="sticky top-0 z-30 bg-[#00294d] text-white w-full px-10 py-8 shadow-lg border-b border-white/5">
+    <div class="sticky top-0 z-30 header-corporate text-white w-full px-10 shadow-lg border-b border-white/5">
         <div class="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
             <div class="space-y-1">
                 <a href="{{ route('admin.galerias.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition mb-1">
@@ -31,7 +31,7 @@
                     </h2>
                     <div>
                         <label for="title" class="block text-sm font-bold text-slate-700 mb-1.5">Título de la Galería *</label>
-                        <input type="text" name="title" id="title" value="{{ old('title', $galeria->title) }}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none text-sm transition" required>
+                        <input type="text" name="title" id="title" value="{{ old('title', $galeria->title) }}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none text-sm transition" required>
                     </div>
                 </section>
 
@@ -40,10 +40,10 @@
                     <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
                         <i class="fas fa-camera"></i> Imágenes de la galería
                     </h2>
-                    <p class="text-sm text-slate-500 -mt-2">La primera imagen tendrá la marca <i class="fas fa-star text-purple-400"></i> de Portada.</p>
+                    <p class="text-sm text-slate-500 -mt-2">La primera imagen tendrá la marca <i class="fas fa-star text-amber-400"></i> de Portada.</p>
 
-                    <div id="dropzoneArea" class="border-2 border-dashed border-purple-400 rounded-2xl p-8 sm:p-10 text-center cursor-pointer bg-slate-50/60 hover:bg-purple-50 transition">
-                        <i class="fas fa-cloud-upload-alt text-4xl text-purple-500 mb-3 block"></i>
+                    <div id="dropzoneArea" class="border-2 border-dashed border-amber-400 rounded-2xl p-8 sm:p-10 text-center cursor-pointer bg-slate-50/60 hover:bg-amber-50 transition">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-amber-500 mb-3 block"></i>
                         <p class="text-slate-600 text-sm font-medium">Arrastra más imágenes aquí o haz clic para seleccionar</p>
                         <p class="text-xs text-slate-400 mt-1">JPG, PNG, GIF (máx. 2MB por imagen)</p>
                         <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
@@ -62,7 +62,7 @@
 
                 {{-- Acciones --}}
                 <div class="flex items-center gap-3 pt-6 border-t border-slate-100">
-                    <button type="submit" id="submitBtn" class="px-6 py-2.5 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-xl text-sm transition-all shadow-md inline-flex items-center gap-2">
+                    <button type="submit" id="submitBtn" class="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-sm transition-all shadow-md inline-flex items-center gap-2">
                         <i class="fas fa-floppy-disk"></i> Guardar Cambios
                     </button>
                     <a href="{{ route('admin.galerias.index') }}" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold rounded-xl text-sm transition-all">
@@ -99,9 +99,9 @@
         dropzoneArea.addEventListener(event, e => { e.preventDefault(); e.stopPropagation(); });
     });
 
-    dropzoneArea.addEventListener('dragenter', () => dropzoneArea.classList.add('bg-purple-100'));
-    dropzoneArea.addEventListener('dragleave', () => dropzoneArea.classList.remove('bg-purple-100'));
-    dropzoneArea.addEventListener('drop',      () => dropzoneArea.classList.remove('bg-purple-100'));
+    dropzoneArea.addEventListener('dragenter', () => dropzoneArea.classList.add('bg-amber-100'));
+    dropzoneArea.addEventListener('dragleave', () => dropzoneArea.classList.remove('bg-amber-100'));
+    dropzoneArea.addEventListener('drop',      () => dropzoneArea.classList.remove('bg-amber-100'));
 
     dropzoneArea.addEventListener('drop',  e  => handleFiles(e.dataTransfer.files));
     dropzoneArea.addEventListener('click', () => fileInput.click());
@@ -131,7 +131,7 @@
         const placeholder = document.createElement('div');
         placeholder.id = `card-${idx}`;
         placeholder.className = 'relative w-full h-32 bg-gray-200 rounded-xl flex items-center justify-center border shadow-sm';
-        placeholder.innerHTML = '<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>';
+        placeholder.innerHTML = '<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-500"></div>';
         previewGrid.appendChild(placeholder);
 
         const formData = new FormData();
@@ -174,12 +174,12 @@
         const fullUrl = url.startsWith('http') ? url : '{{ url("/") }}' + url;
         const esPortada = listaImagenes[0] === url;
 
-        card.className = `relative group border-2 rounded-xl overflow-hidden bg-white shadow-sm transition transform hover:-translate-y-1 ${esPortada ? 'border-purple-500 ring-2 ring-purple-200' : 'border-gray-200'}`;
+        card.className = `relative group border-2 rounded-xl overflow-hidden bg-white shadow-sm transition transform hover:-translate-y-1 ${esPortada ? 'border-amber-500 ring-2 ring-amber-200' : 'border-gray-200'}`;
         
         card.innerHTML = `
             <img src="${fullUrl}" class="w-full h-24 object-cover">
             <div class="p-1 bg-gray-50 flex justify-between items-center gap-1">
-                <button type="button" onclick="marcarComoPortada('${url}')" class="text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 transition ${esPortada ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-purple-100'}">
+                <button type="button" onclick="marcarComoPortada('${url}')" class="text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 transition ${esPortada ? 'bg-amber-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-amber-100'}">
                     ${esPortada ? '<i class="fas fa-star"></i> Portada' : 'Definir Portada'}
                 </button>
                 <button type="button" onclick="eliminarFoto(${idx}, '${url}')" class="text-gray-400 hover:text-red-500 p-0.5 text-xs transition" title="Eliminar foto">

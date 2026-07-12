@@ -4,7 +4,7 @@
 <div class="w-full flex flex-col">
 
     {{-- Header de Pantalla Completa (mismo patrón que el resto del panel) --}}
-    <div class="sticky top-0 z-30 bg-[#00294d] text-white w-full px-10 py-8 shadow-lg border-b border-white/5">
+    <div class="sticky top-0 z-30 header-corporate text-white w-full px-10 shadow-lg border-b border-white/5">
         <div class="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
             <div class="space-y-1">
                 <a href="{{ route('admin.lugares.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition mb-1">
@@ -102,8 +102,8 @@
                         <i class="fas fa-camera"></i> Imagen del lugar
                     </h2>
 
-                    <div id="dropzoneArea" class="border-2 border-dashed border-blue-400 rounded-2xl p-8 sm:p-10 text-center cursor-pointer bg-slate-50/60 hover:bg-blue-50 transition {{ $lugar->imagen_url ? 'hidden' : '' }}">
-                        <i class="fas fa-cloud-upload-alt text-4xl text-blue-500 mb-3 block"></i>
+                    <div id="dropzoneArea" class="border-2 border-dashed border-green-400 rounded-2xl p-8 sm:p-10 text-center cursor-pointer bg-slate-50/60 hover:bg-green-50 transition {{ $lugar->imagen_url ? 'hidden' : '' }}">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-green-500 mb-3 block"></i>
                         <p class="text-slate-600 text-sm font-medium">Arrastra una nueva imagen aquí o haz clic para seleccionar</p>
                         <p class="text-xs text-slate-400 mt-1">JPG, PNG, GIF (máx. 2MB) — también puedes pegar con Ctrl+V</p>
                         <input type="file" id="fileInput" accept="image/*" style="display: none;">
@@ -111,7 +111,7 @@
 
                     <div id="previewContainer" class="{{ $lugar->imagen_url ? '' : 'hidden' }}">
                         <img id="previewImg" src="{{ $lugar->imagen_url }}" class="w-48 h-32 object-cover rounded-xl shadow-md border border-slate-200">
-                        <button type="button" id="removeImageBtn" class="mt-2 text-rose-500 text-xs font-bold hover:underline flex items-center gap-1">
+                        <button type="button" id="removeImageBtn" class="mt-2 text-red-500 text-xs font-bold hover:underline flex items-center gap-1">
                             <i class="fas fa-trash-alt"></i> Eliminar e intercambiar imagen
                         </button>
                     </div>
@@ -201,9 +201,9 @@
         });
     });
     
-    dropzoneArea.addEventListener('dragenter', () => dropzoneArea.classList.add('bg-blue-100'));
-    dropzoneArea.addEventListener('dragleave', () => dropzoneArea.classList.remove('bg-blue-100'));
-    dropzoneArea.addEventListener('drop', () => dropzoneArea.classList.remove('bg-blue-100'));
+    dropzoneArea.addEventListener('dragenter', () => dropzoneArea.classList.add('bg-green-100'));
+    dropzoneArea.addEventListener('dragleave', () => dropzoneArea.classList.remove('bg-green-100'));
+    dropzoneArea.addEventListener('drop', () => dropzoneArea.classList.remove('bg-green-100'));
     
     dropzoneArea.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files));
     dropzoneArea.addEventListener('click', () => fileInput.click());

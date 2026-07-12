@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
@@ -32,33 +33,37 @@ class PasswordResetController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
+        // MENSAJE NEUTRO SIEMPRE: no revelamos si el correo está registrado o no.
+        // Esto evita la enumeración de cuentas (un atacante no puede usar este
+        // formulario para averiguar qué correos de funcionarios existen). El
+        // token nunca se muestra en pantalla: el reset solo se hace con el
+        // enlace que llega al correo.
+        $mensajeNeutro = 'Si el correo está registrado, te enviamos un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada y la carpeta de spam.';
+
         // Buscamos por el correo principal o por el correo de recuperación.
         $user = User::where('email', $request->email)
             ->orWhere('recovery_email', $request->email)
             ->first();
 
-        // Por seguridad no revelamos si el correo existe o no, salvo para mostrar
-        // el enlace local (entorno de pruebas / municipal sin servidor de correo).
+        // Si no existe, respondemos IGUAL que si existiera (sin delatar la ausencia).
         if (! $user) {
-            return back()->withInput()->with('error', 'No existe ninguna cuenta con ese correo.');
+            return back()->with('status', $mensajeNeutro);
         }
 
-        // Generamos el token con el broker oficial (se guarda en password_reset_tokens).
+        // Generamos el token con el broker oficial (se guarda en
+        // password_reset_tokens) y enviamos el enlace por correo.
         $token = Password::broker()->createToken($user);
-        $url   = route('password.reset', ['token' => $token, 'email' => $user->email]);
 
-        // Intento de envío por correo (si MAIL está configurado). No bloquea el flujo.
         try {
             $user->sendPasswordResetNotification($token);
-            $enviado = true;
         } catch (\Throwable $e) {
-            $enviado = false;
+            // El fallo de SMTP se registra para diagnóstico del administrador,
+            // pero al cliente le damos el MISMO mensaje neutro para no filtrar
+            // que la cuenta existe.
+            Log::error('No se pudo enviar el correo de recuperación de contraseña: ' . $e->getMessage());
         }
 
-        return back()
-            ->with('reset_link', $url)
-            ->with('reset_email', $user->email)
-            ->with('reset_sent', $enviado);
+        return back()->with('status', $mensajeNeutro);
     }
 
     public function showResetForm(Request $request, string $token)

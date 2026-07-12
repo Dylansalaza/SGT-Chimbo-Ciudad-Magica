@@ -139,14 +139,19 @@ sudo -u postgres psql -d turismo -c "GRANT ALL ON SCHEMA public TO sgt;"
 ```bash
 cd /var/www/sgt-chimbo/backend
 composer install --no-dev --optimize-autoloader
-cp .env.example .env
+# Usa la plantilla de PRODUCCIÓN (trae ya los valores seguros):
+cp .env.production.example .env
 php artisan key:generate
 ```
-Edita `.env` (con `nano .env`) para producción:
+Ahora edita `.env` (con `nano .env`) y rellena los `<...>`. La plantilla
+`.env.production.example` documenta cada variable; lo mínimo imprescindible:
 ```dotenv
 APP_ENV=production
-APP_DEBUG=false
+APP_DEBUG=false                          # ⚠️ nunca true en producción
 APP_URL=https://api.tudominio.com        # o http://TU_IP
+
+# Orígenes del frontend permitidos por CORS (separa varios con comas).
+FRONTEND_URLS=https://tudominio.com
 
 DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
@@ -157,15 +162,35 @@ DB_PASSWORD=UNA_CLAVE_FUERTE
 
 QUEUE_CONNECTION=database
 SESSION_DRIVER=database
-CACHE_STORE=database
+CACHE_STORE=file                         # ⚡ NO uses "database": guardar el caché en
+                                         # PostgreSQL abre una conexión a la BD por
+                                         # request (~200ms) y bajo carga colapsa
+                                         # (100 peticiones simultáneas → ~5s). Con
+                                         # "file" el mismo caso baja a ~90ms (60x).
+                                         # Si algún día escalas a varios servidores,
+                                         # usa "redis" (aún más rápido).
+SESSION_SECURE_COOKIE=true               # cookie solo por HTTPS
+
+# Correo (recuperación de contraseña) — Gmail app-password de 16 caracteres
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_ENCRYPTION=tls
+MAIL_USERNAME=tucorreo@gmail.com
+MAIL_PASSWORD=app_password_16_chars
+MAIL_FROM_ADDRESS=tucorreo@gmail.com
 
 # Asistente virtual (IA de chat) — obtén la key en https://console.groq.com/keys
 GROQ_API_KEY=tu_key_de_groq
 GROQ_MODEL=llama-3.1-8b-instant
 
-# URL interna del servicio CLIP (mismo servidor)
+# Servicio CLIP interno + token compartido (protege /search y /refresh).
+# Genera el token con:  php artisan key:generate --show   (parte tras "base64:")
 CLIP_SERVICE_URL=http://127.0.0.1:5001
+CLIP_AUTH_TOKEN=un_token_largo_aleatorio
 ```
+> El servicio Python (Paso 5) debe arrancar con la MISMA variable
+> `CLIP_AUTH_TOKEN` en su entorno para que backend ↔ motor de IA se autentiquen.
 Crea la estructura de la BD, datos de ejemplo y el enlace de storage:
 ```bash
 php artisan migrate --force --seed
@@ -214,6 +239,10 @@ autostart=true
 autorestart=true
 stdout_logfile=/var/log/sgt-clip.log
 stderr_logfile=/var/log/sgt-clip.err.log
+; clip_service.py lee su config del ENTORNO (no del .env de Laravel).
+; El token DEBE ser el MISMO que CLIP_AUTH_TOKEN del backend/.env.
+; CLIP_HOST=127.0.0.1 lo mantiene interno (que Nginx/Laravel lo llamen local).
+environment=CLIP_HOST="127.0.0.1",CLIP_PORT="5001",LARAVEL_URL="http://127.0.0.1:8000",CLIP_AUTH_TOKEN="el_mismo_token_del_.env"
 
 [program:sgt-worker]
 command=/var/www/sgt-chimbo/backend/.venv/bin/python worker.py
@@ -259,15 +288,15 @@ certbot --nginx -d api.tudominio.com
 ```
 
 ### Paso 8 — CORS (¡importante!)
-Tu `backend/config/cors.php` hoy **solo permite `localhost:5173`**. Debes añadir
-la URL pública del frontend, o el navegador **bloqueará** las llamadas:
-```php
-'allowed_origins' => [
-    'http://localhost:5173',
-    'https://sgt-chimbo.vercel.app',   // ← tu frontend en producción
-],
+Ya **no** hace falta editar `config/cors.php`: ahora lee los orígenes permitidos
+de la variable `FRONTEND_URLS` del `.env`. Solo define la URL pública de tu
+frontend (o el navegador **bloqueará** las llamadas):
+```dotenv
+# En backend/.env  (separa varias URLs con comas)
+FRONTEND_URLS=https://sgt-chimbo.vercel.app
 ```
 Luego: `php artisan config:cache`.
+> Si no defines `FRONTEND_URLS`, en local sigue permitiendo `localhost:5173`.
 
 ---
 

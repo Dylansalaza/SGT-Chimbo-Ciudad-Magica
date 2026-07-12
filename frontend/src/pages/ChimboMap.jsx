@@ -85,7 +85,7 @@ const crearIconoPin = (c1, c2, tam = 36) => L.divIcon({
 });
 
 // Azul para los lugares normales; rojo (más grande) para el hallazgo de la IA.
-const iconoNormal    = crearIconoPin('#3b82f6', '#1d4ed8', 34);
+const iconoNormal    = crearIconoPin('#059c45', '#00913f', 34);
 const iconoDestacado = crearIconoPin('#f43f5e', '#be123c', 44);
 
 // Límites de navegación del mapa (esquina suroeste y noreste). Se ampliaron
@@ -267,6 +267,30 @@ export default function ChimboMap() {
 
         const lugares = state.lugares || [];
 
+        // ── Caso: grupo por categoría (miradores, parques, cascadas…) ───
+        // Llega desde el chatbot con nav.categoriaKeys = subcadenas de categoría.
+        // Filtra los lugares de esa categoría, los resalta como grupo y centra
+        // en el primero (o en el lugar concreto si vino con placeId).
+        if (nav.categoriaKeys && Array.isArray(nav.categoriaKeys) && nav.categoriaKeys.length) {
+            const keys = nav.categoriaKeys.map(k => String(k).toLowerCase());
+            const grupo = lugares.filter(l =>
+                l.categoria && keys.some(k => l.categoria.toLowerCase().includes(k))
+            );
+            if (grupo.length > 0) {
+                const primero = nav.placeId
+                    ? (grupo.find(g => String(g.id) === String(nav.placeId)) || grupo[0])
+                    : grupo[0];
+                if (typeof state.setMapCenter === 'function') {
+                    state.setMapCenter([parseFloat(primero.lat), parseFloat(primero.lng)]);
+                    if (typeof state.setMapZoom === 'function') state.setMapZoom(15);
+                }
+                // _foodGroup es el nombre interno del "grupo a mostrar/resaltar";
+                // sirve para cualquier categoría, no solo comida.
+                setChatbotHighlight({ ...primero, _foodGroup: grupo });
+            }
+            return;
+        }
+
         // ── Caso: "lugares de comer en el mapa" (showFood) ──────────────
         if (nav.showFood) {
             const FOOD_KEYS = ['gastro', 'restaurante', 'comida', 'cafetería', 'cafeteria',
@@ -357,8 +381,8 @@ export default function ChimboMap() {
 
     if (state.cargando) {
         return (
-            <div className="flex flex-col items-center justify-center py-32 text-gray-500 dark:text-gray-400 font-medium">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mb-4" />
+            <div className="flex flex-col items-center justify-center min-h-screen text-gray-500 dark:text-gray-400 font-medium">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-500 mb-4" />
                 <p>Cargando mapas y registros del sistema...</p>
             </div>
         );
@@ -416,18 +440,21 @@ export default function ChimboMap() {
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-6 font-sans">
-            <h1 className="font-serif text-3xl font-bold text-center mb-6 text-gray-800 dark:text-white">San José de Chimbo</h1>
+            <div className="text-center mb-6 animate-fade-in-up">
+                <span className="inline-block h-1 w-24 rounded-full brand-gradient-animated mb-3" />
+                <h1 className="font-serif text-3xl font-bold text-gray-800 dark:text-white">San José de Chimbo</h1>
+            </div>
 
             <div className="flex flex-col lg:flex-row gap-5">
-                
+
                 {/* 🛠️ PANEL DE CONTROLES */}
-                <div className="lg:w-64 flex flex-col gap-4 shrink-0">
+                <div className="lg:w-64 flex flex-col gap-4 shrink-0 animate-fade-in-up">
                     
                     {/* Buscador por Red Neuronal (IA) */}
-                    <div className="bg-gradient-to-b from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-800 rounded-xl p-4 shadow-sm border border-blue-100 dark:border-gray-700">
+                    <div className="bg-gradient-to-b from-green-50 to-gold-50 dark:from-gray-800 dark:to-gray-800 rounded-xl p-4 shadow-sm border border-green-100 dark:border-gray-700">
                         <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3 text-center flex items-center justify-center gap-1.5"><CpuChipIcon className="w-4 h-4" /> Buscar por imagen (IA)</p>
 
-                        <div {...getRootProps()} className={`border-2 border-dashed rounded-lg p-3 text-center cursor-pointer transition-all mb-3 ${isDragActive ? 'border-blue-500 bg-blue-100 dark:bg-blue-900/30' : state.uploadedImage ? 'border-green-400 bg-green-50 dark:bg-green-900/20' : 'border-gray-300 dark:border-gray-600 hover:border-blue-400 bg-white dark:bg-[#242424]'}`}>
+                        <div {...getRootProps()} className={`border-2 border-dashed rounded-lg p-3 text-center cursor-pointer transition-all mb-3 ${isDragActive ? 'border-green-500 bg-green-100 dark:bg-green-900/30' : state.uploadedImage ? 'border-green-400 bg-green-50 dark:bg-green-900/20' : 'border-gray-300 dark:border-gray-600 hover:border-green-400 bg-white dark:bg-[#242424]'}`}>
                             <input {...getInputProps()} />
                             {state.uploadedImage ? (
                                 <div className="flex items-center gap-2">
@@ -447,7 +474,7 @@ export default function ChimboMap() {
                             type="button"
                             onClick={state.ejecutarBusquedaIA} 
                             disabled={!state.uploadedImage || state.searching} 
-                            className="w-full py-2 rounded-lg text-sm font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-sm disabled:opacity-50 hover:opacity-95 transition-opacity"
+                            className="btn-press w-full py-2 rounded-lg text-sm font-bold bg-gradient-to-r from-green-600 to-green-700 text-white shadow-green-md disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-95"
                         >
                             {state.searching ? 'Analizando Atractivo...' : <span className="flex items-center justify-center gap-1.5"><MagnifyingGlassIcon className="w-4 h-4" /> Identificar Destino</span>}
                         </button>
@@ -469,7 +496,7 @@ export default function ChimboMap() {
                     <div className="bg-white dark:bg-[#242424] rounded-xl shadow p-4 space-y-4 border border-gray-100 dark:border-gray-700">
                         <div>
                             <label className="flex items-center gap-1 text-xs font-bold text-gray-600 dark:text-gray-300 mb-1 tracking-wider"><MapPinIcon className="w-3.5 h-3.5" /> NAVEGAR A DESTINO</label>
-                            <select value={state.lugarSeleccionadoMenu || ""} onChange={(e) => state.seleccionarDesdeMenu(e.target.value)} className="w-full p-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-[#242424] text-gray-800 dark:text-gray-100">
+                            <select value={state.lugarSeleccionadoMenu || ""} onChange={(e) => state.seleccionarDesdeMenu(e.target.value)} className="w-full p-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none bg-white dark:bg-[#242424] text-gray-800 dark:text-gray-100">
                                 <option value="">— Selecciona —</option>
                                 {state.lugares?.map(l => <option key={l.id} value={l.id}>{l.nombre}</option>)}
                             </select>
@@ -477,14 +504,14 @@ export default function ChimboMap() {
 
                         <div>
                             <label className="flex items-center gap-1 text-xs font-bold text-gray-600 dark:text-gray-300 mb-1 tracking-wider"><MagnifyingGlassIcon className="w-3.5 h-3.5" /> TEXTO</label>
-                            <input type="text" placeholder="ej. Cascada, Iglesia..." value={state.searchTerm || ""} onChange={(e) => state.setSearchTerm(e.target.value)} className="w-full p-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50/50 dark:bg-[#242424] text-gray-800 dark:text-gray-100"/>
+                            <input type="text" placeholder="ej. Cascada, Iglesia..." value={state.searchTerm || ""} onChange={(e) => state.setSearchTerm(e.target.value)} className="w-full p-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none bg-gray-50/50 dark:bg-[#242424] text-gray-800 dark:text-gray-100"/>
                         </div>
 
                         <div>
                             <h3 className="flex items-center gap-1 text-xs font-bold text-gray-600 dark:text-gray-300 mb-2 tracking-wider"><BanknotesIcon className="w-3.5 h-3.5" /> RANGO PRECIO</h3>
                             {['todos', 'gratis', 'economico', 'premium'].map(mode => (
                                 <label key={mode} className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 capitalize cursor-pointer mb-1.5 font-medium">
-                                    <input type="radio" checked={state.filtroPrecio === mode} onChange={() => state.setFiltroPrecio(mode)} className="accent-blue-600" /> {mode}
+                                    <input type="radio" checked={state.filtroPrecio === mode} onChange={() => state.setFiltroPrecio(mode)} className="accent-green-600" /> {mode}
                                 </label>
                             ))}
                         </div>
@@ -493,7 +520,7 @@ export default function ChimboMap() {
                             <h3 className="flex items-center gap-1 text-xs font-bold text-gray-600 dark:text-gray-300 mb-2 tracking-wider"><TagIcon className="w-3.5 h-3.5" /> CATEGORÍAS</h3>
 
                             {/* Opción "Todos" */}
-                            <label className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-300 cursor-pointer mb-2 bg-blue-50 dark:bg-blue-900/30 px-2 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <label className="flex items-center gap-2 text-xs font-bold text-green-700 dark:text-green-300 cursor-pointer mb-2 bg-green-50 dark:bg-green-900/30 px-2 py-1.5 rounded-lg border border-green-200 dark:border-green-800">
                                 <input
                                     type="checkbox"
                                     checked={mostrarTodos}
@@ -502,7 +529,7 @@ export default function ChimboMap() {
                                         setMostrarTodos(nuevoEstado);
                                         if (nuevoEstado) state.setCategoriasSeleccionadas([]);
                                     }}
-                                    className="accent-blue-600 rounded"
+                                    className="accent-green-600 rounded"
                                 />
                                 Mostrar todos los lugares
                             </label>
@@ -510,7 +537,7 @@ export default function ChimboMap() {
                             {!mostrarTodos && (state.categoriasDisponibles?.length ? (
                                 state.categoriasDisponibles.map(cat => (
                                     <label key={cat} className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 cursor-pointer mb-1.5 font-medium">
-                                        <input type="checkbox" checked={state.categoriasSeleccionadas?.includes(cat)} onChange={() => state.toggleCategoria(cat)} className="accent-blue-600 rounded" /> {cat}
+                                        <input type="checkbox" checked={state.categoriasSeleccionadas?.includes(cat)} onChange={() => state.toggleCategoria(cat)} className="accent-green-600 rounded" /> {cat}
                                     </label>
                                 ))
                             ) : (
@@ -575,7 +602,7 @@ export default function ChimboMap() {
                                                     </div>
                                                 ) : (
                                                     <div
-                                                        className="w-full h-16 bg-blue-50 rounded-lg mb-2 flex items-center justify-center text-xl text-blue-400 cursor-pointer"
+                                                        className="w-full h-16 bg-green-50 rounded-lg mb-2 flex items-center justify-center text-xl text-green-400 cursor-pointer"
                                                         title="Ver detalles completos"
                                                         onClick={() => state.setModalPlace(place)}
                                                     ><PhotoIcon className="w-6 h-6" /></div>
@@ -584,7 +611,7 @@ export default function ChimboMap() {
                                                 <strong className="block text-sm text-gray-800 leading-tight mb-0.5">{place.nombre}</strong>
                                                 <p className="text-xs text-gray-500 m-0 font-medium">{place.categoria}</p>
                                                 
-                                                <button type="button" onClick={() => state.setModalPlace(place)} className="mt-2 text-xs text-blue-600 font-bold block mx-auto underline border-none bg-transparent cursor-pointer">
+                                                <button type="button" onClick={() => state.setModalPlace(place)} className="mt-2 text-xs text-green-600 font-bold block mx-auto underline border-none bg-transparent cursor-pointer">
                                                     Ver detalles completos
                                                 </button>
                                             </div>
@@ -611,7 +638,7 @@ export default function ChimboMap() {
                                     <h3 className="text-xl font-extrabold text-gray-800 dark:text-white leading-tight">{state.searchResult.nombre}</h3>
                                     <div className="flex items-center gap-2 mt-1">
                                         {state.searchResult.categoria && (
-                                            <span className="text-[10px] font-bold bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">{state.searchResult.categoria}</span>
+                                            <span className="text-[10px] font-bold bg-green-50 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">{state.searchResult.categoria}</span>
                                         )}
                                         {state.topScore != null && (
                                             <span className="flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400"><TargetIcon className="w-3.5 h-3.5" /> {Math.round(state.topScore * 100)}%</span>
@@ -619,7 +646,7 @@ export default function ChimboMap() {
                                     </div>
                                     <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mt-1.5">{state.searchResult.descripcion || state.searchResult.description || ''}</p>
                                     <div className="flex gap-2 mt-3">
-                                        <button onClick={() => state.setModalPlace(state.searchResult)} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition"><BookOpenIcon className="w-3.5 h-3.5" /> Ver detalles</button>
+                                        <button onClick={() => state.setModalPlace(state.searchResult)} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition"><BookOpenIcon className="w-3.5 h-3.5" /> Ver detalles</button>
                                         <button onClick={() => state.seleccionarDesdeMenu(state.searchResult.id)} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition"><MapPinIcon className="w-3.5 h-3.5" /> Ver en el mapa</button>
                                     </div>
                                 </div>
@@ -632,18 +659,29 @@ export default function ChimboMap() {
                             <p className="text-xs text-gray-400 mt-1">La imagen no corresponde a ningún lugar registrado.</p>
                         </div>
                     ) : state.selectedPlace && (
-                        <div onClick={() => state.setModalPlace(state.selectedPlace)} className="mt-4 p-3 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-700 rounded-xl border border-blue-100 dark:border-gray-600 cursor-pointer flex gap-4 items-center hover:shadow-sm transition-shadow animate-fadeIn">
-                            {(() => {
-                                const urlImg = resolverImagen(state.selectedPlace);
-                                return urlImg ? (
-                                    <img src={urlImg} alt="preview" loading="lazy" decoding="async" className="h-12 w-12 object-cover rounded-lg shadow-sm shrink-0" />
-                                ) : (
-                                    <div className="h-12 w-12 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0"><PhotoIcon className="w-5 h-5" /></div>
-                                );
-                            })()}
-                            <div>
-                                <h4 className="font-bold text-sm text-gray-800 dark:text-white">{state.selectedPlace.nombre}</h4>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">{state.selectedPlace.descripcion || state.selectedPlace.description || 'Haz clic para ver la ficha completa.'}</p>
+                        <div className="mt-4 bg-white dark:bg-[#242424] rounded-2xl border border-green-200 dark:border-green-800 shadow-md p-5 animate-fadeIn">
+                            <div className="flex gap-4">
+                                <div className="w-28 h-28 rounded-xl overflow-hidden shrink-0 bg-gray-100 dark:bg-gray-700">
+                                    {resolverImagen(state.selectedPlace) ? (
+                                        <img src={resolverImagen(state.selectedPlace)} alt={state.selectedPlace.nombre} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700"><PhotoIcon className="w-8 h-8" /></div>
+                                    )}
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="flex items-center gap-1 text-[11px] font-black text-green-700 dark:text-green-400 uppercase tracking-widest"><CheckCircleIcon className="w-3.5 h-3.5" /> Lugar seleccionado</p>
+                                    <h3 className="text-xl font-extrabold text-gray-800 dark:text-white leading-tight">{state.selectedPlace.nombre}</h3>
+                                    {state.selectedPlace.categoria && (
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="text-[10px] font-bold bg-green-50 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">{state.selectedPlace.categoria}</span>
+                                        </div>
+                                    )}
+                                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mt-1.5">{state.selectedPlace.descripcion || state.selectedPlace.description || ''}</p>
+                                    <div className="flex gap-2 mt-3">
+                                        <button onClick={() => state.setModalPlace(state.selectedPlace)} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition"><BookOpenIcon className="w-3.5 h-3.5" /> Ver detalles</button>
+                                        <button onClick={() => state.seleccionarDesdeMenu(state.selectedPlace.id)} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition"><MapPinIcon className="w-3.5 h-3.5" /> Ver en el mapa</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -674,7 +712,7 @@ export default function ChimboMap() {
                         </div>
                         <div className="md:w-3/5 p-7 flex flex-col justify-center">
                             {state.searchResult.categoria && (
-                                <span className="text-xs font-black uppercase tracking-[0.2em] text-blue-600">{state.searchResult.categoria}</span>
+                                <span className="text-xs font-black uppercase tracking-[0.2em] text-green-600">{state.searchResult.categoria}</span>
                             )}
                             <h2 className="text-3xl font-extrabold text-gray-800 mt-1 leading-tight">{state.searchResult.nombre}</h2>
                             <p className="text-gray-600 mt-3 leading-relaxed line-clamp-3">
@@ -682,7 +720,7 @@ export default function ChimboMap() {
                             </p>
                             <div className="flex flex-wrap gap-3 mt-5">
                                 <button onClick={() => state.setModalPlace(state.searchResult)}
-                                    className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow transition">
+                                    className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-bold shadow transition">
                                     <BookOpenIcon className="w-4 h-4" /> Ver detalles completos
                                 </button>
                                 <button onClick={() => state.seleccionarDesdeMenu(state.searchResult.id)}
@@ -697,7 +735,7 @@ export default function ChimboMap() {
                     <div className="mt-8">
                         <div className="flex items-center gap-3 mb-4">
                             <h3 className="text-xl font-extrabold text-gray-800 flex items-center gap-2"><MagnifyingGlassIcon className="w-5 h-5" /> Lugares similares</h3>
-                            <span className="text-xs font-bold bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full">
+                            <span className="text-xs font-bold bg-green-50 text-green-700 px-2.5 py-1 rounded-full">
                                 {tipoSimilares === 'categoria' ? state.searchResult.categoria : 'parecidos a tu foto'}
                             </span>
                             <span className="flex-1 border-t border-gray-200" />
@@ -716,9 +754,9 @@ export default function ChimboMap() {
                                             )}
                                         </div>
                                         <div className="p-3.5">
-                                            <p className="font-bold text-sm text-gray-800 leading-tight line-clamp-1 group-hover:text-blue-600 transition-colors">{s.nombre}</p>
+                                            <p className="font-bold text-sm text-gray-800 leading-tight line-clamp-1 group-hover:text-green-600 transition-colors">{s.nombre}</p>
                                             <p className="text-xs text-gray-400 mt-0.5">{s.categoria}</p>
-                                            <p className="text-xs text-blue-500 font-semibold mt-2 flex items-center gap-1 group-hover:gap-2 transition-all">Ver en el mapa <ArrowRightIcon className="w-3 h-3" /></p>
+                                            <p className="text-xs text-green-500 font-semibold mt-2 flex items-center gap-1 group-hover:gap-2 transition-all">Ver en el mapa <ArrowRightIcon className="w-3 h-3" /></p>
                                         </div>
                                     </div>
                                 ))}
@@ -742,8 +780,8 @@ export default function ChimboMap() {
                         {(() => {
                             const urlImg = resolverImagen(state.modalPlace);
                             return urlImg ? (
-                                <div className="w-full h-64 overflow-hidden rounded-xl mb-4 shadow-xs">
-                                    <img src={urlImg} alt={state.modalPlace.nombre} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                                <div className="w-full rounded-xl mb-4 shadow-xs bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                                    <img src={urlImg} alt={state.modalPlace.nombre} loading="lazy" decoding="async" className="max-w-full max-h-[60vh] object-contain" />
                                 </div>
                             ) : (
                                 <div className="w-full h-40 bg-gray-100 dark:bg-gray-700 rounded-xl mb-4 flex items-center justify-center text-gray-400 dark:text-gray-500"><PhotoIcon className="w-10 h-10" /></div>
@@ -758,13 +796,13 @@ export default function ChimboMap() {
                                 className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
                                     hablando
                                         ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-300'
-                                        : 'bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/40 dark:text-blue-300'
+                                        : 'bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/40 dark:text-green-300'
                                 }`}
                             >
                                 {hablando ? <><StopIcon className="w-3.5 h-3.5" /> Detener</> : <><SpeakerWaveIcon className="w-3.5 h-3.5" /> Escuchar</>}
                             </button>
                         </div>
-                        <span className="inline-block bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold px-2.5 py-1 rounded-md mb-4 border border-blue-100 dark:border-blue-800">{state.modalPlace.categoria}</span>
+                        <span className="inline-block bg-green-50 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs font-bold px-2.5 py-1 rounded-md mb-4 border border-green-100 dark:border-green-800">{state.modalPlace.categoria}</span>
 
                         <h3 className="flex items-center gap-1 text-xs font-bold text-gray-400 uppercase tracking-wider mb-1"><BookOpenIcon className="w-3.5 h-3.5" /> Descripción del Atractivo:</h3>
                         <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">{state.modalPlace.descripcion || state.modalPlace.description || 'Sin descripción detallada registrada.'}</p>
@@ -789,7 +827,7 @@ export default function ChimboMap() {
                             >
                                 <TruckIcon className="w-4 h-4" /> Cómo llegar (en carro) <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5" />
                             </button>
-                            <button type="button" onClick={cerrarModalPlace} className="px-5 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors">Cerrar Ficha</button>
+                            <button type="button" onClick={cerrarModalPlace} className="px-5 py-2 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700 transition-colors">Cerrar Ficha</button>
                         </div>
                     </div>
                 </div>

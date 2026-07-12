@@ -12,17 +12,12 @@ use App\Http\Controllers\Admin\CategoriaLugarController;
 use App\Http\Controllers\Admin\ChatFaqController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\AuthController;
-// 🟢 1. IMPORTAMOS EL CONTROLADOR DEL BUSCADOR
-use App\Http\Controllers\ImageSearchController; 
 use Illuminate\Support\Facades\Route;
 
-// =========================================================
-// 🔍 RUTAS DEL BUSCADOR VISUAL (PÚBLICAS)
-// =========================================================
-// Recibe la imagen e inicia el procesamiento (Worker Python)
-Route::post('/search', [ImageSearchController::class, 'store'])->name('search.store');
-// Consulta el estado y resultado del procesamiento
-Route::get('/search/{id}', [ImageSearchController::class, 'show'])->name('search.show');
+// NOTA: la búsqueda visual real vive en routes/api.php (POST /api/image-search y
+// GET /api/image-search/status/{id}). Las antiguas rutas web /search apuntaban a
+// métodos inexistentes del controlador (daban error 500) y nadie las usaba, por
+// eso se eliminaron.
 
 // =========================================================
 // 🛡️ RUTAS DEL PANEL DE ADMINISTRADOR (PRIVADAS)
@@ -90,15 +85,22 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->g
         Route::put('faqs/{id}',    [ChatFaqController::class, 'update'])->name('faqs.update');
         Route::delete('faqs/{id}', [ChatFaqController::class, 'destroy'])->name('faqs.destroy');
 
-        // 📊 Reportes
-        Route::get('reportes/visitas',     [ReporteController::class, 'visitas'])->name('reportes.visitas');
-        Route::get('reportes/visitas/csv', [ReporteController::class, 'visitasCsv'])->name('reportes.visitas.csv');
+        // 📊 Reportes (hub + vista en pantalla + PDF institucional por cada uno)
+        Route::get('reportes',                [ReporteController::class, 'index'])->name('reportes.index');
+        Route::get('reportes/visitas',        [ReporteController::class, 'visitas'])->name('reportes.visitas');
+        Route::get('reportes/visitas/pdf',    [ReporteController::class, 'visitasPdf'])->name('reportes.visitas.pdf');
+        Route::get('reportes/visitas/csv',    [ReporteController::class, 'visitasCsv'])->name('reportes.visitas.csv');
+        Route::get('reportes/eventos',        [ReporteController::class, 'eventos'])->name('reportes.eventos');
+        Route::get('reportes/eventos/pdf',    [ReporteController::class, 'eventosPdf'])->name('reportes.eventos.pdf');
+        Route::get('reportes/noticias',       [ReporteController::class, 'noticias'])->name('reportes.noticias');
+        Route::get('reportes/noticias/pdf',   [ReporteController::class, 'noticiasPdf'])->name('reportes.noticias.pdf');
+        Route::get('reportes/lugares',        [ReporteController::class, 'lugares'])->name('reportes.lugares');
+        Route::get('reportes/lugares/pdf',    [ReporteController::class, 'lugaresPdf'])->name('reportes.lugares.pdf');
 
         // 🏠 Editor del Home
         Route::get('home',                [AdminHomeController::class, 'edit'])->name('home.edit');
         Route::put('home',                [AdminHomeController::class, 'update'])->name('home.update');
         Route::post('home/upload',        [AdminHomeController::class, 'upload'])->name('home.upload');
-        Route::delete('home/images/{nombre}', [AdminHomeController::class, 'destroyImage'])->name('home.images.destroy');
     });
 });
 
@@ -109,16 +111,16 @@ Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
 
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // =========================================================
 // 🔑 RECUPERACIÓN DE CONTRASEÑA POR CORREO
 // =========================================================
 Route::get('/forgot-password',  [PasswordResetController::class, 'showForgotForm'])->name('password.request');
-Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->middleware('throttle:6,1')->name('password.email');
 Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
-Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->middleware('throttle:6,1')->name('password.update');
 
 // =========================================================
 // 🖼️ SERVIDOR DE IMÁGENES (RESPALDO)
@@ -128,9 +130,18 @@ Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']
 // SIEMPRE se ven aunque falte el symlink.
 // =========================================================
 Route::get('/storage/{ruta}', function (string $ruta) {
-    $absoluta = storage_path('app/public/' . $ruta);
+    // 🛡️ Blindaje contra path traversal (../../.env, /etc/passwd, código fuente…):
+    // resolvemos la ruta real y exigimos que quede DENTRO de storage/app/public.
+    $base     = realpath(storage_path('app/public'));
+    $absoluta = realpath($base . DIRECTORY_SEPARATOR . $ruta);
 
-    abort_unless(is_file($absoluta), 404);
+    abort_unless(
+        $base !== false
+            && $absoluta !== false
+            && is_file($absoluta)
+            && str_starts_with($absoluta, $base . DIRECTORY_SEPARATOR),
+        404
+    );
 
     return response()->file($absoluta);
 })->where('ruta', '.*')->name('storage.fallback');

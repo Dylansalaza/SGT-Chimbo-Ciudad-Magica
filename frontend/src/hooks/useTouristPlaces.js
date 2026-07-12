@@ -7,6 +7,22 @@ const MIN_SCORE_LABEL = 0.25;   // por debajo de esto mostramos "baja confianza"
 
 const api = axios.create({ baseURL: API_BASE });
 
+// ── Clasificación del precio (texto libre → categoría de filtro) ──
+// En el admin el precio se escribe a mano ("Gratis", "$5", "$20", "Variable"…),
+// así que no es un número. Esta función lo interpreta y lo mapea a una de las
+// categorías del filtro del mapa. Los precios "Variable"/desconocidos solo
+// aparecen bajo "todos".
+function categoriaPrecio(raw) {
+    const s = String(raw ?? '').trim().toLowerCase();
+    if (s === '' || s === 'gratis' || s === 'free' || s === 'libre') return 'gratis';
+    // Extrae el primer número, ignorando símbolos ("$5" → 5, "$ 20,00" → 20).
+    const num = parseFloat(s.replace(',', '.').replace(/[^0-9.]/g, ''));
+    if (Number.isNaN(num)) return 'desconocido';   // p. ej. "Variable"
+    if (num === 0)   return 'gratis';
+    if (num <= 10)   return 'economico';
+    return 'premium';
+}
+
 // ============================================================================
 // HOOK: useTouristPlaces
 // Centraliza TODO el estado y la lógica de datos del mapa (ChimboMap.jsx):
@@ -80,12 +96,10 @@ export function useTouristPlaces() {
             const texto = `${place.nombre} ${place.descripcion || ''}`.toLowerCase();
             const matchText  = texto.includes(searchTerm.toLowerCase());
             const matchCat   = categoriasSeleccionadas.length === 0 || categoriasSeleccionadas.includes(place.categoria);
-            const precio     = parseFloat(place.precio || place.costo || 0);
             const matchPrecio =
-                filtroPrecio === 'todos'     ? true :
-                filtroPrecio === 'gratis'    ? precio === 0 :
-                filtroPrecio === 'economico' ? precio > 0 && precio <= 10 :
-                filtroPrecio === 'premium'   ? precio > 10 : true;
+                filtroPrecio === 'todos'
+                    ? true
+                    : categoriaPrecio(place.precio ?? place.costo) === filtroPrecio;
             return matchText && matchCat && matchPrecio;
         });
     }, [lugares, searchTerm, categoriasSeleccionadas, filtroPrecio]);

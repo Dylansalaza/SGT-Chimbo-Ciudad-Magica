@@ -4,7 +4,7 @@
 <div class="w-full flex flex-col">
 
     {{-- Header de Pantalla Completa (mismo patrón que el resto del panel) --}}
-    <div class="sticky top-0 z-30 bg-[#00294d] text-white w-full px-10 py-8 shadow-lg border-b border-white/5">
+    <div class="sticky top-0 z-30 header-corporate text-white w-full px-10 shadow-lg border-b border-white/5">
         <div class="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
             <div class="space-y-1">
                 <a href="{{ route('admin.noticias.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition mb-1">
@@ -30,14 +30,11 @@
                     </h2>
                     <div>
                         <label for="title" class="block text-sm font-bold text-slate-700 mb-1.5">Título *</label>
-                        <input type="text" name="title" id="title" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none text-sm transition" required>
+                        <input type="text" name="title" id="title" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-green-600 focus:ring-2 focus:ring-green-600/20 outline-none text-sm transition" required>
                     </div>
                     <div>
                         <label for="categoria" class="block text-sm font-bold text-slate-700 mb-1.5">Categoría</label>
-                        <input type="text" name="categoria" id="categoria" list="cats-noticias" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none text-sm transition" placeholder="Ej: Política, Cultura, Deportes...">
-                        <datalist id="cats-noticias">
-                            <option value="Política"><option value="Cultura"><option value="Deportes"><option value="Comunidad"><option value="Turismo"><option value="Economía">
-                        </datalist>
+                        @include('admin.partials.categoria-select', ['categorias' => $categorias])
                     </div>
                 </section>
 
@@ -48,7 +45,7 @@
                     </h2>
                     <div>
                         <label for="body" class="block text-sm font-bold text-slate-700 mb-1.5">Contenido *</label>
-                        <textarea name="body" id="body" rows="7" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none text-sm leading-relaxed transition" required></textarea>
+                        <textarea name="body" id="body" rows="7" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-green-600 focus:ring-2 focus:ring-green-600/20 outline-none text-sm leading-relaxed transition" required></textarea>
                     </div>
                 </section>
 
@@ -60,11 +57,11 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div>
                             <label for="published_date" class="block text-sm font-bold text-slate-700 mb-1.5">Fecha</label>
-                            <input type="date" name="published_date" id="published_date" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none text-sm transition">
+                            <input type="date" name="published_date" id="published_date" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-green-600 focus:ring-2 focus:ring-green-600/20 outline-none text-sm transition">
                         </div>
                         <div>
                             <label for="published_time" class="block text-sm font-bold text-slate-700 mb-1.5">Hora</label>
-                            <input type="time" name="published_time" id="published_time" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none text-sm transition">
+                            <input type="time" name="published_time" id="published_time" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-green-600 focus:ring-2 focus:ring-green-600/20 outline-none text-sm transition">
                         </div>
                     </div>
                 </section>
@@ -72,21 +69,22 @@
                 {{-- Sección: Multimedia --}}
                 <section class="space-y-5">
                     <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
-                        <i class="fas fa-camera"></i> Imagen de portada
+                        <i class="fas fa-photo-film"></i> Portada (imagen o video)
                     </h2>
 
-                    <div id="dropzoneArea" class="border-2 border-dashed border-emerald-400 rounded-2xl p-8 sm:p-10 text-center cursor-pointer bg-slate-50/60 hover:bg-emerald-50 transition">
-                        <i class="fas fa-cloud-upload-alt text-4xl text-emerald-500 mb-3 block"></i>
-                        <p class="text-slate-600 text-sm font-medium">Arrastra una imagen aquí o haz clic para seleccionar</p>
-                        <p class="text-xs text-slate-400 mt-1">JPG, PNG, GIF (máx. 2MB)</p>
-                        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                    <div id="dropzoneArea" class="border-2 border-dashed border-green-400 rounded-2xl p-8 sm:p-10 text-center cursor-pointer bg-slate-50/60 hover:bg-green-50 transition">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-green-500 mb-3 block"></i>
+                        <p class="text-slate-600 text-sm font-medium">Arrastra una imagen o video aquí o haz clic para seleccionar</p>
+                        <p class="text-xs text-slate-400 mt-1">JPG, PNG, GIF, WebP o video MP4/WebM/MOV (máx. 40MB)</p>
+                        <input type="file" id="fileInput" accept="image/*,video/*" style="display: none;">
                     </div>
 
                     <div id="previewContainer" class="hidden">
-                        <img id="previewImg" class="w-32 h-32 object-cover rounded-xl shadow border border-slate-200">
-                        <p id="previewUrl" class="text-xs text-emerald-600 mt-2"></p>
-                        <button type="button" id="removeImageBtn" class="mt-1 text-rose-500 text-xs font-bold hover:underline flex items-center gap-1">
-                            <i class="fas fa-trash-alt"></i> Eliminar imagen
+                        <img id="previewImg" class="hidden w-32 h-32 object-cover rounded-xl shadow border border-slate-200">
+                        <video id="previewVideo" class="hidden w-48 rounded-xl shadow border border-slate-200" controls muted></video>
+                        <p id="previewUrl" class="text-xs text-green-600 mt-2"></p>
+                        <button type="button" id="removeImageBtn" class="mt-1 text-red-500 text-xs font-bold hover:underline flex items-center gap-1">
+                            <i class="fas fa-trash-alt"></i> Eliminar archivo
                         </button>
                     </div>
 
@@ -100,7 +98,7 @@
 
                 {{-- Acciones --}}
                 <div class="flex items-center gap-3 pt-6 border-t border-slate-100">
-                    <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-all shadow-md inline-flex items-center gap-2">
+                    <button type="submit" class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl text-sm transition-all shadow-md inline-flex items-center gap-2">
                         <i class="fas fa-paper-plane"></i> Publicar Noticia
                     </button>
                     <a href="{{ route('admin.noticias.index') }}" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold rounded-xl text-sm transition-all">
@@ -118,9 +116,13 @@
     const fileInput        = document.getElementById('fileInput');
     const previewContainer = document.getElementById('previewContainer');
     const previewImg       = document.getElementById('previewImg');
+    const previewVideo     = document.getElementById('previewVideo');
     const previewUrl       = document.getElementById('previewUrl');
     const imageUrlInput    = document.getElementById('imageUrl');
     const removeImageBtn   = document.getElementById('removeImageBtn');
+
+    const MAX_MB = 40;
+    const esVideoUrl = (u) => /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(u || '');
 
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
         dropzoneArea.addEventListener(event, e => { e.preventDefault(); e.stopPropagation(); });
@@ -139,12 +141,12 @@
 
         const file = files[0];
 
-        if (!file.type.startsWith('image/')) {
-            alert('Solo se permiten archivos de imagen');
+        if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+            alert('Solo se permiten imágenes o videos');
             return;
         }
-        if (file.size > 2 * 1024 * 1024) {
-            alert('La imagen no puede superar los 2MB');
+        if (file.size > MAX_MB * 1024 * 1024) {
+            alert('El archivo no puede superar los ' + MAX_MB + 'MB');
             return;
         }
 
@@ -162,8 +164,7 @@
 
             if (data.url) {
                 imageUrlInput.value = data.url;
-                previewImg.src = '{{ url("/") }}' + data.url;
-                previewUrl.textContent = 'Imagen subida: ' + data.url;
+                mostrarPreview(data.url);
                 previewContainer.classList.remove('hidden');
                 dropzoneArea.style.display = 'none';
             } else {
@@ -171,15 +172,34 @@
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al subir la imagen: ' + error.message);
+            alert('Error al subir el archivo: ' + error.message);
         }
 
         fileInput.value = '';
     }
 
+    // Muestra la vista previa como <video> o <img> según la extensión de la URL.
+    function mostrarPreview(url) {
+        const full = '{{ url("/") }}' + url;
+        if (esVideoUrl(url)) {
+            previewVideo.src = full;
+            previewVideo.classList.remove('hidden');
+            previewImg.classList.add('hidden');
+            previewImg.src = '';
+            previewUrl.textContent = 'Video subido: ' + url;
+        } else {
+            previewImg.src = full;
+            previewImg.classList.remove('hidden');
+            previewVideo.classList.add('hidden');
+            previewVideo.src = '';
+            previewUrl.textContent = 'Imagen subida: ' + url;
+        }
+    }
+
     removeImageBtn.addEventListener('click', () => {
         imageUrlInput.value = '';
         previewImg.src      = '';
+        previewVideo.src    = '';
         previewContainer.classList.add('hidden');
         dropzoneArea.style.display = 'block';
     });

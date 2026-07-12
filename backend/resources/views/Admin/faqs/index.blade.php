@@ -26,7 +26,7 @@
                         value="{{ old('keyword') }}"
                         placeholder="Ej: horario, precio, wifi, baños…"
                         required
-                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                     >
                     <p class="text-xs text-slate-400 mt-1">El asistente responde si el mensaje del visitante contiene esta palabra (sin importar mayúsculas/acentos).</p>
                 </div>
@@ -37,11 +37,11 @@
                         rows="4"
                         placeholder="Texto que el asistente responderá…"
                         required
-                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                     >{{ old('answer') }}</textarea>
                 </div>
                 <button type="submit"
-                    class="w-full py-2.5 bg-[#00294d] hover:bg-blue-900 text-white font-bold rounded-lg text-sm transition">
+                    class="w-full py-2.5 bg-[#00913f] hover:bg-green-900 text-white font-bold rounded-lg text-sm transition">
                     Crear palabra clave
                 </button>
             </form>
@@ -62,10 +62,10 @@
                     <div class="faq-item border border-slate-200 rounded-xl p-3.5">
                         <div class="faq-vista">
                             <div class="flex items-start justify-between gap-2">
-                                <span class="text-sm font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">{{ $faq->keyword }}</span>
+                                <span class="text-sm font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded">{{ $faq->keyword }}</span>
                                 <div class="flex gap-1 shrink-0">
                                     <button type="button" onclick="toggleEditarFaq(this, true)"
-                                        class="text-xs text-slate-500 hover:text-blue-700 font-semibold px-2 py-1 rounded hover:bg-blue-50 transition">
+                                        class="text-xs bg-black text-white hover:bg-slate-800 font-semibold px-2 py-1 rounded transition">
                                         Editar
                                     </button>
                                     <form method="POST" action="{{ route('admin.faqs.destroy', $faq->id) }}"
@@ -86,11 +86,11 @@
                             @csrf
                             @method('PUT')
                             <input type="text" name="keyword" value="{{ $faq->keyword }}" required
-                                class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-sm font-bold text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-sm font-bold text-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
                             <textarea name="answer" rows="3" required
-                                class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">{{ $faq->answer }}</textarea>
+                                class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">{{ $faq->answer }}</textarea>
                             <div class="flex gap-2">
-                                <button type="submit" class="flex-1 py-1.5 bg-[#00294d] hover:bg-blue-900 text-white font-bold rounded-lg text-xs transition">Guardar</button>
+                                <button type="submit" class="flex-1 py-1.5 bg-[#00913f] hover:bg-green-900 text-white font-bold rounded-lg text-xs transition">Guardar</button>
                                 <button type="button" onclick="toggleEditarFaq(this, false)" class="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg text-xs transition">Cancelar</button>
                             </div>
                         </form>

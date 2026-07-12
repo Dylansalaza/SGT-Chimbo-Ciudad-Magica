@@ -19,14 +19,38 @@ class NoticiaController extends Controller
     /** Lista todas las noticias para la tabla del admin. */
     public function index()
     {
-        $noticias = News::orderBy('created_at', 'desc')->get();
+        // Ordena por la FECHA de la noticia (más reciente arriba). Si dos comparten
+        // fecha —o alguna no tiene fecha— se desempata por la de creación.
+        $noticias = News::orderByDesc('published_at')->orderByDesc('created_at')->get();
         return view('admin.noticias.index', compact('noticias'));
     }
 
     /** Muestra el formulario para redactar una noticia nueva. */
     public function create()
     {
-        return view('admin.noticias.create');
+        return view('admin.noticias.create', ['categorias' => $this->categoriasDisponibles()]);
+    }
+
+    /**
+     * Lista de categorías para el <select> de noticias: combina un conjunto
+     * base con las que ya se han usado en noticias existentes, sin duplicados
+     * y ordenadas alfabéticamente.
+     */
+    private function categoriasDisponibles(): array
+    {
+        $base = ['Política', 'Cultura', 'Deportes', 'Comunidad', 'Turismo', 'Economía'];
+
+        $usadas = News::query()
+            ->whereNotNull('categoria')
+            ->where('categoria', '!=', '')
+            ->distinct()
+            ->pluck('categoria')
+            ->all();
+
+        $todas = array_unique(array_merge($base, $usadas));
+        sort($todas, SORT_NATURAL | SORT_FLAG_CASE);
+
+        return $todas;
     }
 
     /** Valida y guarda una noticia nueva, combinando fecha+hora de publicación. */
@@ -71,7 +95,10 @@ class NoticiaController extends Controller
     public function edit($id)
     {
         $noticia = News::findOrFail($id);
-        return view('admin.noticias.edit', compact('noticia'));
+        return view('admin.noticias.edit', [
+            'noticia'    => $noticia,
+            'categorias' => $this->categoriasDisponibles(),
+        ]);
     }
 
     /**
@@ -149,12 +176,20 @@ class NoticiaController extends Controller
             return response()->json(['error' => 'No se recibió ningún archivo'], 400);
         }
 
+        // Acepta imágenes y también video (MP4/WebM/MOV/OGG). El tope de 40 MB
+        // va en línea con los límites de PHP (upload_max_filesize/post_max_size).
         $request->validate([
-            'file' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            // Nota: algunos MP4 los detecta PHP (finfo) como "application/mp4"
+            // en vez de "video/mp4"; incluimos ambos para no rechazarlos.
+            'file' => 'required|file|mimetypes:image/jpeg,image/png,image/gif,image/webp,video/mp4,application/mp4,video/webm,video/quicktime,video/x-msvideo,video/ogg,application/ogg|max:40960',
+        ], [
+            'file.mimetypes' => 'Formato no permitido. Sube una imagen (JPG, PNG, GIF, WebP) o un video (MP4, WebM, MOV).',
+            'file.max'       => 'El archivo supera el máximo de 40 MB.',
         ]);
 
         $file = $request->file('file');
-        // Convierte la foto a WebP (más liviano) cuando es posible.
+        // Convierte la foto a WebP (más liviano) cuando es posible; los videos y
+        // otros no-imagen se guardan tal cual (ImageOptimizer hace el fallback).
         $path = \App\Support\ImageOptimizer::storeWebp($file, 'noticias');
 
         return response()->json(['url' => '/storage/' . $path]);

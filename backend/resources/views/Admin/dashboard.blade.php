@@ -3,18 +3,18 @@
 @section('content')
 <div class="w-full flex flex-col">
     
-    {{-- Header de Pantalla Completa --}}
-    <div class="sticky top-0 z-50 bg-[#00294d] text-white w-full px-10 py-8 shadow-lg border-b border-white/5">
+    {{-- Header de Pantalla Completa (mismo verde profundo del sidebar) --}}
+    <div class="sticky top-0 z-50 header-corporate text-white w-full px-10 shadow-lg border-b border-white/5">
         <div class="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
             <div class="space-y-1">
                 <h1 class="font-serif text-2xl font-extrabold tracking-tight md:text-3xl">Panel de Control General</h1>
                 <p class="text-sm text-slate-300 font-medium">Monitoreo en tiempo real del tráfico, estadísticas generales y estado de los módulos del Sistema de Gestión Turística.</p>
             </div>
             <div class="flex items-center gap-3 self-start sm:self-center">
-                <a href="{{ route('admin.reportes.visitas') }}" target="_blank" class="inline-flex items-center gap-2 bg-white text-[#00294d] px-5 py-2.5 rounded-xl text-xs font-black tracking-wider shadow-md uppercase hover:bg-slate-100 transition">
-                    <i class="fas fa-file-pdf"></i> Reporte de visitas (PDF)
+                <a href="{{ route('admin.reportes.index') }}" class="inline-flex items-center gap-2 bg-white text-[#00913f] px-5 py-2.5 rounded-xl text-xs font-black tracking-wider shadow-md uppercase hover:bg-slate-100 transition">
+                    <i class="fas fa-chart-line"></i> Reportes
                 </a>
-                <div class="inline-flex items-center gap-3 bg-emerald-600 border border-emerald-500 text-white px-5 py-2.5 rounded-xl text-xs font-black tracking-wider shadow-md uppercase">
+                <div class="inline-flex items-center gap-3 bg-green-600 border border-green-500 text-white px-5 py-2.5 rounded-xl text-xs font-black tracking-wider shadow-md uppercase">
                     <span class="w-2.5 h-2.5 bg-white rounded-full animate-ping"></span>
                     SISTEMA EN LÍNEA
                 </div>
@@ -41,13 +41,13 @@
                 </div>
                 <div>
                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Estado de Cuenta</p>
-                    <p class="text-sm font-bold text-emerald-600 mt-0.5 flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Activo
+                    <p class="text-sm font-bold text-green-600 mt-0.5 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span> Activo
                     </p>
                 </div>
                 <div>
                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Rol Asignado</p>
-                    <p class="text-sm font-black text-blue-600 mt-0.5 uppercase tracking-wide">
+                    <p class="text-sm font-black text-green-600 mt-0.5 uppercase tracking-wide">
                         {{ Auth::user()->role ?? 'ADMINISTRADOR' }}
                     </p>
                 </div>
@@ -73,12 +73,12 @@
             <div class="bg-white rounded-2xl p-6 card-premium-shadow flex items-center justify-between">
                 <div class="space-y-1">
                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Visitas del Mes</p>
-                    <h3 class="text-3xl font-black text-blue-600 tracking-tight">
+                    <h3 class="text-3xl font-black text-green-600 tracking-tight">
                         {{ number_format($monthVisits ?? 0) }}
                     </h3>
-                    <p class="text-xs text-blue-600 font-medium"><i class="fas fa-calendar-days"></i> Tráfico Mensual</p>
+                    <p class="text-xs text-green-600 font-medium"><i class="fas fa-calendar-days"></i> Tráfico Mensual</p>
                 </div>
-                <div class="w-12 h-12 bg-blue-50/50 rounded-xl flex items-center justify-center text-blue-500 text-base border border-blue-100/50">
+                <div class="w-12 h-12 bg-green-50/50 rounded-xl flex items-center justify-center text-green-500 text-base border border-green-100/50">
                     <i class="fas fa-calendar-alt"></i>
                 </div>
             </div>
@@ -86,12 +86,12 @@
             <div class="bg-white rounded-2xl p-6 card-premium-shadow flex items-center justify-between">
                 <div class="space-y-1">
                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Visitas de Hoy</p>
-                    <h3 class="text-3xl font-black text-emerald-600 tracking-tight">
+                    <h3 class="text-3xl font-black text-green-600 tracking-tight">
                         {{ number_format($todayVisits ?? 0) }}
                     </h3>
-                    <p class="text-xs text-emerald-600 font-medium"><i class="fas fa-bolt"></i> Tráfico Diario</p>
+                    <p class="text-xs text-green-600 font-medium"><i class="fas fa-bolt"></i> Tráfico Diario</p>
                 </div>
-                <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 text-base border border-emerald-100">
+                <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-500 text-base border border-green-100">
                     <i class="fas fa-bolt"></i>
                 </div>
             </div>
@@ -123,7 +123,7 @@
                 <div class="space-y-3">
                     <div class="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl border border-gray-100">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center text-xs">
+                            <div class="w-8 h-8 rounded-lg bg-green-50 border border-green-100 text-green-600 flex items-center justify-center text-xs">
                                 <i class="fas fa-calendar-alt"></i>
                             </div>
                             <span class="text-sm font-bold text-gray-700">Eventos</span>
@@ -133,7 +133,7 @@
 
                     <div class="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl border border-gray-100">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center text-xs">
+                            <div class="w-8 h-8 rounded-lg bg-green-50 border border-green-100 text-green-600 flex items-center justify-center text-xs">
                                 <i class="fas fa-newspaper"></i>
                             </div>
                             <span class="text-sm font-bold text-gray-700">Noticias</span>
@@ -143,7 +143,7 @@
 
                     <div class="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl border border-gray-100">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-purple-50 border border-purple-100 text-purple-600 flex items-center justify-center text-xs">
+                            <div class="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center text-xs">
                                 <i class="fas fa-images"></i>
                             </div>
                             <span class="text-sm font-bold text-gray-700">Galerías</span>

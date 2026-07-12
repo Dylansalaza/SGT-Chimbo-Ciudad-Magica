@@ -7,6 +7,7 @@ use App\Models\TouristPlace;
 use App\Models\News;
 use App\Models\Event;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * API pública del contenido del Home de React.
@@ -15,7 +16,24 @@ use Illuminate\Http\JsonResponse;
  */
 class HomeController extends Controller
 {
+    /** Clave de caché de la respuesta pública de /home. */
+    public const CACHE_KEY = 'home_payload_v1';
+
     public function show(): JsonResponse
+    {
+        // La respuesta se cachea unos minutos: el contenido cambia poco (solo
+        // cuando el admin edita el Home o publica noticias/eventos), así evitamos
+        // repetir las mismas consultas en cada visita. Se invalida al instante
+        // cuando el admin guarda (ver Admin\HomeController::update → olvidarCache()).
+        $payload = Cache::remember(self::CACHE_KEY, now()->addMinutes(10), function () {
+            return $this->construirPayload();
+        });
+
+        return response()->json($payload);
+    }
+
+    /** Arma el contenido del Home (consultas a BD). Separado para poder cachearlo. */
+    private function construirPayload(): array
     {
         $settings = HomeSetting::singleton();
 
@@ -37,7 +55,7 @@ class HomeController extends Controller
         // Eventos: los elegidos por el admin, o los 3 más recientes si no eligió.
         $eventos = $this->seleccionar(Event::class, $settings->eventos_ids, 'starts_at');
 
-        return response()->json([
+        return [
             'welcome_title' => $settings->welcome_title,
             'welcome_text'  => $settings->welcome_text,
             'carousel'      => $settings->carousel ?? [],
@@ -45,7 +63,13 @@ class HomeController extends Controller
             'destacados'    => $destacados,
             'noticias'      => $noticias,
             'eventos'       => $eventos,
-        ]);
+        ];
+    }
+
+    /** Borra la caché de /home para que la próxima visita reciba datos frescos. */
+    public static function olvidarCache(): void
+    {
+        Cache::forget(self::CACHE_KEY);
     }
 
     /**

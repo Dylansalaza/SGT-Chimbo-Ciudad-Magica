@@ -1,15 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import StaggerGrid from '../components/StaggerGrid';
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
   CalendarDaysIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  PlayCircleIcon,
 } from '@heroicons/react/24/solid';
 
-const LARAVEL_URL = 'http://127.0.0.1:3000';
+// Base del backend Laravel, derivada de VITE_API_URL (quitando el sufijo /api).
+// En producción VITE_API_URL apunta al dominio HTTPS real; en local cae al 127.0.0.1.
+const LARAVEL_URL = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000/api').replace('/api', '');
 const SERIF = "'Playfair Display', Georgia, serif";
 
 // Normaliza cualquier ruta de imagen que venga del backend a una URL completa
@@ -20,6 +24,12 @@ function resolverImagen(image_url) {
     if (image_url.startsWith('http')) return image_url;
     if (image_url.startsWith('/'))    return LARAVEL_URL + image_url;
     return LARAVEL_URL + '/storage/' + image_url;
+}
+
+// Detecta si una URL corresponde a un archivo de video (para renderizar <video>
+// en vez de <img>). La portada/galería de una noticia puede ser imagen o video.
+function esVideo(url) {
+    return /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(url || '');
 }
 
 // Convierte cualquier fecha a 'YYYY-MM-DD' en horario LOCAL (no UTC)
@@ -132,7 +142,7 @@ export default function NoticiaDetalle() {
     const next = () => setImgActiva(i => (i + 1) % imgs.length);
 
     return (
-        <div className="bg-[#fcfbf7] dark:bg-[#242424] transition-colors">
+        <div>
         <div className="max-w-7xl mx-auto px-4 py-8" style={{ fontFamily: SERIF }}>
 
             {/* ===== Volver ===== */}
@@ -145,9 +155,9 @@ export default function NoticiaDetalle() {
             </button>
 
             {/* ===== Encabezado del artículo ===== */}
-            <article>
+            <article className="animate-fade-in-up">
                 {noticia.categoria && (
-                    <p className="text-center text-[11px] uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400 mb-2" style={{ fontFamily: "'Manrope', sans-serif" }}>
+                    <p className="text-center text-[11px] uppercase tracking-[0.3em] text-green-700 dark:text-green-400 mb-2 font-bold" style={{ fontFamily: "'Manrope', sans-serif" }}>
                         {noticia.categoria}
                     </p>
                 )}
@@ -166,17 +176,22 @@ export default function NoticiaDetalle() {
                     <div className="mb-8">
                         <div className="relative h-64 sm:h-80 md:h-96 bg-gray-900 overflow-hidden select-none rounded-lg">
                             {imgs.map((src, idx) => (
-                                <img key={idx} src={src} alt={`${noticia.title} ${idx + 1}`}
-                                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${idx === imgActiva ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
+                                esVideo(src) ? (
+                                    <video key={idx} src={src} controls playsInline
+                                        className={`absolute inset-0 w-full h-full object-contain bg-black transition-opacity duration-500 ${idx === imgActiva ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
+                                ) : (
+                                    <img key={idx} src={src} alt={`${noticia.title} ${idx + 1}`}
+                                        className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-500 ${idx === imgActiva ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
+                                )
                             ))}
                             {imgs.length > 1 && (
                                 <>
                                     <button onClick={prev} aria-label="Foto anterior"
-                                        className="absolute left-3 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/75 text-white rounded-full w-10 h-10 flex items-center justify-center backdrop-blur-sm transition-all hover:scale-110">
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/75 text-white rounded-full w-10 h-10 flex items-center justify-center backdrop-blur-sm transition-transform duration-200 ease-out hover:scale-110 active:scale-95">
                                         <ChevronLeftIcon className="w-5 h-5" />
                                     </button>
                                     <button onClick={next} aria-label="Foto siguiente"
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/75 text-white rounded-full w-10 h-10 flex items-center justify-center backdrop-blur-sm transition-all hover:scale-110">
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/75 text-white rounded-full w-10 h-10 flex items-center justify-center backdrop-blur-sm transition-transform duration-200 ease-out hover:scale-110 active:scale-95">
                                         <ChevronRightIcon className="w-5 h-5" />
                                     </button>
                                     <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
@@ -194,8 +209,18 @@ export default function NoticiaDetalle() {
                         {imgs.length > 1 && (
                             <div className="flex gap-2 mt-2 overflow-x-auto">
                                 {imgs.map((src, idx) => (
-                                    <img key={idx} src={src} onClick={() => setImgActiva(idx)}
-                                        className={`h-16 w-24 object-cover cursor-pointer shrink-0 rounded border-2 transition-all ${idx === imgActiva ? 'border-gray-900 dark:border-gray-300 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`} />
+                                    esVideo(src) ? (
+                                        <div key={idx} onClick={() => setImgActiva(idx)}
+                                            className={`relative h-16 w-24 cursor-pointer shrink-0 rounded border-2 overflow-hidden transition-all ${idx === imgActiva ? 'border-gray-900 dark:border-gray-300 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}>
+                                            <video src={src} muted playsInline className="h-full w-full object-cover bg-black" />
+                                            <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                <PlayCircleIcon className="w-6 h-6 text-white/90 drop-shadow" />
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <img key={idx} src={src} onClick={() => setImgActiva(idx)}
+                                            className={`h-16 w-24 object-cover cursor-pointer shrink-0 rounded border-2 transition-all ${idx === imgActiva ? 'border-gray-900 dark:border-gray-300 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`} />
+                                    )
                                 ))}
                             </div>
                         )}
@@ -210,16 +235,25 @@ export default function NoticiaDetalle() {
 
             {/* ===== Otras noticias ===== */}
             {sugeridas.length > 0 && (
-                <section className="border-t-2 border-gray-900 dark:border-gray-600 pt-6 mt-8">
+                <section className="border-t-2 border-green-800 dark:border-green-700 pt-6 mt-8">
                     <h2 className="text-center font-black text-gray-900 dark:text-white mb-6" style={{ fontSize: 'clamp(1.3rem, 3vw, 1.8rem)' }}>
                         Otras noticias
                     </h2>
-                    <div className="grid sm:grid-cols-3 gap-6" style={{ fontFamily: "'Manrope', sans-serif" }}>
+                    <StaggerGrid className="grid sm:grid-cols-3 gap-6" style={{ fontFamily: "'Manrope', sans-serif" }}>
                         {sugeridas.map(n => (
                             <Link to={`/noticias/${n.id}`} key={n.id} className="group block">
                                 {resolverImagen(n.image_url) && (
-                                    <img src={resolverImagen(n.image_url)} alt={n.title} loading="lazy" decoding="async"
-                                        className="w-full h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-600 mb-2" />
+                                    esVideo(n.image_url) ? (
+                                        <div className="relative w-full h-32 rounded-lg border border-gray-300 dark:border-gray-600 mb-2 overflow-hidden bg-black">
+                                            <video src={resolverImagen(n.image_url)} muted playsInline preload="metadata" className="w-full h-full object-cover" />
+                                            <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                <PlayCircleIcon className="w-9 h-9 text-white/90 drop-shadow" />
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <img src={resolverImagen(n.image_url)} alt={n.title} loading="lazy" decoding="async"
+                                            className="w-full h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-600 mb-2" />
+                                    )
                                 )}
                                 <h3 className="font-bold text-sm text-gray-900 dark:text-white leading-snug group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" style={{ fontFamily: SERIF }}>
                                     {n.title}
@@ -229,7 +263,7 @@ export default function NoticiaDetalle() {
                                 </span>
                             </Link>
                         ))}
-                    </div>
+                    </StaggerGrid>
                 </section>
             )}
         </div>

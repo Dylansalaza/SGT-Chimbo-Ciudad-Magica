@@ -2,6 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Fuentes AUTO-HOSPEDADAS (variables, subset latin) ──
+   Se sirven desde /public/fonts y se precargan en index.html, así la fuente
+   correcta está disponible en el PRIMER pintado: no hay fallback→swap tardío y,
+   por tanto, no hay salto de layout (CLS). Son fuentes variables: un solo
+   archivo cubre todo el rango de pesos. */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: optional;
+  src: url('/fonts/manrope.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 600 900;
+  font-display: optional;
+  src: url('/fonts/playfairdisplay.woff2') format('woff2');
+}
+
+/* ── Tokens de diseño ──
+   Curvas de easing fuertes (Emil Kowalski): las curvas nativas de CSS son
+   débiles; estas dan el "punch" que hace que las animaciones se sientan
+   intencionales. Y la paleta institucional como variables reutilizables. */
+:root {
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --green-500: #059c45;
+  --green-700: #00913f;
+  --gold-400: #eab52a;
+  --gold-500: #d99a16;
+}
+
 /* Tipografía uniforme en toda la vista del usuario (Home, Noticias, Eventos, Mapa, Galerías).
    Manrope es la fuente base; los titulares grandes usan Playfair Display vía la
    utilidad `font-serif` de Tailwind. */
@@ -9,8 +43,37 @@ html, body, #root, button, input, select, textarea {
   font-family: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+/* Los titulares grandes se sienten más intencionales con tracking negativo y
+   un balance de líneas que evita palabras huérfanas (recomendación de la skill). */
 h1, h2, h3 {
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* Feedback de pulsado consistente en todo el sitio: cualquier <button> o enlace
+   marcado con `.btn-press` se hunde levemente al presionarse (Emil: los botones
+   deben sentirse responsivos). Solo transform → GPU, 140ms ease-out. */
+button, a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-press {
+  transition: transform 140ms var(--ease-out-strong), background-color 160ms ease, box-shadow 200ms ease;
+}
+.btn-press:active {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-press { transition: background-color 160ms ease; }
+  .btn-press:active { transform: none; }
 }
 
 body {
@@ -33,7 +96,13 @@ html.dark a {
 }
 
 html.dark *:focus-visible {
-  outline: 3px solid #60a5fa !important;
+  outline: 3px solid #18b25b !important;
+  outline-offset: 2px;
+}
+
+/* Anillo de foco visible también en modo claro (accesibilidad para teclado). */
+*:focus-visible {
+  outline: 2px solid var(--green-500);
   outline-offset: 2px;
 }
 
@@ -148,8 +217,8 @@ html.dark *:focus-visible {
 }
 
 /* ── Fondo con degradado animado (cabecera del modal de créditos) ──
-   Un degradado grande verde → esmeralda → dorado institucional que se
-   desplaza en bucle, dando sensación de movimiento sin distraer. */
+   Un SOLO color (verde institucional) en varios tonos que se desplazan en
+   bucle: da sensación de movimiento suave sin mezclar otros colores. */
 @keyframes gradient-flow {
   0%   { background-position: 0% 50%; }
   50%  { background-position: 100% 50%; }
@@ -157,30 +226,52 @@ html.dark *:focus-visible {
 }
 
 .animated-gradient {
-  background-image: linear-gradient(120deg, #00294d, #013a66, #0b4c7d, #013a66, #00294d);
+  background-image: linear-gradient(120deg, #04521f, #00913f, #0a9e47, #00913f, #04521f);
   background-size: 260% 260%;
-  animation: gradient-flow 16s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animated-gradient { animation: none; }
+  animation: gradient-flow 12s ease-in-out infinite;
 }
 
 /* ── Barra de acento superior con brillo en movimiento ──
-   Reemplaza la franja estática: un degradado azul que se desliza en bucle. */
+   Mismo color (verde) en tonos que se deslizan en bucle. */
 @keyframes accent-slide {
   0%   { background-position: 0% 50%; }
   100% { background-position: 200% 50%; }
 }
 
 .animated-accent-bar {
-  background-image: linear-gradient(90deg, #013a66, #3b82f6, #93c5fd, #3b82f6, #013a66);
+  background-image: linear-gradient(90deg, #00913f, #059c45, #43d47e, #059c45, #00913f);
   background-size: 200% 100%;
   animation: accent-slide 5s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .animated-accent-bar { animation: none; }
+}
+
+/* ── Placeholder del carrusel del Home mientras carga ──
+   Sustituye al antiguo bloque negro liso (que se veía como un hueco vacío).
+   Es un degradado verde institucional con un barrido de luz dorado muy sutil
+   que recorre el área: reserva el mismo alto del hero SIN salto y se lee como
+   "cargando", no como un error. Respeta prefers-reduced-motion. */
+@keyframes hero-shimmer {
+  0%   { transform: translateX(-60%); }
+  100% { transform: translateX(160%); }
+}
+.hero-skeleton {
+  position: relative;
+  overflow: hidden;
+  background-image: linear-gradient(120deg, #04371c, #075f2b 45%, #053f1f);
+}
+.hero-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(100deg, transparent 35%, rgba(234, 181, 42, 0.12) 50%, transparent 65%);
+  transform: translateX(-60%);
+  animation: hero-shimmer 1.9s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-skeleton::after { animation: none; }
 }
 
 /* Animaciones */
@@ -214,4 +305,150 @@ html.dark *:focus-visible {
 
 .animation-delay-400 {
   animation-delay: 0.4s;
+}
+
+/* ── Cascada de entrada para grillas de tarjetas ──
+   Cada hijo directo entra con fade + leve subida, escalonado, cuando el
+   contenedor recibe la clase `.stagger-in.is-visible` (la activa un
+   IntersectionObserver al entrar al viewport, ver el hook useReveal).
+   Solo opacity/transform → GPU. Respeta prefers-reduced-motion. */
+.stagger-in > * {
+  opacity: 0;
+  transform: translateY(24px);
+}
+.stagger-in.is-visible > * {
+  animation: fade-in-up 0.55s var(--ease-out-strong) forwards;
+}
+.stagger-in.is-visible > *:nth-child(1)  { animation-delay: 0ms; }
+.stagger-in.is-visible > *:nth-child(2)  { animation-delay: 70ms; }
+.stagger-in.is-visible > *:nth-child(3)  { animation-delay: 140ms; }
+.stagger-in.is-visible > *:nth-child(4)  { animation-delay: 210ms; }
+.stagger-in.is-visible > *:nth-child(5)  { animation-delay: 280ms; }
+.stagger-in.is-visible > *:nth-child(6)  { animation-delay: 350ms; }
+.stagger-in.is-visible > *:nth-child(7)  { animation-delay: 420ms; }
+.stagger-in.is-visible > *:nth-child(8)  { animation-delay: 490ms; }
+.stagger-in.is-visible > *:nth-child(n+9) { animation-delay: 560ms; }
+
+/* ── Degradados de MARCA: verde → oro ──
+   Unen los dos colores institucionales del cantón en un solo gesto visual.
+   `brand-gradient-bg`  → fondos (botones, cabeceras, sellos).
+   `brand-gradient-bar` → barras/reglas horizontales.
+   `text-brand-gradient`→ texto con relleno degradado (titulares).
+   `brand-underline`    → subrayado decorativo bajo un titular. */
+.brand-gradient-bg  { background-image: linear-gradient(120deg, #00913f, #059c45 55%, #eab52a); }
+.brand-gradient-bar { background-image: linear-gradient(90deg, #00913f, #059c45, #eab52a); }
+
+.text-brand-gradient {
+  background-image: linear-gradient(115deg, #059c45, #00913f 42%, #d99a16);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.gold-underline,
+.brand-underline {
+  position: relative;
+  display: inline-block;
+}
+.gold-underline::after,
+.brand-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -0.35rem;
+  height: 4px;
+  width: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #059c45, #eab52a);
+}
+
+/* Franja de marca animada: el degradado verde→oro se desplaza en bucle.
+   Úsalo en barras finas de acento (cabeceras de página, divisores). */
+.brand-gradient-animated {
+  background-image: linear-gradient(90deg, #00913f, #059c45, #eab52a, #059c45, #00913f);
+  background-size: 200% 100%;
+  animation: accent-slide 6s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-gradient-animated { animation: none; }
+}
+
+/* Revelado genérico al hacer scroll: fade + leve subida. Lo activa el
+   componente <Reveal> añadiendo `is-visible` cuando el elemento entra al
+   viewport. Solo opacity/transform (GPU). Respeta prefers-reduced-motion. */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s var(--ease-out-strong), transform 0.6s var(--ease-out-strong);
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ============================================================================
+   Carrusel de Lugares Destacados (Swiper) — estilo institucional.
+   Flechas ◀ ▶ pequeñas, blancas, en botón circular verde translúcido con
+   acabado pulido (blur + sombra suave). Se centran sobre las TARJETAS (no
+   sobre el alto total del Swiper, que incluye el espacio inferior de los
+   bullets), compensando ese padding con el calc del `top`.
+   ============================================================================ */
+.destacados-swiper .swiper-button-next,
+.destacados-swiper .swiper-button-prev {
+  width: 2.25rem;                 /* 36px: más pequeñas que las 44px por defecto */
+  height: 2.25rem;
+  border-radius: 9999px;
+  /* Centrado sobre la IMAGEN de la tarjeta (pt-2 = 0.5rem + mitad de h-56/2 =
+     7rem) menos la mitad del botón (1.125rem) → el centro del botón cae justo
+     en el centro de la foto, sin verse arrastrado hacia los bullets de abajo. */
+  top: 6.375rem !important;       /* !important: Swiper fija top/margin-top con su propia regla */
+  margin-top: 0 !important;       /* anula el margin-top negativo por defecto de Swiper */
+  color: #fff;                    /* flecha blanca */
+  background: rgba(0, 145, 63, 0.55);       /* verde institucional translúcido */
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 4px 14px rgba(4, 48, 30, 0.28);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: background 0.25s var(--ease-out-strong),
+              border-color 0.25s var(--ease-out-strong),
+              box-shadow 0.25s var(--ease-out-strong),
+              transform 0.2s var(--ease-out-strong);
+}
+/* Esta versión de Swiper dibuja la flecha como un <svg>, no como glifo ::after.
+   Reducimos el SVG para una flecha más pequeña y estilizada dentro del botón. */
+.destacados-swiper .swiper-button-next .swiper-navigation-icon,
+.destacados-swiper .swiper-button-prev .swiper-navigation-icon {
+  width: 0.5rem;                  /* ~8px de ancho */
+  height: auto;
+}
+.destacados-swiper .swiper-button-next:hover,
+.destacados-swiper .swiper-button-prev:hover {
+  background: rgba(0, 145, 63, 0.92);
+  border-color: rgba(234, 181, 42, 0.85);   /* toque dorado en hover */
+  box-shadow: 0 6px 20px rgba(4, 48, 30, 0.38);
+  transform: scale(1.06);
+}
+.destacados-swiper .swiper-button-next:active,
+.destacados-swiper .swiper-button-prev:active {
+  transform: scale(0.96);
+}
+.destacados-swiper .swiper-button-disabled {
+  opacity: 0;                     /* en loop no aparece, pero por si se desactiva */
+  pointer-events: none;
+}
+/* Bullets de paginación a juego con la marca (activo verde institucional) */
+.destacados-swiper .swiper-pagination-bullet {
+  background: #04301e;
+  opacity: 0.35;
+}
+.destacados-swiper .swiper-pagination-bullet-active {
+  background: #00913f;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .destacados-swiper .swiper-button-next,
+  .destacados-swiper .swiper-button-prev { transition: none; }
+  .destacados-swiper .swiper-button-next:hover,
+  .destacados-swiper .swiper-button-prev:hover { transform: none; }
 }

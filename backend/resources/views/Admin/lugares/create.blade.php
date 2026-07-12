@@ -4,7 +4,7 @@
 <div class="w-full flex flex-col">
 
     {{-- Header de Pantalla Completa (mismo patrón que el resto del panel) --}}
-    <div class="sticky top-0 z-30 bg-[#00294d] text-white w-full px-10 py-8 shadow-lg border-b border-white/5">
+    <div class="sticky top-0 z-30 header-corporate text-white w-full px-10 shadow-lg border-b border-white/5">
         <div class="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
             <div class="space-y-1">
                 <a href="{{ route('admin.lugares.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition mb-1">
@@ -19,7 +19,7 @@
             {{-- 📥 Botón para precargar el formulario desde una Ficha MINTUR (.xlsx/.xlsm).
                  No crea el lugar automáticamente: solo llena los campos de abajo para
                  que el admin los revise y luego presione "Agregar Lugar". --}}
-            <label id="importarFichaBtn" class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer transition shadow-md self-start sm:self-center">
+            <label id="importarFichaBtn" class="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer transition shadow-md self-start sm:self-center">
                 <i class="fas fa-file-import"></i>
                 <span id="importarFichaTexto">Importar Ficha</span>
                 <input type="file" id="fichaInput" accept=".xlsx,.xlsm,.xls" class="hidden">
@@ -110,15 +110,15 @@
                     <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 pb-3 border-b border-slate-100">
                         <i class="fas fa-camera"></i> Imagen del lugar
                     </h2>
-                    <div id="dropzoneArea" class="border-2 border-dashed border-blue-400 rounded-2xl p-8 sm:p-10 text-center cursor-pointer bg-slate-50/60 hover:bg-blue-50 transition">
-                        <i class="fas fa-cloud-upload-alt text-4xl text-blue-500 mb-3 block"></i>
+                    <div id="dropzoneArea" class="border-2 border-dashed border-green-400 rounded-2xl p-8 sm:p-10 text-center cursor-pointer bg-slate-50/60 hover:bg-green-50 transition">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-green-500 mb-3 block"></i>
                         <p class="text-slate-600 text-sm font-medium">Arrastra una imagen aquí o haz clic para seleccionar</p>
                         <p class="text-xs text-slate-400 mt-1">JPG, PNG, GIF (máx. 2MB) — también puedes pegar con Ctrl+V</p>
                         <input type="file" id="fileInput" accept="image/*" style="display: none;">
                     </div>
                     <div id="previewContainer" class="hidden">
                         <img id="previewImg" class="w-32 h-32 object-cover rounded-xl shadow border border-slate-200">
-                        <button type="button" id="removeImageBtn" class="mt-2 text-rose-500 text-xs font-bold hover:underline flex items-center gap-1">
+                        <button type="button" id="removeImageBtn" class="mt-2 text-red-500 text-xs font-bold hover:underline flex items-center gap-1">
                             <i class="fas fa-trash-alt"></i> Eliminar imagen
                         </button>
                     </div>
@@ -204,9 +204,9 @@
         });
     });
     
-    dropzoneArea.addEventListener('dragenter', () => dropzoneArea.classList.add('bg-blue-100'));
-    dropzoneArea.addEventListener('dragleave', () => dropzoneArea.classList.remove('bg-blue-100'));
-    dropzoneArea.addEventListener('drop', () => dropzoneArea.classList.remove('bg-blue-100'));
+    dropzoneArea.addEventListener('dragenter', () => dropzoneArea.classList.add('bg-green-100'));
+    dropzoneArea.addEventListener('dragleave', () => dropzoneArea.classList.remove('bg-green-100'));
+    dropzoneArea.addEventListener('drop', () => dropzoneArea.classList.remove('bg-green-100'));
     
     dropzoneArea.addEventListener('drop', (e) => {
         const files = e.dataTransfer.files;
@@ -390,7 +390,7 @@
                 div.innerHTML = `
                     <img src="${url}" class="w-full h-full object-cover">
                     <input type="hidden" name="galeria[]" value="${url}">
-                    <button type="button" class="galeria-remove absolute top-1 right-1 bg-rose-500 text-white w-5 h-5 rounded-full text-xs leading-none"><i class="fas fa-xmark"></i></button>`;
+                    <button type="button" class="galeria-remove absolute top-1 right-1 bg-red-500 text-white w-5 h-5 rounded-full text-xs leading-none"><i class="fas fa-xmark"></i></button>`;
                 previews.appendChild(div);
             });
         }

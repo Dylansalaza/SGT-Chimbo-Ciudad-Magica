@@ -13,7 +13,7 @@
             <h2 class="text-2xl font-extrabold text-slate-900">{{ $evento->title }}</h2>
         </div>
         @if($evento->categoria)
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-wide shrink-0">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-600 border border-green-100 uppercase tracking-wide shrink-0">
                 {{ $evento->categoria }}
             </span>
         @endif
@@ -66,7 +66,7 @@
     @endif
 
     <div class="mt-6 border-t pt-4 flex gap-2">
-        <a href="{{ route('admin.eventos.edit', $evento->id) }}" class="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition shadow-sm inline-flex items-center gap-2">
+        <a href="{{ route('admin.eventos.edit', $evento->id) }}" class="px-5 py-2.5 bg-black text-white font-medium rounded-lg hover:bg-slate-800 transition shadow-sm inline-flex items-center gap-2">
             <i class="fas fa-pen-to-square"></i> Editar este evento
         </a>
         <a href="{{ route('admin.eventos.index') }}" class="px-5 py-2.5 bg-gray-500 text-white font-medium rounded-lg hover:bg-gray-600 transition inline-flex items-center gap-2">

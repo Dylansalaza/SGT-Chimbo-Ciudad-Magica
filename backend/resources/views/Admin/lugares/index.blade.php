@@ -4,13 +4,13 @@
 <div class="w-full flex flex-col">
     
     {{-- Header de Pantalla Completa --}}
-    <div class="sticky top-0 z-50 bg-[#00294d] text-white w-full px-10 py-8 shadow-lg border-b border-white/5">
+    <div class="sticky top-0 z-50 header-corporate text-white w-full px-10 shadow-lg border-b border-white/5">
         <div class="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
             <div class="space-y-1">
                 <h1 class="font-serif text-2xl font-extrabold tracking-tight md:text-3xl">Lista de Lugares Turísticos</h1>
                 <p class="text-sm text-slate-300 font-medium">Panel administrativo para gestionar y supervisar todos los puntos de interés registrados en el sistema.</p>
             </div>
-            <a href="{{ route('admin.lugares.create') }}" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black tracking-wider shadow-md transition-all uppercase self-start sm:self-center">
+            <a href="{{ route('admin.lugares.create') }}" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-black tracking-wider shadow-md transition-all uppercase self-start sm:self-center">
                 <i class="fas fa-plus"></i> Nuevo Lugar
             </a>
         </div>
@@ -29,7 +29,7 @@
             <div class="flex gap-2 mb-5">
                 <button type="button" id="tab-activos" onclick="filtrarLugares('activo')"
                     class="lugar-tab-btn px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Activos <span class="ml-1 opacity-70">({{ $totalActivos }})</span>
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span> Activos <span class="ml-1 opacity-70">({{ $totalActivos }})</span>
                 </button>
                 <button type="button" id="tab-baja" onclick="filtrarLugares('baja')"
                     class="lugar-tab-btn px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5">
@@ -65,14 +65,14 @@
                             {{-- Columna Estado: refleja el campo booleano "activo" del modelo --}}
                             <td class="px-6 py-4 text-sm text-center">
                                 @if($l->activo)
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase tracking-wide"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Activo</span>
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-600 border border-green-100 uppercase tracking-wide"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Activo</span>
                                 @else
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wide"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> De baja</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-sm text-center">
                                 <div class="flex items-center justify-center gap-2">
-                                    <a href="{{ route('admin.lugares.edit', $l->id) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100/70 transition">
+                                    <a href="{{ route('admin.lugares.edit', $l->id) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-black text-white hover:bg-slate-800 transition">
                                         <i class="fas fa-edit text-[10px]"></i> Editar
                                     </a>
                                     {{-- Mismo endpoint (DELETE) para ambos botones: el controlador
@@ -82,7 +82,7 @@
                                         <form method="POST" action="{{ route('admin.lugares.destroy', $l->id) }}" onsubmit="return confirmarEliminar(this, '¿Seguro que deseas dar de baja el lugar «' + '{{ addslashes($l->nombre) }}' + '»? Dejará de mostrarse al público, pero podrás reactivarlo cuando quieras.', {titulo: '¿Dar de baja este lugar?', boton: 'Dar de baja', icono: 'fa-power-off'})">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-100/70 transition">
+                                            <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100 border border-red-100/70 transition">
                                                 <i class="fas fa-power-off text-[10px]"></i> Dar de baja
                                             </button>
                                         </form>
@@ -90,7 +90,7 @@
                                         <form method="POST" action="{{ route('admin.lugares.destroy', $l->id) }}">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100/70 transition">
+                                            <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-green-50 text-green-600 hover:bg-green-100 border border-green-100/70 transition">
                                                 <i class="fas fa-check text-[10px]"></i> Activar
                                             </button>
                                         </form>
@@ -128,7 +128,7 @@
         // Estilos de la pestaña activa vs. inactiva
         const btnActivos = document.getElementById('tab-activos');
         const btnBaja    = document.getElementById('tab-baja');
-        const activoCls  = ['bg-[#00294d]', 'text-white', 'shadow-md'];
+        const activoCls  = ['bg-[#00913f]', 'text-white', 'shadow-md'];
         const inactivoCls = ['bg-slate-100', 'text-slate-500', 'hover:bg-slate-200'];
 
         [btnActivos, btnBaja].forEach((btn) => btn.classList.remove(...activoCls, ...inactivoCls));

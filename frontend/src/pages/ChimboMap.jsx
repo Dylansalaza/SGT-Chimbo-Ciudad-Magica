@@ -24,8 +24,11 @@ import {
 } from '@heroicons/react/24/solid';
 import { TargetIcon, StopIcon } from '../components/icons/CustomIcons';
 
-// URL del servidor Backend (Laravel)
-const LARAVEL_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://127.0.0.1:3000';
+// URL del servidor Backend (Laravel). El replace va anclado al final ($): si
+// el dominio empieza con "api." (ej. api.midominio.com/api), un replace sin
+// ancla corta la primera aparición de "/api" (dentro de "//api...") en vez
+// del sufijo, dejando una URL rota.
+const LARAVEL_URL = import.meta.env.VITE_API_URL?.replace(/\/api$/, '') || 'http://127.0.0.1:3000';
 
 // Extrae y normaliza la URL de la foto de un lugar, sea cual sea el formato
 // en que llegue del backend (string simple, array de imágenes, objeto {url}).

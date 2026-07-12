@@ -12,7 +12,7 @@ import {
 
 // Base del backend Laravel, derivada de VITE_API_URL (quitando el sufijo /api).
 // En producción VITE_API_URL apunta al dominio HTTPS real; en local cae al 127.0.0.1.
-const LARAVEL_URL = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000/api').replace('/api', '');
+const LARAVEL_URL = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000/api').replace(/\/api$/, '');
 const SERIF = "'Playfair Display', Georgia, serif";
 
 // Normaliza cualquier ruta de imagen que venga del backend a una URL completa

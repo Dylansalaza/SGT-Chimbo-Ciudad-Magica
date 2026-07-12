@@ -14,8 +14,12 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/solid';
 
-// Base del backend (para enlazar al panel admin de Laravel)
-const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://127.0.0.1:3000';
+// Base del backend (para enlazar al panel admin de Laravel).
+// OJO: el reemplazo va anclado al FINAL ($) — si se usa .replace('/api', '')
+// a secas, y el dominio empieza con "api." (ej. api.midominio.com/api), el
+// replace corta la PRIMERA aparición de "/api" (dentro de "//api...") en vez
+// del sufijo, dejando una URL rota como "https:/.midominio.com/api".
+const BACKEND_URL = import.meta.env.VITE_API_URL?.replace(/\/api$/, '') || 'http://127.0.0.1:3000';
 
 // Lee el usuario logueado (guardado en localStorage al iniciar sesión)
 const getCurrentUser = () => {

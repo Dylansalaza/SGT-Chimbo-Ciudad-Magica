@@ -23,6 +23,46 @@ function categoriaPrecio(raw) {
     return 'premium';
 }
 
+// ── Redimensiona/convierte la imagen a un JPEG pequeño ANTES de subirla ──
+// Las fotos de celular suelen pesar >8 MB (y en iPhone vienen en HEIC), y el
+// backend solo acepta jpeg/png de máx. 8 MB → daban error 422 que en móvil se
+// veía como "No se pudo conectar con el servidor". Aquí se dibuja la imagen en
+// un canvas a máx. 1280 px de lado y se exporta como JPEG (~calidad 0.85): queda
+// en pocos cientos de KB, en formato aceptado, y CLIP no necesita más resolución.
+// Además acelera la subida por datos móviles. Si el navegador no puede decodificar
+// el formato (HEIC en un navegador sin soporte), se rechaza con un mensaje claro.
+function redimensionarImagen(file, maxLado = 1280, calidad = 0.85) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            let { width, height } = img;
+            if (Math.max(width, height) > maxLado) {
+                const r = maxLado / Math.max(width, height);
+                width  = Math.round(width * r);
+                height = Math.round(height * r);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+            canvas.toBlob(
+                (blob) => blob
+                    ? resolve(new File([blob], 'busqueda.jpg', { type: 'image/jpeg' }))
+                    : reject(new Error('No se pudo procesar la imagen. Intenta con otra foto.')),
+                'image/jpeg',
+                calidad,
+            );
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('No se pudo leer la imagen. Usa una foto en formato JPG o PNG.'));
+        };
+        img.src = url;
+    });
+}
+
 // ============================================================================
 // HOOK: useTouristPlaces
 // Centraliza TODO el estado y la lógica de datos del mapa (ChimboMap.jsx):
@@ -239,15 +279,34 @@ export function useTouristPlaces() {
         setResultadoEsIA(false);
 
         try {
+            // Redimensiona a JPEG pequeño antes de subir (clave para móvil: fotos
+            // grandes/HEIC que el backend rechazaba). Si falla la conversión, se
+            // sube el archivo original como respaldo.
+            let archivo = rawFile;
+            try {
+                archivo = await redimensionarImagen(rawFile);
+            } catch (e) {
+                // No abortamos: intentamos con el original (p. ej. si el navegador
+                // no pudo decodificar el formato para el canvas).
+            }
+
             const form = new FormData();
-            form.append('image', rawFile);
+            form.append('image', archivo);
             const { data } = await api.post('/image-search', form, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             if (!data.search_id) throw new Error('El servidor no devolvió un ticket.');
             iniciarPolling(data.search_id);
         } catch (err) {
-            setIaError(err.response?.data?.error || 'No se pudo conectar con el servidor.');
+            // Mostramos el motivo REAL: error del backend, error de validación
+            // (422 trae errors.image), el mensaje de la excepción, o el genérico.
+            const resp = err.response?.data;
+            const msg = resp?.error
+                || resp?.errors?.image?.[0]
+                || resp?.message
+                || err.message
+                || 'No se pudo conectar con el servidor.';
+            setIaError(msg);
             setSearching(false);
         }
     };

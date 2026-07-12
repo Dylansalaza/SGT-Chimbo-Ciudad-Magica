@@ -7,6 +7,7 @@ use App\Models\ImageSearch;
 use App\Models\TouristPlace;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ImageSearchController extends Controller
 {
@@ -53,9 +54,14 @@ class ImageSearchController extends Controller
                 'message'   => 'Imagen encolada. Procesando con Inteligencia Artificial...',
             ], 201);
         } catch (\Throwable $e) {
+            // El detalle técnico solo va al log del servidor; al cliente (endpoint
+            // público) le devolvemos un mensaje genérico para no filtrar rutas,
+            // nombres de clases ni datos internos.
+            Log::error('Fallo al encolar búsqueda por imagen', ['exception' => $e]);
+
             return response()->json([
                 'success' => false,
-                'error'   => 'Error interno al procesar la imagen: ' . $e->getMessage(),
+                'error'   => 'Error interno al procesar la imagen. Inténtalo de nuevo.',
             ], 500);
         }
     }

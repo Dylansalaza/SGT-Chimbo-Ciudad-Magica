@@ -24,6 +24,17 @@ class LugarController extends Controller
     private const CACHE_KEY = 'catalogo_turismo_key';
 
     /**
+     * Campos que el admin puede escribir vía formulario. Se usa como lista
+     * blanca en create/update (en vez de $request->all()) para evitar
+     * mass-assignment: aunque el modelo tenga más columnas fillable (p. ej.
+     * "activo", que se gestiona solo desde destroy()), aquí nunca se tocan.
+     */
+    private const CAMPOS = [
+        'nombre', 'categoria', 'descripcion', 'lat', 'lng', 'direccion',
+        'telefono', 'horario', 'precio', 'imagen_url', 'destacado', 'galeria',
+    ];
+
+    /**
      * Lista todos los lugares (activos e inactivos) para la tabla del admin.
      * Se ordena primero por "activo" (los activos arriba) y luego por fecha,
      * así los lugares dados de baja quedan agrupados al final de la lista
@@ -67,7 +78,7 @@ class LugarController extends Controller
             'galeria'   => array_values(array_filter((array) $request->input('galeria', []))),
         ]);
 
-        $lugar = TouristPlace::create($request->all());
+        $lugar = TouristPlace::create($request->only(self::CAMPOS));
 
         // 1) Limpiar la caché para que la API/mapa muestren el nuevo lugar YA.
         Cache::forget(self::CACHE_KEY);
@@ -111,7 +122,7 @@ class LugarController extends Controller
         ]);
 
         $lugar = TouristPlace::findOrFail($id);
-        $lugar->update($request->all());
+        $lugar->update($request->only(self::CAMPOS));
 
         Cache::forget(self::CACHE_KEY);
         // REFRESCAR EL SERVICIO PYTHON TAMBIÉN AL ACTUALIZAR LA DATA
@@ -176,7 +187,7 @@ class LugarController extends Controller
             \Log::error('Error al leer ficha MINTUR: ' . $e->getMessage());
 
             return response()->json([
-                'error' => 'No se pudo leer el archivo. Verifica que sea un Excel válido. Detalle: ' . $e->getMessage(),
+                'error' => 'No se pudo leer el archivo. Verifica que sea un Excel válido con el formato de la Ficha MINTUR.',
             ], 422);
         }
 

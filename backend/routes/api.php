@@ -14,7 +14,7 @@ use App\Http\Controllers\StatsController;
 // ============================================================
 // AUTENTICACIÓN
 // ============================================================
-Route::post('/login',  [AuthController::class, 'login']);
+Route::post('/login',  [AuthController::class, 'login'])->middleware('throttle:login');
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 // ============================================================
@@ -38,8 +38,9 @@ Route::get('/tourist-places/{id}', [TouristPlaceController::class, 'show']);
 // Contenido editable del Home (carrusel, bienvenida, destacados)
 Route::get('/home', [HomeController::class, 'show']);
 
-// Estadísticas públicas (visitas, contenidos)
-Route::get('/stats', [StatsController::class, 'index']);
+// Estadísticas públicas (visitas, contenidos). Cacheadas 5 min en el controller;
+// el throttle es una segunda barrera contra ráfagas automatizadas.
+Route::get('/stats', [StatsController::class, 'index'])->middleware('throttle:30,1');
 
 // Chatbot — lectura pública
 Route::get('/chat-faqs', [ChatbotController::class, 'getFaqs']);
@@ -48,15 +49,18 @@ Route::get('/chat-faqs', [ChatbotController::class, 'getFaqs']);
 // para no agotar la cuota gratuita diaria si alguien abusa del formulario.
 Route::post('/chat-ai', [ChatbotController::class, 'askAi'])->middleware('throttle:15,1');
 
-// Registro de visita (analítica anónima)
-Route::post('/registro-visita', [ChatbotController::class, 'registrarVisita']);
+// Registro de visita (analítica anónima) — limitado para evitar inflar las
+// estadísticas o saturar la tabla `visits` con peticiones automatizadas.
+Route::post('/registro-visita', [ChatbotController::class, 'registrarVisita'])->middleware('throttle:30,1');
 
 // ============================================================
 // BÚSQUEDA POR IMAGEN (IA — flujo asíncrono)
 //   1. React sube la imagen  → POST /image-search
 //   2. React consulta estado → GET  /image-search/status/{id}
 // ============================================================
-Route::post('/image-search',            [ImageSearchController::class, 'search']);
+// La subida de imágenes es costosa (almacena archivo + encola trabajo del
+// worker CLIP), así que la limitamos para evitar llenar el disco / la cola.
+Route::post('/image-search',            [ImageSearchController::class, 'search'])->middleware('throttle:20,1');
 Route::get('/image-search/status/{id}', [ImageSearchController::class, 'checkStatus']);
 
 // ============================================================

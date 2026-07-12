@@ -507,7 +507,7 @@ export default function ChimboMap() {
 
                         <div>
                             <label className="flex items-center gap-1 text-xs font-bold text-gray-600 dark:text-gray-300 mb-1 tracking-wider"><MagnifyingGlassIcon className="w-3.5 h-3.5" /> TEXTO</label>
-                            <input type="text" placeholder="ej. Cascada, Iglesia..." value={state.searchTerm || ""} onChange={(e) => state.setSearchTerm(e.target.value)} className="w-full p-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none bg-gray-50/50 dark:bg-[#242424] text-gray-800 dark:text-gray-100"/>
+                            <input type="text" placeholder="ej. Cascada, Iglesia..." value={state.searchTerm || ""} onChange={(e) => state.buscarPorTexto(e.target.value)} className="w-full p-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none bg-gray-50/50 dark:bg-[#242424] text-gray-800 dark:text-gray-100"/>
                         </div>
 
                         <div>

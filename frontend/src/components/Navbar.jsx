@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
-import AccessibilityWidget from './AccessibilityWidget';
-import HighContrastToggle from './HighContrastToggle';
 import {
   HomeIcon,
   CalendarDaysIcon,
@@ -158,9 +156,6 @@ export default function Navbar() {
 
           {/* SESIÓN — solo en pantallas grandes */}
           <div className="hidden lg:flex items-center space-x-3">
-            {/* Accesibilidad: alto contraste (♦) + panel de tamaño de texto (♿) */}
-            <HighContrastToggle />
-            <AccessibilityWidget />
             <ThemeToggle />
             {authenticated ? (
               <div className="flex items-center space-x-3">
@@ -177,9 +172,8 @@ export default function Navbar() {
             ) : null}
           </div>
 
-          {/* Accesibilidad (♿) + Toggle oscuro + HAMBURGUESA — pantallas pequeñas/medianas */}
+          {/* Toggle oscuro + HAMBURGUESA — pantallas pequeñas/medianas */}
           <div className="lg:hidden flex items-center gap-2 shrink-0">
-            <AccessibilityWidget />
             <ThemeToggle />
             <button
               onClick={() => setMenuAbierto((o) => !o)}

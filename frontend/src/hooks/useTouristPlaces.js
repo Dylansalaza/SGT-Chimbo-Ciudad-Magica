@@ -92,9 +92,16 @@ export function useTouristPlaces() {
     // precio) sobre el catálogo completo. Es independiente del resultado de
     // la búsqueda por IA (searchResult).
     const filteredPlaces = useMemo(() => {
+        // Normaliza a minúsculas y sin tildes, para que "restaurante" o
+        // "gastronomia" encuentren "Restaurante"/"Gastronómica" aunque el
+        // usuario escriba sin acentos.
+        const norm = (s) => (s || '').normalize('NFD').replace(/\p{Mn}/gu, '').toLowerCase();
         return lugares.filter(place => {
-            const texto = `${place.nombre} ${place.descripcion || ''}`.toLowerCase();
-            const matchText  = texto.includes(searchTerm.toLowerCase());
+            // La búsqueda por texto mira nombre + descripción + CATEGORÍA, así
+            // escribir "restaurante" encuentra los lugares de esa categoría aunque
+            // la palabra no aparezca en su nombre (ej. "Patio de comida").
+            const texto = norm(`${place.nombre} ${place.descripcion || ''} ${place.categoria || ''}`);
+            const matchText  = texto.includes(norm(searchTerm));
             const matchCat   = categoriasSeleccionadas.length === 0 || categoriasSeleccionadas.includes(place.categoria);
             const matchPrecio =
                 filtroPrecio === 'todos'

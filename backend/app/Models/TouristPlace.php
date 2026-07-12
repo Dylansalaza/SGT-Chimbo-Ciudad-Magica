@@ -30,4 +30,12 @@ class TouristPlace extends Model
     {
         return $this->hasMany(ReferenceImage::class);
     }
+
+    // Al crear/editar/borrar un lugar (o marcarlo destacado), la caché de /home queda obsoleta.
+    protected static function booted(): void
+    {
+        $olvidar = fn () => \App\Http\Controllers\HomeController::olvidarCache();
+        static::saved($olvidar);
+        static::deleted($olvidar);
+    }
 }

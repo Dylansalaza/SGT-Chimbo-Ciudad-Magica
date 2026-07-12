@@ -4,7 +4,7 @@
 <div class="w-full flex flex-col">
 
     {{-- Header --}}
-    <div class="sticky top-0 z-50 bg-[#00294d] text-white w-full px-10 py-8 shadow-lg border-b border-white/5">
+    <div class="sticky top-0 z-50 header-corporate text-white w-full px-10 shadow-lg border-b border-white/5">
         <div class="w-full flex items-center justify-between gap-6">
             <div class="space-y-1">
                 <h1 class="font-serif text-2xl font-extrabold tracking-tight md:text-3xl">Nuevo Usuario</h1>
@@ -27,19 +27,19 @@
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1.5">Nombre completo</label>
                     <input type="text" name="name" value="{{ old('name') }}" required
-                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm">
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00913f] focus:ring-2 focus:ring-[#00913f]/20 outline-none text-sm">
                 </div>
 
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1.5">Correo electrónico</label>
                     <input type="email" name="email" value="{{ old('email') }}" required
-                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm">
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00913f] focus:ring-2 focus:ring-[#00913f]/20 outline-none text-sm">
                 </div>
 
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1.5 flex items-center gap-1.5"><i class="fas fa-envelope text-slate-400"></i> Correo de recuperación <span class="text-slate-400 font-normal">(opcional)</span></label>
                     <input type="email" name="recovery_email" value="{{ old('recovery_email') }}"
-                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00913f] focus:ring-2 focus:ring-[#00913f]/20 outline-none text-sm"
                            placeholder="correo alterno para recuperar la contraseña">
                     <p class="text-xs text-slate-400 mt-1">Servirá para recuperar la contraseña si olvida la principal.</p>
                 </div>
@@ -48,13 +48,13 @@
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1.5">Contraseña</label>
                         <input type="password" name="password" required
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm">
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00913f] focus:ring-2 focus:ring-[#00913f]/20 outline-none text-sm">
                         <p class="text-xs text-slate-400 mt-1">Mínimo 8 caracteres.</p>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1.5">Confirmar contraseña</label>
                         <input type="password" name="password_confirmation" required
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00294d] focus:ring-2 focus:ring-[#00294d]/20 outline-none text-sm">
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#00913f] focus:ring-2 focus:ring-[#00913f]/20 outline-none text-sm">
                     </div>
                 </div>
 
@@ -63,13 +63,13 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
                         <label class="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition
-                            {{ old('rol') === 'administrador' ? 'border-[#00294d] bg-[#00294d]/5' : 'border-slate-200 hover:border-slate-300' }}">
+                            {{ old('rol') === 'administrador' ? 'border-[#00913f] bg-[#00913f]/5' : 'border-slate-200 hover:border-slate-300' }}">
                             <input type="radio" name="rol" value="administrador" required
                                    {{ old('rol') === 'administrador' ? 'checked' : '' }}
-                                   class="mt-0.5 text-[#00294d] focus:ring-[#00294d]/30">
+                                   class="mt-0.5 text-[#00913f] focus:ring-[#00913f]/30">
                             <span>
                                 <span class="block text-sm font-bold text-slate-800">
-                                    <i class="fas fa-user-shield text-[#00294d] mr-1"></i> Administrador
+                                    <i class="fas fa-user-shield text-[#00913f] mr-1"></i> Administrador
                                 </span>
                                 <span class="block text-xs text-slate-500 mt-0.5">
                                     Solo puede ver el Dashboard y gestionar usuarios del sistema.
@@ -78,13 +78,13 @@
                         </label>
 
                         <label class="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition
-                            {{ old('rol') === 'admin_turismo' ? 'border-emerald-600 bg-emerald-50' : 'border-slate-200 hover:border-slate-300' }}">
+                            {{ old('rol') === 'admin_turismo' ? 'border-green-600 bg-green-50' : 'border-slate-200 hover:border-slate-300' }}">
                             <input type="radio" name="rol" value="admin_turismo" required
                                    {{ old('rol') === 'admin_turismo' ? 'checked' : '' }}
-                                   class="mt-0.5 text-emerald-600 focus:ring-emerald-500/30">
+                                   class="mt-0.5 text-green-600 focus:ring-green-500/30">
                             <span>
                                 <span class="block text-sm font-bold text-slate-800">
-                                    <i class="fas fa-map-marked-alt text-emerald-600 mr-1"></i> Admin de Turismo
+                                    <i class="fas fa-map-marked-alt text-green-600 mr-1"></i> Admin de Turismo
                                 </span>
                                 <span class="block text-xs text-slate-500 mt-0.5">
                                     Gestiona eventos, noticias, galerías, lugares, categorías y reportes.
@@ -96,7 +96,7 @@
                 </div>
 
                 <div class="pt-2 flex items-center gap-3">
-                    <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black tracking-wider shadow-md transition uppercase">
+                    <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-black tracking-wider shadow-md transition uppercase">
                         <i class="fas fa-save"></i> Crear Usuario
                     </button>
                     <a href="{{ route('admin.usuarios.index') }}" class="px-6 py-3 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-700 uppercase tracking-wider">Cancelar</a>

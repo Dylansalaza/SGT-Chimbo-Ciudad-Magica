@@ -18,12 +18,20 @@ class FlaskImageSearchService implements ImageSearchInterface
     public function __construct(
         private readonly string $baseUrl,
         private readonly int $timeout = 30,
+        private readonly ?string $token = null,
     ) {
+    }
+
+    /** Cabeceras con el token compartido (solo si está configurado). */
+    private function headers(): array
+    {
+        return $this->token ? ['X-CLIP-Token' => $this->token] : [];
     }
 
     public function search(string $imageBase64): array
     {
         $response = Http::timeout($this->timeout)
+            ->withHeaders($this->headers())
             ->post("{$this->baseUrl}/search", ['image' => $imageBase64]);
 
         return $response->json('matches', []);
@@ -32,6 +40,7 @@ class FlaskImageSearchService implements ImageSearchInterface
     public function refreshIndex(): array
     {
         $response = Http::timeout(max($this->timeout, 45))
+            ->withHeaders($this->headers())
             ->post("{$this->baseUrl}/refresh");
 
         return $response->json() ?? ['success' => false, 'error' => 'Respuesta vacía del motor.'];

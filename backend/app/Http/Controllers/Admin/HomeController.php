@@ -7,7 +7,6 @@ use App\Models\HomeSetting;
 use App\Models\News;
 use App\Models\Event;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Editor del contenido del Home de React desde el panel administrativo.
@@ -19,49 +18,7 @@ class HomeController extends Controller
         $settings = HomeSetting::singleton();
         $todasNoticias = News::orderByDesc('published_at')->get();
         $todosEventos  = Event::orderByDesc('starts_at')->get();
-        $imagenesSubidas = $this->listarImagenesHome();
-        return view('admin.home.edit', compact('settings', 'todasNoticias', 'todosEventos', 'imagenesSubidas'));
-    }
-
-    /**
-     * Todas las imágenes que se han subido alguna vez al carrusel (disco
-     * `public/home`), más recientes primero. Sirve para reutilizarlas en una
-     * nueva diapositiva o borrarlas definitivamente del servidor.
-     */
-    private function listarImagenesHome(): array
-    {
-        $archivos = collect(Storage::disk('public')->files('home'))
-            ->sortByDesc(fn ($path) => Storage::disk('public')->lastModified($path))
-            ->values();
-
-        return $archivos->map(fn ($path) => [
-            'nombre' => basename($path),
-            'url'    => '/storage/' . $path,
-        ])->all();
-    }
-
-    /** Borra definitivamente una imagen subida del disco (si ya no está en uso en el carrusel). */
-    public function destroyImage(Request $request, string $nombre)
-    {
-        $nombre = basename($nombre); // evita path traversal
-        $path = 'home/' . $nombre;
-
-        $enUso = collect(HomeSetting::singleton()->carousel ?? [])
-            ->contains(fn ($slide) => ($slide['url'] ?? null) === '/storage/' . $path);
-
-        if ($enUso) {
-            return response()->json([
-                'error' => 'Esta imagen está en uso en el carrusel actual. Quítala del carrusel y guarda antes de borrarla.',
-            ], 422);
-        }
-
-        if (! Storage::disk('public')->exists($path)) {
-            return response()->json(['error' => 'La imagen ya no existe.'], 404);
-        }
-
-        Storage::disk('public')->delete($path);
-
-        return response()->json(['ok' => true]);
+        return view('admin.home.edit', compact('settings', 'todasNoticias', 'todosEventos'));
     }
 
     public function update(Request $request)
@@ -106,6 +63,10 @@ class HomeController extends Controller
             'noticias_ids'  => $noticiasIds,
             'eventos_ids'   => $eventosIds,
         ]);
+
+        // El contenido público cambió: invalidamos la caché de /home para que la
+        // próxima visita reciba los datos nuevos de inmediato (sin esperar el TTL).
+        \App\Http\Controllers\HomeController::olvidarCache();
 
         return redirect()->route('admin.home.edit')->with('success', 'Home actualizado correctamente.');
     }

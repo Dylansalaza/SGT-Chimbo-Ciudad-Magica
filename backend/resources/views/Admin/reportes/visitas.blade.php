@@ -1,99 +1,78 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reporte de Visitas - SGT Chimbo</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js" crossorigin="anonymous"></script>
-    <style>
-        @media print {
-            .no-print { display: none !important; }
-            body { background: white !important; }
-            .page { box-shadow: none !important; margin: 0 !important; }
-        }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #e2e8f0; padding: 6px 10px; font-size: 12px; text-align: left; }
-        th { background: #00294d; color: white; }
-        tr:nth-child(even) td { background: #f8fafc; }
-    </style>
-</head>
-<body class="py-6">
+@extends('admin.layouts.app')
 
-    {{-- Barra de acciones (no se imprime) --}}
-    <div class="no-print max-w-4xl mx-auto mb-4 flex items-center justify-between px-4">
-        <a href="{{ route('admin.dashboard') }}" class="text-sm text-slate-600 hover:text-slate-900 inline-flex items-center gap-1.5"><i class="fas fa-arrow-left"></i> Volver al panel</a>
-        <div class="flex items-center gap-2">
-            <a href="{{ route('admin.reportes.visitas.csv') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg text-sm shadow inline-flex items-center gap-2">
-                <i class="fas fa-file-csv"></i> Exportar CSV (Excel)
-            </a>
-            <button onclick="window.print()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-5 py-2.5 rounded-lg text-sm shadow inline-flex items-center gap-2">
-                <i class="fas fa-print"></i> Descargar / Imprimir PDF
-            </button>
+@section('content')
+<div class="w-full flex flex-col">
+
+    @include('admin.reportes._encabezado', [
+        'titulo'    => 'Reporte de Visitas',
+        'subtitulo' => 'Estadísticas de tráfico del portal turístico de San José de Chimbo',
+        'pdfRoute'  => 'admin.reportes.visitas.pdf',
+        'csvRoute'  => 'admin.reportes.visitas.csv',
+        'generado'  => $generado,
+    ])
+
+    <div class="p-8 w-full space-y-6">
+
+        {{-- KPIs --}}
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            @foreach([
+                ['n' => $totales['historico'], 'l' => 'Visitas totales',   'c' => 'text-[#00913f]'],
+                ['n' => $totales['unicos'],    'l' => 'Visitantes únicos',  'c' => 'text-[#04521f]'],
+                ['n' => $totales['mes'],       'l' => 'Este mes',           'c' => 'text-[#00913f]'],
+                ['n' => $totales['hoy'],       'l' => 'Hoy',                'c' => 'text-amber-600'],
+            ] as $k)
+                <div class="bg-white rounded-2xl p-5 card-premium-shadow text-center">
+                    <p class="text-3xl font-black {{ $k['c'] }}">{{ number_format($k['n']) }}</p>
+                    <p class="text-[11px] uppercase tracking-wider text-slate-500 mt-1">{{ $k['l'] }}</p>
+                </div>
+            @endforeach
         </div>
+
+        {{-- Mensual --}}
+        <div class="bg-white rounded-2xl p-6 card-premium-shadow">
+            <h2 class="text-sm font-black text-slate-800 uppercase tracking-wider mb-4">Visitas por mes · últimos 12 meses</h2>
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-left text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-200">
+                        <th class="py-2 w-1/3">Mes</th><th class="py-2">Distribución</th><th class="py-2 text-right w-24">Visitas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($mensual as $m)
+                        @php $pct = $maxMes > 0 ? max(2, round($m['visitas'] * 100 / $maxMes)) : 0; @endphp
+                        <tr class="border-b border-slate-100">
+                            <td class="py-2 text-slate-700">{{ $m['mes'] }}</td>
+                            <td class="py-2 pr-4"><div class="bg-slate-100 rounded-full h-2.5"><div class="bg-[#00913f] h-2.5 rounded-full" style="width: {{ $pct }}%"></div></div></td>
+                            <td class="py-2 text-right font-bold text-slate-800">{{ number_format($m['visitas']) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        {{-- Diario --}}
+        <div class="bg-white rounded-2xl p-6 card-premium-shadow">
+            <h2 class="text-sm font-black text-slate-800 uppercase tracking-wider mb-4">Detalle diario · últimos 30 días</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-200">
+                            <th class="py-2">Fecha</th><th class="py-2">Día</th><th class="py-2 text-right">Visitas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($diario as $d)
+                            <tr class="border-b border-slate-100">
+                                <td class="py-2 text-slate-700">{{ $d['fecha'] }}</td>
+                                <td class="py-2 text-slate-500">{{ $d['dia'] }}</td>
+                                <td class="py-2 text-right font-bold text-slate-800">{{ number_format($d['visitas']) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
-
-    <div class="page max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-10">
-
-        {{-- Encabezado --}}
-        <div class="flex items-center justify-between border-b-2 border-[#00294d] pb-4 mb-6">
-            <div>
-                <h1 class="text-2xl font-black text-[#00294d]">Reporte de Visitas</h1>
-                <p class="text-sm text-slate-500">Sistema de Gestión Turística · San José de Chimbo</p>
-            </div>
-            <div class="text-right text-xs text-slate-500">
-                <p>Generado el</p>
-                <p class="font-bold text-slate-700">{{ $generado }}</p>
-            </div>
-        </div>
-
-        {{-- Tarjetas de totales --}}
-        <div class="grid grid-cols-4 gap-3 mb-8">
-            <div class="border border-slate-200 rounded-lg p-4 text-center">
-                <p class="text-2xl font-black text-[#00294d]">{{ number_format($totales['historico']) }}</p>
-                <p class="text-[11px] uppercase tracking-wider text-slate-500 mt-1">Visitas totales</p>
-            </div>
-            <div class="border border-slate-200 rounded-lg p-4 text-center">
-                <p class="text-2xl font-black text-emerald-600">{{ number_format($totales['unicos']) }}</p>
-                <p class="text-[11px] uppercase tracking-wider text-slate-500 mt-1">Visitantes únicos</p>
-            </div>
-            <div class="border border-slate-200 rounded-lg p-4 text-center">
-                <p class="text-2xl font-black text-blue-600">{{ number_format($totales['mes']) }}</p>
-                <p class="text-[11px] uppercase tracking-wider text-slate-500 mt-1">Este mes</p>
-            </div>
-            <div class="border border-slate-200 rounded-lg p-4 text-center">
-                <p class="text-2xl font-black text-rose-600">{{ number_format($totales['hoy']) }}</p>
-                <p class="text-[11px] uppercase tracking-wider text-slate-500 mt-1">Hoy</p>
-            </div>
-        </div>
-
-        {{-- Resumen mensual --}}
-        <h2 class="text-lg font-bold text-slate-800 mb-3">Visitas por mes (últimos 12 meses)</h2>
-        <table class="mb-8">
-            <thead><tr><th>Mes</th><th class="text-right">Visitas</th></tr></thead>
-            <tbody>
-                @foreach($mensual as $m)
-                    <tr><td>{{ $m['mes'] }}</td><td style="text-align:right">{{ number_format($m['visitas']) }}</td></tr>
-                @endforeach
-            </tbody>
-        </table>
-
-        {{-- Detalle diario --}}
-        <h2 class="text-lg font-bold text-slate-800 mb-3">Visitas por día (últimos 30 días)</h2>
-        <table>
-            <thead><tr><th>Fecha</th><th>Día</th><th class="text-right">Visitas</th></tr></thead>
-            <tbody>
-                @foreach($diario as $d)
-                    <tr><td>{{ $d['fecha'] }}</td><td>{{ $d['dia'] }}</td><td style="text-align:right">{{ number_format($d['visitas']) }}</td></tr>
-                @endforeach
-            </tbody>
-        </table>
-
-        <p class="text-[11px] text-slate-400 mt-8 text-center border-t border-slate-100 pt-4">
-            © {{ date('Y') }} Municipio de San José de Chimbo — Reporte generado automáticamente por el Sistema de Gestión Turística.
-        </p>
-    </div>
-
-</body>
-</html>
+</div>
+@endsection

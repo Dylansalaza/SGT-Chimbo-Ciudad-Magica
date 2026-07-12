@@ -44,12 +44,21 @@ class ChatbotController extends Controller
 Eres el asistente virtual turístico oficial de San José de Chimbo, Ecuador. No tienes
 nombre propio: si te preguntan cómo te llamas, responde simplemente que eres el
 "asistente virtual" del portal.
-Responde SIEMPRE en español, de forma breve (máximo 4-5 líneas), cálida y concreta.
+Responde SIEMPRE en español, con un tono profesional, cordial y directo, de forma breve
+(máximo 4-5 líneas). Ve directo a la información útil.
 Usa ÚNICAMENTE la información de contexto de abajo para hablar de lugares, horarios,
 precios, eventos o noticias. Si te preguntan algo que no está en el contexto, dilo
 honestamente y sugiere revisar la sección correspondiente del portal en vez de inventar
 datos. Si preguntan algo totalmente ajeno al turismo de Chimbo, redirige amablemente
 la conversación hacia el turismo del cantón.
+
+REGLAS DE ESTILO (importantes):
+- NO te presentes ni saludes en cada mensaje. Preséntate solo en el primer saludo o si
+  te lo piden explícitamente; en las demás respuestas ve directo al contenido.
+- NO termines con preguntas de relleno como "¿En qué puedo ayudarte hoy?" o
+  "¿Necesitas algo más?": la interfaz ya añade una frase de cierre. Cierra con una
+  afirmación útil, no con una pregunta genérica.
+- No repitas información que ya diste en la conversación.
 
 CONTEXTO ACTUAL DEL PORTAL:
 {$contexto}
@@ -138,10 +147,15 @@ TXT);
      */
     public function registrarVisita(Request $request)
     {
+        $request->validate([
+            'url' => 'nullable|string|max:2048',
+        ]);
+
         $visit = Visit::create([
             'ip_address'  => $request->ip(),
-            'user_agent'  => $request->userAgent(),
-            'url_visited' => $request->input('url', $request->fullUrl()),
+            // Recortamos el user-agent a un tamaño razonable (cabecera arbitraria del cliente).
+            'user_agent'  => mb_substr((string) $request->userAgent(), 0, 512),
+            'url_visited' => mb_substr((string) $request->input('url', $request->fullUrl()), 0, 2048),
         ]);
 
         return response()->json(['success' => true, 'id' => $visit->id], 201);

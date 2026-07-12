@@ -13,7 +13,7 @@
             <h2 class="text-2xl font-extrabold text-slate-900">{{ $noticia->title }}</h2>
         </div>
         @if($noticia->categoria)
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-600 border border-rose-100 uppercase tracking-wide shrink-0">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-600 border border-red-100 uppercase tracking-wide shrink-0">
                 {{ $noticia->categoria }}
             </span>
         @endif
@@ -53,7 +53,7 @@
     @endif
 
     <div class="mt-6 border-t pt-4 flex gap-2">
-        <a href="{{ route('admin.noticias.edit', $noticia->id) }}" class="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition shadow-sm inline-flex items-center gap-2">
+        <a href="{{ route('admin.noticias.edit', $noticia->id) }}" class="px-5 py-2.5 bg-black text-white font-medium rounded-lg hover:bg-slate-800 transition shadow-sm inline-flex items-center gap-2">
             <i class="fas fa-pen-to-square"></i> Editar esta noticia
         </a>
         <a href="{{ route('admin.noticias.index') }}" class="px-5 py-2.5 bg-gray-500 text-white font-medium rounded-lg hover:bg-gray-600 transition inline-flex items-center gap-2">

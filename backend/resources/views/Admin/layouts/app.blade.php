@@ -19,6 +19,25 @@
                     fontFamily: {
                         serif: ['"Playfair Display"', 'Georgia', 'serif'],
                     },
+                    colors: {
+                        /* Paleta institucional EXACTA del frontend (verde + oro).
+                           Reemplaza la paleta green/gold por defecto de Tailwind,
+                           que era un verde distinto (más brillante). */
+                        green: {
+                            50:'#ecfdf3',100:'#d2f9e0',200:'#a8f0c6',300:'#6fe0a6',400:'#38c882',
+                            500:'#059c45',600:'#00913f',700:'#00913f',800:'#08573a',900:'#084832',950:'#02281c',
+                        },
+                        gold: {
+                            50:'#fdfaec',100:'#faf1c8',200:'#f5e08d',300:'#efca52',400:'#eab52a',
+                            500:'#d99a16',600:'#bd7510',700:'#975211',800:'#7c4115',900:'#693717',950:'#3d1c08',
+                        },
+                        brand: {
+                            green:  '#00913f',
+                            emerald:'#059c45',
+                            dark:   '#02281c',
+                            gold:   '#eab52a',
+                        },
+                    },
                 },
             },
         };
@@ -32,9 +51,14 @@
     
     <style>
         :root {
-            --color-navy: #00294d;       /* Azul Marino Corporativo Principal */
-            --color-red-accent: #e11d48; /* Rojo Institucional de Alto Contraste */
+            /* Paleta de MARCA (verde + oro), unificada con el frontend. */
+            --color-navy: #084832;       /* Verde profundo institucional = green-900 del frontend */
+            --color-red-accent: #eab52a; /* Oro institucional (acentos de navegación) */
             --color-bg-clean: #f1f5f9;   /* Fondo gris claro nítido para el área de trabajo */
+            /* Altura común de la barra superior: la comparten el bloque del logo
+               del sidebar y el header de cada página, para que sus líneas
+               divisorias queden a la MISMA altura (simétricas). */
+            --topbar-h: 116px;
         }
 
         body {
@@ -42,17 +66,44 @@
             background-color: var(--color-bg-clean);
         }
 
-        /* Estilos del Sidebar con el color corporativo exacto */
+        /* ── Degradados de MARCA (verde → esmeralda → oro) ── */
+        .brand-gradient-bg  { background-image: linear-gradient(120deg, #00913f, #059c45 55%, #eab52a); }
+        .brand-gradient-bar { background-image: linear-gradient(90deg, #00913f, #059c45, #eab52a); }
+        .brand-gradient-animated {
+            background-image: linear-gradient(90deg, #00913f, #059c45, #eab52a, #059c45, #00913f);
+            background-size: 200% 100%;
+            animation: brand-slide 6s linear infinite;
+        }
+        @keyframes brand-slide { to { background-position: 200% 50%; } }
+
+        /* Estilos del Sidebar con degradado sutil de marca */
         .sidebar-corporate {
             background-color: var(--color-navy);
+            background-image: linear-gradient(180deg, #08573a 0%, #084832 55%, #02281c 100%);
             box-shadow: 4px 0 25px rgba(0, 0, 0, 0.15);
         }
+
+        /* Header del panel con la MISMA difuminación (degradado) que el sidebar,
+           para que cabecera y menú lateral se lean como un bloque simétrico.
+           Ambos arrancan en #08573a arriba, así el borde superior es continuo.
+           Altura fija = --topbar-h y contenido centrado en vertical → su línea
+           inferior coincide con la del bloque del logo del sidebar. */
+        .header-corporate {
+            background-color: var(--color-navy);
+            background-image: linear-gradient(180deg, #08573a 0%, #084832 55%, #02281c 100%);
+            min-height: var(--topbar-h);
+            display: flex;
+            align-items: center;
+        }
+
+        /* Bloque del logo del sidebar: misma altura que el header. */
+        .sidebar-brand { min-height: var(--topbar-h); }
 
         /* Enlaces de navegación con alto contraste y enfoque nítido */
         .nav-link-premium {
             font-weight: 600;
-            color: #cbd5e1;
-            transition: all 0.2s ease-in-out;
+            color: #d7e6dd;
+            transition: color .2s ease, background-color .2s ease, border-color .2s ease, padding-left .2s ease;
             border-left: 4px solid transparent;
         }
         .nav-link-premium:hover {
@@ -63,9 +114,46 @@
         }
         .nav-link-premium.active {
             color: #ffffff;
-            background-color: rgba(255, 255, 255, 0.12);
+            background-color: rgba(234, 181, 42, 0.14);
             border-left-color: var(--color-red-accent);
+            box-shadow: inset 0 0 22px -6px rgba(234, 181, 42, 0.35);
         }
+        .nav-link-premium i { transition: transform .2s ease; }
+        .nav-link-premium:hover i,
+        .nav-link-premium.active i { transform: scale(1.12); color: #f5cf5e; }
+
+        /* Título de cada sección/categoría del menú. Se oculta al colapsar el
+           sidebar (clase sidebar-collapsible). */
+        .nav-section {
+            padding: 0.9rem 1rem 0.35rem;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.38);
+            user-select: none;
+        }
+        /* Al colapsar, una línea divisoria sustituye a los títulos para no
+           perder la separación entre secciones. */
+        #sidebar.collapsed .nav-section {
+            padding: 0.5rem 0;
+            margin: 0 0.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* ── Entrada escalonada de los enlaces del menú al cargar (fresco) ──
+           Usa nth-of-type para contar SOLO los <a> (ignora los títulos <p>). */
+        @keyframes nav-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        #sidebar nav > a { animation: nav-in .45s cubic-bezier(.16,1,.3,1) both; }
+        #sidebar nav > a:nth-of-type(1) { animation-delay: .04s; }
+        #sidebar nav > a:nth-of-type(2) { animation-delay: .09s; }
+        #sidebar nav > a:nth-of-type(3) { animation-delay: .14s; }
+        #sidebar nav > a:nth-of-type(4) { animation-delay: .19s; }
+        #sidebar nav > a:nth-of-type(5) { animation-delay: .24s; }
+        #sidebar nav > a:nth-of-type(6) { animation-delay: .29s; }
+        #sidebar nav > a:nth-of-type(7) { animation-delay: .34s; }
+        #sidebar nav > a:nth-of-type(8) { animation-delay: .39s; }
+        @media (prefers-reduced-motion: reduce) { #sidebar nav > a { animation: none; } }
 
         /* Componentes de interfaz compartidos */
         .preview-image {
@@ -78,7 +166,7 @@
         }
         
         .dropzone-area {
-            border: 2px dashed #00294d;
+            border: 2px dashed #00913f;
             border-radius: 1rem;
             background: #ffffff;
             min-height: 200px;
@@ -121,10 +209,10 @@
            rápido (220 ms) y con ease-out fuerte. Solo anima opacity y
            transform (GPU). Se desactiva si el usuario prefiere menos motion. */
         @keyframes vista-enter {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: translateY(14px) scale(.995); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
         }
-        .vista-enter { animation: vista-enter 220ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .vista-enter { animation: vista-enter 360ms cubic-bezier(0.16, 1, 0.3, 1) both; }
         @media (prefers-reduced-motion: reduce) {
             .vista-enter { animation: none; }
         }
@@ -145,6 +233,35 @@
         /* La flecha del botón apunta hacia afuera según el estado */
         #sidebar .sidebar-toggle-btn i { transition: transform 0.25s ease; }
         #sidebar.collapsed .sidebar-toggle-btn i { transform: rotate(180deg); }
+
+        /* ===== PULIDO: accesibilidad y microdetalles de marca ===== */
+        html { scroll-behavior: smooth; }
+        ::selection { background: rgba(234, 181, 42, 0.35); color: #04301e; }
+
+        /* Foco visible por TECLADO (a11y) coherente con la marca; no afecta al clic. */
+        a.nav-link-premium:focus-visible,
+        button:focus-visible {
+            outline: 2px solid #eab52a;
+            outline-offset: 2px;
+            border-radius: 10px;
+        }
+
+        /* Barra de scroll sutil en el área de trabajo (coherente, no chillona) */
+        main::-webkit-scrollbar { width: 10px; }
+        main::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; border: 2px solid #f1f5f9; }
+        main::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Tarjetas contenedoras: transición suave para hover consistente */
+        .card-premium-shadow { transition: box-shadow .25s ease, transform .25s ease; }
+
+        /* ===== Respeto a "reducir movimiento" (accesibilidad, obligatorio) =====
+           Todo lo animado (incluido el bucle de la barra de marca) colapsa a estático. */
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            .brand-gradient-animated { animation: none; }
+            .vista-enter,
+            #sidebar nav > a { animation: none; }
+        }
     </style>
 </head>
 <body class="antialiased select-none text-slate-950">
@@ -157,28 +274,30 @@
             {{-- Botón flotante para abrir/cerrar el menú (borde derecho, centrado) --}}
             <button type="button" onclick="toggleSidebar()" title="Abrir/cerrar menú" aria-label="Abrir o cerrar menú"
                     class="sidebar-toggle-btn group absolute top-1/2 -right-5 -translate-y-1/2 z-40 w-11 h-11 rounded-full
-                           flex items-center justify-center text-white bg-[#00294d] hover:bg-[#e11d48]
-                           border-2 border-white shadow-lg transition-all duration-200 active:scale-90">
+                           flex items-center justify-center text-white bg-brand-green hover:bg-brand-emerald
+                           border-2 border-white shadow-lg transition-all duration-200 active:scale-90 hover:scale-105">
                 <i class="fas fa-chevron-left text-base group-hover:scale-110 transition-transform"></i>
             </button>
 
-            <div class="p-5 pt-5 border-b border-white/10 flex flex-col items-center justify-center bg-black/10">
-                {{-- Logo completo (visible cuando el menú está abierto) --}}
-                <div class="sidebar-collapsible flex items-center justify-center">
+            <div class="sidebar-brand px-5 border-b border-white/10 flex flex-col items-center justify-center bg-black/10">
+                {{-- Logo completo (mismo de marca que el frontend: sello "C" verde→oro) --}}
+                <div class="sidebar-collapsible flex items-center gap-2.5">
+                    <span class="grid place-items-center w-10 h-10 rounded-xl brand-gradient-bg ring-1 ring-inset ring-brand-gold/50 text-white font-serif font-black text-lg leading-none shadow-lg">C</span>
                     <div class="flex flex-col leading-none">
                         <span class="font-extrabold italic text-white text-xl tracking-tight">SGT</span>
-                        <span class="font-extrabold text-rose-600 text-sm tracking-wide leading-tight">CHIMBO</span>
-                        <span class="text-[8px] font-semibold tracking-[0.3em] text-slate-300 mt-1">GESTIÓN TURÍSTICA</span>
+                        <span class="font-extrabold text-brand-gold text-sm tracking-wide leading-tight">CHIMBO</span>
+                        <span class="text-[8px] font-semibold tracking-[0.3em] text-green-200/70 mt-1">GESTIÓN TURÍSTICA</span>
                     </div>
                 </div>
                 {{-- Logo mini (visible solo cuando el menú está cerrado) --}}
                 <div class="sidebar-mini hidden items-center justify-center">
-                    <img src="{{ asset('media/logo/logo-icon.svg') }}" alt="SGT Chimbo" class="h-9 w-9 rounded-lg">
+                    <span class="grid place-items-center w-10 h-10 rounded-xl brand-gradient-bg ring-1 ring-inset ring-brand-gold/50 text-white font-serif font-black text-lg leading-none shadow-lg">C</span>
                 </div>
             </div>
             
-            <nav class="flex-1 mt-6 space-y-1 px-2">
-                {{-- Dashboard: visible para ambos roles --}}
+            <nav class="flex-1 mt-4 space-y-1 px-2">
+                {{-- ── Principal (ambos roles) ── --}}
+                <p class="nav-section sidebar-collapsible">Principal</p>
                 <a href="{{ route('admin.dashboard') }}" title="Dashboard" class="nav-link-premium flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <i class="fas fa-tachometer-alt w-5 text-center text-base"></i>
                     <span>Dashboard</span>
@@ -186,6 +305,8 @@
 
                 {{-- Sección del Admin de Turismo --}}
                 @if(auth()->user()?->isAdminTurismo())
+                {{-- ── Contenido ── --}}
+                <p class="nav-section sidebar-collapsible">Contenido</p>
                 <a href="{{ route('admin.home.edit') }}" title="Editar Home" class="nav-link-premium flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('admin.home.*') ? 'active' : '' }}">
                     <i class="fas fa-house w-5 text-center text-base"></i>
                     <span>Editar Home</span>
@@ -202,6 +323,8 @@
                     <i class="fas fa-images w-5 text-center text-base"></i>
                     <span>Galerías</span>
                 </a>
+                {{-- ── Turismo ── --}}
+                <p class="nav-section sidebar-collapsible">Turismo</p>
                 <a href="{{ route('admin.lugares.index') }}" title="Lugares Turísticos" class="nav-link-premium flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('admin.lugares.*') ? 'active' : '' }}">
                     <i class="fas fa-map-marker-alt w-5 text-center text-base"></i>
                     <span>Lugares Turísticos</span>
@@ -210,7 +333,9 @@
                     <i class="fas fa-tags w-5 text-center text-base"></i>
                     <span>Categorías</span>
                 </a>
-                <a href="{{ route('admin.reportes.visitas') }}" title="Reportes" class="nav-link-premium flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('admin.reportes.*') ? 'active' : '' }}">
+                {{-- ── Análisis ── --}}
+                <p class="nav-section sidebar-collapsible">Análisis</p>
+                <a href="{{ route('admin.reportes.index') }}" title="Reportes" class="nav-link-premium flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('admin.reportes.*') ? 'active' : '' }}">
                     <i class="fas fa-chart-line w-5 text-center text-base"></i>
                     <span>Reportes</span>
                 </a>
@@ -218,6 +343,8 @@
 
                 {{-- Sección del Administrador --}}
                 @if(auth()->user()?->isAdministrador())
+                {{-- ── Administración ── --}}
+                <p class="nav-section sidebar-collapsible">Administración</p>
                 <a href="{{ route('admin.usuarios.index') }}" title="Usuarios" class="nav-link-premium flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('admin.usuarios.*') ? 'active' : '' }}">
                     <i class="fas fa-users w-5 text-center text-base"></i>
                     <span>Usuarios</span>
@@ -229,7 +356,7 @@
                 <button
                     type="button"
                     onclick="ejecutarCierreSesionCorporativo(event)"
-                    class="w-full px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold uppercase tracking-wider rounded-lg text-xs transition-all duration-150 flex items-center justify-center gap-2 shadow-md shadow-rose-900/30 active:scale-[0.98]"
+                    class="w-full px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-wider rounded-lg text-xs transition-all duration-150 flex items-center justify-center gap-2 shadow-md shadow-red-900/30 active:scale-[0.98]"
                 >
                     <i class="fas fa-sign-out-alt text-sm"></i> <span class="sidebar-collapsible">Cerrar Sesión</span>
                 </button>
@@ -259,7 +386,7 @@
             </div>
             <h3 id="modal-alerta-title" class="text-xl font-black text-slate-800 mb-2"></h3>
             <p id="modal-alerta-msg" class="text-sm text-slate-500 mb-7 leading-relaxed"></p>
-            <button type="button" onclick="cerrarModalAlerta()" class="px-8 py-2.5 rounded-xl bg-[#00294d] hover:bg-[#003d73] text-white text-sm font-black transition-all shadow-md">
+            <button type="button" onclick="cerrarModalAlerta()" class="px-8 py-2.5 rounded-xl bg-brand-green hover:bg-brand-emerald text-white text-sm font-black transition-all shadow-md">
                 Aceptar
             </button>
             <div class="h-1 rounded-full bg-slate-100 mt-6 overflow-hidden">
@@ -309,7 +436,7 @@
                     Cerrar sesión
                 </button>
                 <button onclick="renovarSesion()"
-                    class="px-6 py-2.5 rounded-xl bg-[#00294d] hover:bg-[#003d73] text-white text-sm font-black transition-all shadow-md flex items-center gap-2">
+                    class="px-6 py-2.5 rounded-xl bg-brand-green hover:bg-brand-emerald text-white text-sm font-black transition-all shadow-md flex items-center gap-2">
                     <i class="fas fa-rotate-right text-xs"></i> Seguir conectado
                 </button>
             </div>
@@ -323,8 +450,8 @@
         {{-- Tarjeta --}}
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center animate-[fadeInScale_.2s_ease]">
             {{-- Icono --}}
-            <div class="mx-auto mb-5 w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center">
-                <i class="fas fa-trash-alt text-2xl text-rose-500"></i>
+            <div class="mx-auto mb-5 w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
+                <i class="fas fa-trash-alt text-2xl text-red-500"></i>
             </div>
             {{-- Título (texto dinámico: "eliminar" para borrados reales, "dar de baja" para desactivaciones reversibles) --}}
             <h3 id="modal-confirmar-title" class="text-xl font-black text-slate-800 mb-2">¿Confirmar eliminación?</h3>
@@ -337,7 +464,7 @@
                     Cancelar
                 </button>
                 <button id="modal-confirmar-btn"
-                    class="px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-black transition-all shadow-md shadow-rose-200 flex items-center gap-2">
+                    class="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-black transition-all shadow-md shadow-red-200 flex items-center gap-2">
                     <i id="modal-confirmar-btn-icon" class="fas fa-trash-alt text-xs"></i>
                     <span id="modal-confirmar-btn-texto">Eliminar</span>
                 </button>
@@ -347,8 +474,8 @@
 
     <style>
         @keyframes fadeInScale {
-            from { opacity: 0; transform: scale(.92); }
-            to   { opacity: 1; transform: scale(1); }
+            from { opacity: 0; transform: scale(.92) translateY(10px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
         }
     </style>
 
@@ -393,10 +520,10 @@
         // mismo look que el modal de confirmación. Si llega una alerta
         // mientras otra está visible, se encola y se muestra a continuación.
         const ALERTA_CFG = {
-            success: { icono: 'fa-circle-check',        iconBg: 'bg-emerald-50', iconColor: 'text-emerald-500', barra: 'bg-emerald-500', titulo: 'Éxito' },
-            error:   { icono: 'fa-circle-xmark',         iconBg: 'bg-rose-50',    iconColor: 'text-rose-500',    barra: 'bg-rose-500',    titulo: 'Error' },
+            success: { icono: 'fa-circle-check',        iconBg: 'bg-green-50', iconColor: 'text-green-500', barra: 'bg-green-500', titulo: 'Éxito' },
+            error:   { icono: 'fa-circle-xmark',         iconBg: 'bg-red-50',     iconColor: 'text-red-500',     barra: 'bg-red-500',     titulo: 'Error' },
             warning: { icono: 'fa-triangle-exclamation', iconBg: 'bg-amber-50',   iconColor: 'text-amber-500',   barra: 'bg-amber-500',   titulo: 'Atención' },
-            info:    { icono: 'fa-circle-info',          iconBg: 'bg-blue-50',    iconColor: 'text-blue-500',    barra: 'bg-blue-500',    titulo: 'Información' },
+            info:    { icono: 'fa-circle-info',          iconBg: 'bg-teal-50',    iconColor: 'text-teal-500',    barra: 'bg-teal-500',    titulo: 'Información' },
         };
         const ALERTA_DURACION = 4500;
         let _alertaCola  = [];

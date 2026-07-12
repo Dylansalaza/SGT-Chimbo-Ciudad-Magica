@@ -17,15 +17,88 @@ import {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000/api';
 
-// Frase de cierre que se agrega al final de toda respuesta del asistente.
-const CLOSING = '¿Te puedo ayudar en algo más?';
+// Frase de cierre que se agrega al final de las respuestas del asistente.
+const CLOSING = '¿Puedo ayudarte con algo más?';
 function withClosing(text) {
-  return `${text}\n\n${CLOSING}`;
+  const t = (text || '').trimEnd();
+  // Evita repetir el cierre cuando el mensaje YA termina en una pregunta
+  // (p. ej. la IA que cierra con "¿En qué puedo ayudarte?"): no duplicamos.
+  if (/[?？]\s*$/.test(t)) return t;
+  return `${t}\n\n${CLOSING}`;
 }
 
 // Palabras clave para detectar lugares de gastronomía
 const FOOD_KEYS = ['gastro', 'restaurante', 'comida', 'cafetería', 'cafeteria',
                    'cocina', 'alimenta', 'comer', 'food', 'picante', 'mercado'];
+
+// ─────────────────────────────────────────────────────────────
+// INTENCIONES POR CATEGORÍA (para el input de texto libre)
+// El asistente recorre esta lista (LOOP) cuando el usuario escribe de forma
+// natural ("¿dónde hay miradores?", "quiero ir a un parque", "dónde comer")
+// y responde con el CONTEXTO (lista de lugares + direcciones) y la UBICACIÓN
+// EXACTA en el mapa (botón general por categoría + cada lugar con su ficha).
+//   · keywords      → cómo lo diría una persona (se comparan sin acentos).
+//   · categoriaKeys → subcadenas que deben aparecer en la categoría de la BD.
+//   · emoji         → icono de la sección (debe existir en LABEL_ICON_MAP).
+// ─────────────────────────────────────────────────────────────
+const CATEGORY_INTENTS = [
+  {
+    key: 'mirador',
+    titulo: 'Miradores de Chimbo',
+    emoji: '⛰️',
+    keywords: ['mirador', 'miradores', 'vista', 'vistas', 'panoramica', 'panoramicas',
+               'paisaje', 'paisajes', 'ver la ciudad', 'mirar la ciudad'],
+    categoriaKeys: ['mirador'],
+  },
+  {
+    key: 'parque',
+    titulo: 'Parques de Chimbo',
+    emoji: '🌳',
+    keywords: ['parque', 'parques', 'jugar', 'niños', 'ninos', 'juegos', 'area verde',
+               'areas verdes', 'recrear', 'recreacion', 'pasear', 'caminar'],
+    categoriaKeys: ['parque'],
+  },
+  {
+    key: 'cascada',
+    titulo: 'Cascadas de Chimbo',
+    emoji: '💧',
+    keywords: ['cascada', 'cascadas', 'catarata', 'cataratas', 'agua', 'nadar',
+               'poza', 'balneario', 'rio', 'naturaleza', 'aventura'],
+    categoriaKeys: ['cascada'],
+  },
+  {
+    key: 'iglesia',
+    titulo: 'Iglesias y sitios religiosos',
+    emoji: '⛪',
+    keywords: ['iglesia', 'iglesias', 'templo', 'templos', 'religios', 'santuario',
+               'misa', 'rezar', 'catedral', 'capilla'],
+    categoriaKeys: ['iglesia', 'religios'],
+  },
+  {
+    key: 'cultura',
+    titulo: 'Sitios culturales',
+    emoji: '🎭',
+    keywords: ['cultura', 'cultural', 'historia', 'historico', 'historicos', 'patrimonio',
+               'museo', 'tradicion', 'monumento'],
+    categoriaKeys: ['cultura'],
+  },
+  {
+    key: 'comida',
+    titulo: 'Lugares para comer',
+    emoji: '🍽️',
+    // FOOD_KEYS + verbos/momentos de comida
+    keywords: [...FOOD_KEYS, 'almorzar', 'almuerzo', 'cenar', 'cena', 'desayunar',
+               'desayuno', 'hornado', 'hambre', 'donde comer'],
+    categoriaKeys: FOOD_KEYS,
+  },
+];
+
+// Palabras con las que una persona pregunta, en general, a dónde ir / qué hacer,
+// sin nombrar una categoría concreta → mostramos el menú de categorías.
+const GENERAL_GO_KEYS = ['donde puedo ir', 'donde ir', 'a donde ir', 'a donde puedo ir',
+  'que visitar', 'que puedo visitar', 'que hacer', 'que puedo hacer', 'que lugares',
+  'lugares para visitar', 'sitios para visitar', 'donde pasear', 'recomienda',
+  'recomendacion', 'recomendaciones', 'que conocer', 'donde ir a pasear'];
 
 // ─────────────────────────────────────────────────────────────
 // Coordenadas de referencia para las secciones ESTÁTICAS del FAQ.
@@ -63,6 +136,10 @@ const LABEL_ICON_MAP = [
   [/^🎉\s*/, SparklesIcon],
   [/^🎊\s*/, SparklesIcon],
   [/^🎭\s*/, SparklesIcon],
+  [/^⛰️\s*/, MapPinIcon],
+  [/^🌳\s*/, MapPinIcon],
+  [/^💧\s*/, MapPinIcon],
+  [/^⛪\s*/, BuildingLibraryIcon],
   [/^←\s*/, ArrowLeftIcon],
 ];
 
@@ -119,25 +196,15 @@ const STATIC_SECTIONS = {
   madera_compra: {
     text: "**Talleres de madera en Chimbo:**\n\n• Calle Bolívar y García Moreno\n• Feria artesanal del parque central (fines de semana)\n• Expo-ferias del GAD Municipal (fechas especiales)",
     buttons: [
-      { label: "🗺️ Ver en el mapa",   action: "mapa", ...COORDS.centroChimbo, nombre: "Talleres de madera (centro de Chimbo)" },
       { label: "← Volver",             next: "madera" },
       { label: "🏠 Menú principal",     next: "root" },
     ],
   },
   armeros: {
-    text: "**Armería de Tambán**\n\nTambán, barrio de San José de Chimbo, en la provincia de Bolívar, fue conocido durante décadas como la tierra de la armería en Ecuador. Desde inicios del siglo XX, en ese sitio se fabricaron escopetas, carabinas y revólveres artesanales.",
+    text: "**Armería de Tambán**\n\nTambán, barrio de San José de Chimbo, en la provincia de Bolívar, fue conocido durante décadas como la tierra de la armería en Ecuador. Desde inicios del siglo XX, en ese sitio se fabricaron escopetas, carabinas y revólveres artesanales.\n\n**Ubicación:** barrio de San José de Chimbo, en la vía al Santuario del Guayco, a pocos minutos del centro. Accesible en vehículo o a pie.",
     buttons: [
-      { label: "📍 Cómo llegar",        next: "tamban_ubicacion" },
       { label: "← Volver",              next: "artesanias" },
       { label: "🏠 Menú principal",      next: "root" },
-    ],
-  },
-  tamban_ubicacion: {
-    text: "**Tambán — Cómo llegar:**\n\nBarrio de San José de Chimbo, en la vía al Santuario del Guayco, a pocos minutos del centro.\nAccesible en vehículo o a pie.",
-    buttons: [
-      { label: "🗺️ Ver en el mapa",   action: "mapa", ...COORDS.tamban, nombre: "Tambán — Armería artesanal" },
-      { label: "← Volver",             next: "armeros" },
-      { label: "🏠 Menú principal",     next: "root" },
     ],
   },
   pirotecnia: {
@@ -303,18 +370,61 @@ function buildFAQ(places) {
     buttons: gastronomiaButtons,
   };
 
+  // ── Nodos por categoría (LOOP) para el texto libre ─────
+  // Por cada intención con lugares registrados creamos un nodo cat_<key> con su
+  // contexto + acceso al mapa, y lo sumamos al menú general "¿a dónde ir?".
+  const dondeIrButtons = [];
+  CATEGORY_INTENTS.forEach(intent => {
+    const matched = places.filter(p =>
+      p.categoria && intent.categoriaKeys.some(k => p.categoria.toLowerCase().includes(k))
+    );
+    if (matched.length === 0) return;
+    faq[`cat_${intent.key}`] = buildCategoryAnswer(intent, matched);
+    dondeIrButtons.push({ label: `${intent.emoji} ${intent.titulo}`, next: `cat_${intent.key}` });
+  });
+  dondeIrButtons.push({ label: "🏠 Menú principal", next: "root" });
+
+  faq.donde_ir = {
+    text: "**¿A dónde puedes ir en Chimbo?**\n\nElige qué tipo de lugar quieres visitar y te muestro la información y su ubicación en el mapa:",
+    buttons: dondeIrButtons,
+  };
+
   // ── Nodo raíz ──────────────────────────────────────────
   faq.root = {
     text: "¡Hola! Soy tu asistente virtual de **Chimbo Ciudad Mágica**.\n\n¿En qué puedo ayudarte hoy?",
     buttons: [
       { label: "🗺️ Sitios Turísticos",    next: "sitios" },
-      { label: "🍽️ Gastronomía",          next: "gastronomia" },
       { label: "🛠️ Artesanías",           next: "artesanias" },
       { label: "📅 Eventos y Fiestas",    next: "eventos" },
     ],
   };
 
   return faq;
+}
+
+// Construye la respuesta de UNA categoría para el input de texto libre: da el
+// CONTEXTO (nombres y direcciones) y la UBICACIÓN EXACTA en el mapa — un botón
+// general por categoría y uno por lugar (su ficha place_/food_ incluye "Ver en
+// el mapa" y "Cómo llegar", nodos que crea buildFAQ). Recibe los lugares ya
+// filtrados por categoría.
+function buildCategoryAnswer(intent, matched) {
+  const lines = [`**${intent.titulo}**`, ""];
+  matched.slice(0, 6).forEach(p => {
+    lines.push(`• **${p.nombre}**${p.direccion ? ` — ${p.direccion}` : ''}`);
+  });
+  lines.push("");
+  lines.push("Toca un lugar para ver su información y su ubicación exacta en el mapa:");
+
+  const buttons = [
+    { label: "🗺️ Ver todos en el mapa", action: "mapa_categoria", categoriaKeys: intent.categoriaKeys, places: matched },
+  ];
+  matched.slice(0, 6).forEach(p => {
+    const prefix = isFoodPlace(p.categoria) ? 'food' : 'place';
+    buttons.push({ label: `📍 ${p.nombre}`, next: `${prefix}_${p.id}` });
+  });
+  buttons.push({ label: "🏠 Menú principal", next: "root" });
+
+  return { text: lines.join('\n'), buttons };
 }
 
 // ════════════════════════════════════════════════════════════
@@ -346,6 +456,32 @@ function buscarFaq(mensaje, keywordFaqs) {
     }
   }
   return mejor;
+}
+
+// Recorre las intenciones por categoría (LOOP) y devuelve la que corresponde al
+// mensaje escrito de forma natural, o null. Si varias coinciden, gana la palabra
+// clave más larga (más específica): así "parque infantil" prima sobre "parque".
+function detectarCategoria(mensaje) {
+  const t = normalizar(mensaje);
+  if (!t) return null;
+  let mejor = null, mejorLen = 0;
+  for (const intent of CATEGORY_INTENTS) {
+    for (const kw of intent.keywords) {
+      const k = normalizar(kw);
+      if (k && t.includes(k) && k.length > mejorLen) {
+        mejor = intent;
+        mejorLen = k.length;
+      }
+    }
+  }
+  return mejor;
+}
+
+// Detecta la pregunta general "¿a dónde puedo ir?" (sin nombrar una categoría).
+function esConsultaGeneral(mensaje) {
+  const t = normalizar(mensaje);
+  if (!t) return false;
+  return GENERAL_GO_KEYS.some(k => t.includes(normalizar(k)));
 }
 
 function Chatbot() {
@@ -422,6 +558,26 @@ function Chatbot() {
       return;
     }
 
+    // ── Acción especial: mapa con todos los lugares de una categoría ──
+    // (miradores, parques, cascadas…). Filtra por categoriaKeys, resalta el
+    // grupo y centra en el primero.
+    if (btn.action === 'mapa_categoria') {
+      const first = btn.places?.[0];
+      navigate('/mapa', {
+        state: {
+          categoriaKeys: btn.categoriaKeys,
+          ...(first?.lat && first?.lng ? {
+            lat:     parseFloat(first.lat),
+            lng:     parseFloat(first.lng),
+            placeId: first.id,
+            nombre:  first.nombre,
+          } : {}),
+        },
+      });
+      setIsOpen(false);
+      return;
+    }
+
     // ── Acción especial: navegar al mapa interno (con coordenadas) ──
     if (btn.action === 'mapa') {
       navigate('/mapa', {
@@ -475,7 +631,23 @@ function Chatbot() {
     };
     setMessages(prev => [...prev, userMsg]);
 
-    // 1) Buscar coincidencia rápida entre lo escrito y las palabras clave del panel admin
+    // 1) ¿Pregunta por una categoría en lenguaje natural (miradores, parques,
+    //    cascadas, iglesias, dónde comer…)? Recorremos las intenciones (LOOP) y
+    //    respondemos con el contexto (lugares + direcciones) y su ubicación EXACTA
+    //    en el mapa. Si nombra una categoría concreta, prima sobre lo general.
+    const intent = detectarCategoria(txt);
+    if (intent && faq[`cat_${intent.key}`]) {
+      setMessages(prev => [...prev, makeBotMsg(faq[`cat_${intent.key}`], `cat_${intent.key}`, faq)]);
+      return;
+    }
+
+    // 1b) Pregunta general "¿a dónde puedo ir?" → menú de categorías con mapa.
+    if (esConsultaGeneral(txt) && faq.donde_ir) {
+      setMessages(prev => [...prev, makeBotMsg(faq.donde_ir, 'donde_ir', faq)]);
+      return;
+    }
+
+    // 2) Buscar coincidencia rápida entre lo escrito y las palabras clave del panel admin
     //    (instantáneo y sin gastar cuota de IA).
     const coincidencia = buscarFaq(txt, keywordFaqs);
     if (coincidencia) {
@@ -487,7 +659,7 @@ function Chatbot() {
       return;
     }
 
-    // 2) Si no hay coincidencia exacta, preguntarle a la IA (Gemini) con
+    // 3) Si no hay coincidencia exacta, preguntarle a la IA (Gemini) con
     //    el contexto real del portal, para que responda de forma natural.
     setAiThinking(true);
     try {
@@ -542,10 +714,10 @@ function Chatbot() {
     if (btn.action === 'googlemaps')
       return 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600';
     if (btn.next === 'root')
-      return 'bg-[#00335c] text-white border-[#00335c] hover:bg-[#004080]';
+      return 'bg-[#00913f] text-white border-[#00913f] hover:bg-[#004080]';
     if (btn.label.startsWith('←'))
       return 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200';
-    return 'bg-white text-slate-800 border-slate-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700';
+    return 'bg-white text-slate-800 border-slate-200 hover:bg-green-50 hover:border-green-300 hover:text-green-700';
   }
 
   return (
@@ -553,7 +725,7 @@ function Chatbot() {
       {/* ── Botón flotante ── */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 bg-gradient-to-r from-[#00335c] to-blue-700 text-white rounded-full p-4 shadow-2xl z-50 transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center border-2 border-white"
+        className="fixed bottom-6 right-6 bg-gradient-to-r from-[#00913f] to-green-700 text-white rounded-full p-4 shadow-2xl z-50 transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center border-2 border-white"
         title="Asistente Virtual"
       >
         {isOpen ? (
@@ -575,15 +747,14 @@ function Chatbot() {
           sm:left-auto sm:right-6 sm:w-80 sm:h-[28rem] sm:max-h-none">
 
           {/* Header */}
-          <div className="bg-[#00335c] text-white p-4 flex justify-between items-center shadow-md">
+          <div className="bg-[#00913f] text-white p-4 flex justify-between items-center shadow-md">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 bg-white/10 rounded-full flex items-center justify-center border border-white/20">
                 <BuildingLibraryIcon className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="font-bold text-sm tracking-wide flex items-center gap-1.5 whitespace-nowrap">
+                <h3 className="font-bold text-sm tracking-wide whitespace-nowrap">
                   Asistente Virtual
-                  <span className="text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded font-mono">FAQ</span>
                 </h3>
                 <p className="text-xs text-slate-300">Turismo — Chimbo</p>
               </div>
@@ -615,7 +786,7 @@ function Chatbot() {
 
                 {/* Avatar bot */}
                 {msg.sender === 'bot' && (
-                  <div className="w-7 h-7 bg-[#00335c] text-white rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-7 h-7 bg-[#00913f] text-white rounded-full flex items-center justify-center flex-shrink-0">
                     <BuildingLibraryIcon className="w-4 h-4" />
                   </div>
                 )}
@@ -624,12 +795,12 @@ function Chatbot() {
                   {/* Burbuja */}
                   <div className={`p-3.5 rounded-2xl shadow-sm text-sm leading-relaxed
                     ${msg.sender === 'user'
-                      ? 'bg-blue-600 text-white rounded-br-none'
+                      ? 'bg-green-600 text-white rounded-br-none'
                       : 'bg-white text-slate-800 rounded-bl-none border border-slate-200'
                     }`}>
                     {renderText(msg.text)}
                     <div className={`text-[9px] mt-1 opacity-60 text-right
-                      ${msg.sender === 'user' ? 'text-blue-100' : 'text-slate-400'}`}>
+                      ${msg.sender === 'user' ? 'text-green-100' : 'text-slate-400'}`}>
                       {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
@@ -662,7 +833,7 @@ function Chatbot() {
             {/* Indicador "escribiendo…" mientras la IA responde */}
             {aiThinking && (
               <div className="flex justify-start items-end gap-2">
-                <div className="w-7 h-7 bg-[#00335c] text-white rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-7 h-7 bg-[#00913f] text-white rounded-full flex items-center justify-center flex-shrink-0">
                   <BuildingLibraryIcon className="w-4 h-4" />
                 </div>
                 <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm flex gap-1 items-center">
@@ -684,12 +855,12 @@ function Chatbot() {
               onChange={(e) => setInput(e.target.value)}
               disabled={loading || !faq || aiThinking}
               placeholder="Escribe tu consulta (ej: horario, precio, wifi)…"
-              className="flex-1 p-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-slate-700 disabled:opacity-50"
+              className="flex-1 p-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-slate-50 text-slate-700 disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={loading || !faq || aiThinking}
-              className="bg-[#00335c] hover:bg-blue-800 text-white px-4 py-2 text-sm rounded-xl transition shadow-sm disabled:opacity-50"
+              className="bg-[#00913f] hover:bg-green-800 text-white px-4 py-2 text-sm rounded-xl transition shadow-sm disabled:opacity-50"
             >
               Enviar
             </button>

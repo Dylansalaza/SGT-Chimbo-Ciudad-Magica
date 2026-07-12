@@ -4,13 +4,13 @@
 <div class="w-full flex flex-col">
     
     {{-- Header de Pantalla Completa --}}
-    <div class="sticky top-0 z-50 bg-[#00294d] text-white w-full px-10 py-8 shadow-lg border-b border-white/5">
+    <div class="sticky top-0 z-50 header-corporate text-white w-full px-10 shadow-lg border-b border-white/5">
         <div class="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
             <div class="space-y-1">
                 <h1 class="font-serif text-2xl font-extrabold tracking-tight md:text-3xl">Galerías Fotográficas</h1>
                 <p class="text-sm text-slate-300 font-medium">Módulo para subir imágenes del entorno, crear álbumes visuales y administrar fotos de portada.</p>
             </div>
-            <a href="{{ route('admin.galerias.create') }}" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black tracking-wider shadow-md transition-all uppercase self-start sm:self-center">
+            <a href="{{ route('admin.galerias.create') }}" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-black tracking-wider shadow-md transition-all uppercase self-start sm:self-center">
                 <i class="fas fa-plus"></i> Nueva Galería
             </a>
         </div>
@@ -42,13 +42,13 @@
                             </td>
                             <td class="px-6 py-4 text-sm text-center">
                                 <div class="flex items-center justify-center gap-2">
-                                    <a href="{{ route('admin.galerias.edit', $g->id) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100/70 transition">
+                                    <a href="{{ route('admin.galerias.edit', $g->id) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-black text-white hover:bg-slate-800 transition">
                                         <i class="fas fa-edit text-[10px]"></i> Editar
                                     </a>
                                     <form method="POST" action="{{ route('admin.galerias.destroy', $g->id) }}" onsubmit="return confirmarEliminar(this, '¿Seguro que deseas eliminar la galería «' + '{{ addslashes($g->title) }}' + '»? Esta acción no se puede deshacer.')">
                                         @csrf 
                                         @method('DELETE')
-                                        <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-100/70 transition">
+                                        <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100 border border-red-100/70 transition">
                                             <i class="fas fa-trash-alt text-[10px]"></i> Eliminar
                                         </button>
                                     </form>

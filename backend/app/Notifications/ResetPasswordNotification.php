@@ -25,18 +25,24 @@ class ResetPasswordNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
+        // La URL absoluta al formulario de nueva contraseña (con token + correo).
         $url = url(route('password.reset', [
             'token' => $this->token,
             'email' => $notifiable->getEmailForPasswordReset(),
         ], false));
 
+        // Minutos de validez del token (config oficial de Laravel), para que el
+        // texto del correo coincida siempre con la caducidad real.
+        $broker = config('auth.defaults.passwords', 'users');
+        $expira = (int) config("auth.passwords.{$broker}.expire", 60);
+
+        // Correo con plantilla HTML de marca (resources/views/emails/reset-password).
         return (new MailMessage)
-            ->subject('Restablecer contraseña — SGT San José de Chimbo')
-            ->greeting('Hola, ' . $notifiable->name . '.')
-            ->line('Recibimos una solicitud para restablecer la contraseña de tu cuenta en el **Sistema de Gestión Turística de San José de Chimbo**.')
-            ->action('Restablecer mi contraseña', $url)
-            ->line('Este enlace expirará en **60 minutos**.')
-            ->line('Si no solicitaste restablecer tu contraseña, puedes ignorar este correo — tu cuenta sigue segura.')
-            ->salutation('SGT Chimbo — Municipio de San José de Chimbo');
+            ->subject('Restablece tu contraseña — SGT San José de Chimbo')
+            ->view('emails.reset-password', [
+                'nombre' => $notifiable->name,
+                'url'    => $url,
+                'expira' => $expira,
+            ]);
     }
 }

@@ -6,8 +6,6 @@ import {
   CalendarDaysIcon,
   XMarkIcon,
   EyeIcon,
-  UserGroupIcon,
-  AcademicCapIcon,
 } from '@heroicons/react/24/solid';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000/api';
@@ -33,23 +31,25 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="bg-gray-900 text-white mt-8">
-        {/* Franja de acento con los colores institucionales del cantón */}
-        <div className="h-1 bg-green-700" />
-        <div className="h-0.5 bg-yellow-400" />
+      <footer className="bg-green-950 text-white mt-8">
+        {/* Franja de acento animada que une los colores del cantón (verde→oro) */}
+        <div className="h-1.5 brand-gradient-animated" />
 
         <div className="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
 
           {/* Marca */}
           <div className="lg:col-span-2">
-            <div className="flex items-center mb-3">
+            <div className="flex items-center gap-2.5 mb-3">
+              <span className="grid place-items-center w-9 h-9 rounded-xl brand-gradient-bg ring-1 ring-inset ring-gold-400/50 text-white font-serif font-black text-base leading-none">
+                C
+              </span>
               <div className="flex flex-col leading-none">
                 <span className="font-extrabold italic text-white text-xl tracking-tight">SGT</span>
-                <span className="font-extrabold text-rose-600 text-sm tracking-wide leading-tight">CHIMBO</span>
-                <span className="text-[8px] font-semibold tracking-[0.3em] text-slate-300 mt-1">GESTIÓN TURÍSTICA</span>
+                <span className="font-extrabold text-gold-400 text-sm tracking-wide leading-tight">CHIMBO</span>
+                <span className="text-[8px] font-semibold tracking-[0.3em] text-green-200/70 mt-1">GESTIÓN TURÍSTICA</span>
               </div>
             </div>
-            <p className="text-sm text-gray-400 leading-relaxed max-w-sm">
+            <p className="text-sm text-green-100/60 leading-relaxed max-w-sm">
               Sistema de Gestión Turística del cantón Chimbo, provincia de Bolívar, Ecuador.
               Historia colonial, naturaleza andina y tradición artesanal en un mismo destino.
             </p>
@@ -57,26 +57,26 @@ export default function Footer() {
 
           {/* Enlaces rápidos */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-300 mb-3">Explorar</h3>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="/" className="hover:text-yellow-400 transition-colors">Inicio</Link></li>
-              <li><Link to="/eventos" className="hover:text-yellow-400 transition-colors">Eventos</Link></li>
-              <li><Link to="/noticias" className="hover:text-yellow-400 transition-colors">Noticias</Link></li>
-              <li><Link to="/galerias" className="hover:text-yellow-400 transition-colors">Galerías</Link></li>
-              <li><Link to="/mapa" className="hover:text-yellow-400 transition-colors">Mapa Turístico</Link></li>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-green-200/80 mb-3">Explorar</h3>
+            <ul className="space-y-2 text-sm text-green-100/60">
+              <li><Link to="/" className="hover:text-gold-300 transition-colors">Inicio</Link></li>
+              <li><Link to="/eventos" className="hover:text-gold-300 transition-colors">Eventos</Link></li>
+              <li><Link to="/noticias" className="hover:text-gold-300 transition-colors">Noticias</Link></li>
+              <li><Link to="/galerias" className="hover:text-gold-300 transition-colors">Galerías</Link></li>
+              <li><Link to="/mapa" className="hover:text-gold-300 transition-colors">Mapa Turístico</Link></li>
             </ul>
           </div>
 
           {/* El cantón */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-300 mb-3">El Cantón</h3>
-            <ul className="space-y-2.5 text-sm text-gray-400">
-              <li className="flex items-center gap-2"><MapPinIcon className="w-3.5 h-3.5 shrink-0 text-green-400" /> Provincia de Bolívar, Ecuador</li>
-              <li className="flex items-center gap-2"><CalendarDaysIcon className="w-3.5 h-3.5 shrink-0 text-green-400" /> Cantonizado el 3 de marzo de 1860</li>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-green-200/80 mb-3">El Cantón</h3>
+            <ul className="space-y-2.5 text-sm text-green-100/60">
+              <li className="flex items-center gap-2"><MapPinIcon className="w-3.5 h-3.5 shrink-0 text-gold-400" /> Provincia de Bolívar, Ecuador</li>
+              <li className="flex items-center gap-2"><CalendarDaysIcon className="w-3.5 h-3.5 shrink-0 text-gold-400" /> Cantonizado el 3 de marzo de 1860</li>
               {visitas !== null && (
                 <li className="flex items-center gap-2">
-                  <EyeIcon className="w-3.5 h-3.5 shrink-0 text-green-400" />
-                  <span className="tabular-nums">{Number(visitas).toLocaleString('es-ES')}</span> visitas al portal
+                  <EyeIcon className="w-3.5 h-3.5 shrink-0 text-gold-400" />
+                  <span className="tabular-nums text-green-50">{Number(visitas).toLocaleString('es-ES')}</span> visitas al portal
                 </li>
               )}
             </ul>
@@ -84,88 +84,86 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-white/10 bg-black/20">
-          <div className="max-w-7xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
+          <div className="max-w-7xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-green-100/50">
             <p>© 2026 Municipio de San José de Chimbo. Todos los derechos reservados.</p>
-            <button type="button" onClick={() => setShowCreditos(true)} className="hover:text-yellow-400 underline underline-offset-2 transition-colors">
-              Creado por Dylan Salazar y Thalía Quinatoa
+            <button type="button" onClick={() => setShowCreditos(true)} className="hover:text-gold-300 underline underline-offset-2 transition-colors">
+              Creado por Pablo Salazar y Mayra Quinatoa
             </button>
           </div>
         </div>
       </footer>
 
-      {/* Modal de créditos del proyecto */}
+      {/* Modal de créditos — formato horizontal, paleta de marca verde+oro */}
       {showCreditos && (
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-modal-backdrop"
+          className="fixed inset-0 bg-green-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-modal-backdrop"
           onClick={() => setShowCreditos(false)}
         >
           <div
-            className="relative bg-white dark:bg-[#1c1c1c] rounded-2xl shadow-2xl shadow-black/40 w-full max-w-md overflow-hidden animate-modal-pop"
+            className="relative bg-white rounded-2xl shadow-green-lg w-full max-w-3xl overflow-hidden animate-modal-pop flex flex-col sm:flex-row ring-1 ring-black/5"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Barra de acento superior con brillo azul en movimiento */}
-            <div className="animated-accent-bar h-1.5" />
+            <button
+              type="button"
+              onClick={() => setShowCreditos(false)}
+              aria-label="Cerrar"
+              className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition-colors duration-150 active:scale-95 z-10"
+            >
+              <XMarkIcon className="w-4 h-4" />
+            </button>
 
-            {/* ── Cabecera con degradado e ícono institucional ── */}
-            <div className="animated-gradient relative px-8 pt-8 pb-14 text-center overflow-hidden">
-              {/* Textura sutil: resplandores difusos (uno verde, uno dorado) para dar profundidad */}
-              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[#F2C230]/25 blur-2xl pointer-events-none" />
-              <div className="absolute -bottom-16 -left-10 w-40 h-40 rounded-full bg-black/10 blur-2xl pointer-events-none" />
+            {/* ── Panel de marca (izquierda) ── */}
+            <aside className="relative sm:w-[42%] shrink-0 px-8 py-9 flex flex-col justify-center overflow-hidden bg-gradient-to-br from-green-950 via-green-900 to-green-700">
+              {/* Resplandores del mismo tono para dar profundidad */}
+              <div className="absolute -top-12 -right-10 w-40 h-40 rounded-full bg-green-500/15 blur-2xl pointer-events-none" />
+              <div className="absolute -bottom-16 -left-12 w-44 h-44 rounded-full bg-green-950/40 blur-2xl pointer-events-none" />
 
-              <button
-                type="button"
-                onClick={() => setShowCreditos(false)}
-                aria-label="Cerrar"
-                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-all"
-              >
-                <XMarkIcon className="w-4 h-4" />
-              </button>
-
-              <div className="relative w-16 h-16 mx-auto mb-4 bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center ring-1 ring-inset ring-[#F2C230]/50 shadow-lg">
-                <BuildingLibraryIcon className="w-8 h-8 text-[#F2C230]" />
+              <div className="relative w-14 h-14 mb-5 mx-auto rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center ring-1 ring-inset ring-green-300/40">
+                <BuildingLibraryIcon className="w-7 h-7 text-white" />
               </div>
 
-              <h2 className="relative font-serif text-2xl font-bold text-white leading-tight">Sistema de Gestión Turística</h2>
-              <span className="relative inline-block bg-[#F2C230] text-[#00294d] text-[11px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full mt-3 shadow-md shadow-black/20">
+              <h2 className="relative font-serif text-2xl font-bold text-white leading-tight tracking-tight text-balance">
+                Sistema de Gestión Turística
+              </h2>
+
+              <span className="relative inline-flex self-start items-center gap-1.5 mt-4 bg-green-950/40 text-green-100 ring-1 ring-inset ring-green-300/30 text-[11px] font-bold uppercase tracking-[0.18em] px-3 py-1 rounded-full">
                 SGT Chimbo · v1.0
               </span>
-            </div>
 
-            {/* ── Ficha técnica (superpuesta a la cabecera, como una tarjeta flotante) ── */}
-            <div className="relative px-6 -mt-8 pb-6">
-              <div className="bg-white dark:bg-[#242424] rounded-xl shadow-lg shadow-black/10 border border-black/5 dark:border-white/10 divide-y divide-gray-100 dark:divide-gray-700">
-                <div className="flex items-center gap-3 px-4 py-3.5">
-                  <div className="w-8 h-8 shrink-0 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                    <UserGroupIcon className="w-4 h-4 text-blue-700 dark:text-blue-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] uppercase tracking-wide text-gray-400 leading-none mb-1">Desarrollado por</p>
-                    <p className="text-sm font-semibold text-gray-800 dark:text-white leading-snug truncate">Dylan Salazar y Thalía Quinatoa</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 px-4 py-3.5">
-                  <div className="w-8 h-8 shrink-0 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
-                    <AcademicCapIcon className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] uppercase tracking-wide text-gray-400 leading-none mb-1">Carrera</p>
-                    <p className="text-sm font-semibold text-gray-800 dark:text-white leading-snug truncate">Ingeniería en Software</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 px-4 py-3.5">
-                  <div className="w-8 h-8 shrink-0 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                    <BuildingLibraryIcon className="w-4 h-4 text-blue-700 dark:text-blue-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] uppercase tracking-wide text-gray-400 leading-none mb-1">Universidad</p>
-                    <p className="text-sm font-semibold text-gray-800 dark:text-white leading-snug truncate">Universidad Estatal de Bolívar</p>
-                  </div>
-                </div>
-              </div>
+              <p className="relative mt-5 text-[13px] leading-relaxed text-green-50/80 max-w-[24ch]">
+                Portal turístico del cantón Chimbo, provincia de Bolívar.
+              </p>
+            </aside>
 
-              <div className="text-center mt-5 pt-4 border-t border-gray-100 dark:border-gray-800">
-                <p className="text-xs text-gray-400">Desarrollado como trabajo de titulación.</p>
-                <p className="text-xs text-gray-400 mt-0.5">© 2026 Dylan Salazar y Thalía Quinatoa. Todos los derechos reservados.</p>
+            {/* ── Ficha técnica (derecha) ── */}
+            <div className="flex-1 min-w-0 flex flex-col">
+              <dl className="px-8 pt-9 pb-2 divide-y divide-green-100">
+                <div className="py-4 animate-fade-in-up" style={{ animationDelay: '60ms' }}>
+                  <dt className="text-[10px] font-semibold uppercase tracking-[0.15em] text-green-700 mb-2">Desarrollado por</dt>
+                  <dd className="space-y-1.5">
+                    <span className="flex items-center gap-2.5 text-sm font-semibold text-green-900 leading-snug">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-600 ring-2 ring-green-600/20 shrink-0" />
+                      Pablo Dylan Salazar Bonilla
+                    </span>
+                    <span className="flex items-center gap-2.5 text-sm font-semibold text-green-900 leading-snug">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-600 ring-2 ring-green-600/20 shrink-0" />
+                      Mayra Thalía Quinatoa Caizaguano
+                    </span>
+                  </dd>
+                </div>
+                <div className="py-4 animate-fade-in-up" style={{ animationDelay: '130ms' }}>
+                  <dt className="text-[10px] font-semibold uppercase tracking-[0.15em] text-green-700 mb-1">Carrera</dt>
+                  <dd className="text-sm font-semibold text-green-900 leading-snug">Ingeniería en Software</dd>
+                </div>
+                <div className="py-4 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+                  <dt className="text-[10px] font-semibold uppercase tracking-[0.15em] text-green-700 mb-1">Universidad</dt>
+                  <dd className="text-sm font-semibold text-green-900 leading-snug">Universidad Estatal de Bolívar</dd>
+                </div>
+              </dl>
+
+              <div className="mt-auto px-8 py-5 border-t border-green-100 bg-green-50/50">
+                <p className="text-xs text-green-800/60">Trabajo de titulación · Ingeniería en Software</p>
+                <p className="text-xs text-green-800/60 mt-0.5">© 2026 Pablo Salazar y Mayra Quinatoa. Todos los derechos reservados.</p>
               </div>
             </div>
           </div>

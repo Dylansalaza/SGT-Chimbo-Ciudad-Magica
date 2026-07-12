@@ -30,11 +30,11 @@
                         value="{{ old('nombre') }}"
                         placeholder="Ej: Balneario, Museo, Artesanía…"
                         required
-                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                     >
                 </div>
                 <button type="submit"
-                    class="w-full py-2.5 bg-[#00294d] hover:bg-blue-900 text-white font-bold rounded-lg text-sm transition">
+                    class="w-full py-2.5 bg-[#00913f] hover:bg-green-900 text-white font-bold rounded-lg text-sm transition">
                     Crear categoría
                 </button>
             </form>

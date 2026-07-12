@@ -19,6 +19,16 @@
                     fontFamily: {
                         serif: ['"Playfair Display"', 'Georgia', 'serif'],
                     },
+                    colors: {
+                        green: {
+                            50:'#ecfdf3',100:'#d2f9e0',200:'#a8f0c6',300:'#6fe0a6',400:'#38c882',
+                            500:'#059c45',600:'#00913f',700:'#00913f',800:'#08573a',900:'#084832',950:'#02281c',
+                        },
+                        gold: {
+                            50:'#fdfaec',100:'#faf1c8',200:'#f5e08d',300:'#efca52',400:'#eab52a',
+                            500:'#d99a16',600:'#bd7510',700:'#975211',800:'#7c4115',900:'#693717',950:'#3d1c08',
+                        },
+                    },
                 },
             },
         };
@@ -28,9 +38,9 @@
         :root {
             /* DIVISIÓN MATEMÁTICA EXACTA AL 50% */
             --split-angle: 102deg;
-            --split-pos: 50%; 
-            
-            --color-left: #00294d;       /* Azul Marino Corporativo */
+            --split-pos: 50%;
+
+            --color-left: #00913f;       /* Azul Marino Corporativo */
             --color-right-bg: #e2e8f0;   /* Gris de fondo exterior para resaltar la tarjeta */
             --color-right-card: #ffffff; /* Blanco puro para la sección del formulario */
         }
@@ -43,7 +53,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            
+
             /* Fondo dividido exactamente a la mitad y fijado al monitor */
             background-image: linear-gradient(var(--split-angle), var(--color-left) var(--split-pos), var(--color-right-bg) var(--split-pos));
             background-attachment: fixed;
@@ -54,16 +64,16 @@
             width: 960px;
             height: 520px;
             border-radius: 20px;
-            
+
             /* El fondo de la tarjeta copia el degradado fijo para un empalme milimétrico */
             background-image: linear-gradient(var(--split-angle), var(--color-left) var(--split-pos), var(--color-right-card) var(--split-pos));
             background-attachment: fixed;
-            
+
             /* MAXIMA DENSIDAD DE SOMBRAS: Efecto flotante ultra marcado */
-            box-shadow: 0 45px 95px -10px rgba(0, 0, 0, 0.60), 
+            box-shadow: 0 45px 95px -10px rgba(0, 0, 0, 0.60),
                         0 25px 45px -15px rgba(0, 0, 0, 0.50),
                         0 0 60px 15px rgba(0, 0, 0, 0.20);
-            
+
             display: flex;
             overflow: hidden;
             position: relative;
@@ -76,35 +86,37 @@
             font-weight: 600;
         }
         .input-high-contrast:focus {
-            border-color: #0d6efd !important;
-            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.2) !important;
+            border-color: #00913f !important;
+            box-shadow: 0 0 0 4px rgba(6, 110, 69, 0.2) !important;
         }
     </style>
 </head>
 <body class="antialiased select-none">
 
     <div class="login-card-master">
-        
+
         <div class="w-1/2 flex flex-col items-center justify-center relative pr-8">
-            
-            <div class="flex items-center justify-center drop-shadow-md">
+
+            <div class="flex items-center gap-3.5 drop-shadow-md">
+                <span class="grid place-items-center w-16 h-16 rounded-2xl text-white font-serif font-black text-3xl leading-none shadow-xl ring-1 ring-inset ring-white/40"
+                      style="background-image: linear-gradient(120deg, #00913f, #059c45 55%, #eab52a);">C</span>
                 <div class="flex flex-col leading-none">
                     <span class="font-extrabold italic text-white text-5xl tracking-tight">SGT</span>
-                    <span class="font-extrabold text-rose-600 text-2xl tracking-wide leading-tight">CHIMBO</span>
-                    <span class="text-[11px] font-semibold tracking-[0.35em] text-slate-300 mt-1.5">GESTIÓN TURÍSTICA</span>
+                    <span class="font-extrabold text-2xl tracking-wide leading-tight" style="color:#eab52a;">CHIMBO</span>
+                    <span class="text-[11px] font-semibold tracking-[0.35em] text-green-100/80 mt-1.5">GESTIÓN TURÍSTICA</span>
                 </div>
             </div>
 
         </div>
 
         <div class="w-1/2 flex flex-col justify-center pl-10 pr-16 bg-transparent">
-            
+
             <div class="mb-8">
                 <h2 class="font-serif text-[32px] font-extrabold text-slate-950 tracking-tight">
                     Credenciales Institucionales
                 </h2>
             </div>
-            
+
             @if(session('error'))
                 <div class="bg-red-50 border-2 border-red-300 text-red-900 px-4 py-2.5 rounded-lg mb-4 text-xs flex items-center gap-2 font-bold shadow-sm animate-pulse">
                     <i class="fas fa-triangle-exclamation"></i> {{ session('error') }}
@@ -115,10 +127,10 @@
                     <i class="fas fa-circle-check"></i> {{ session('success') }}
                 </div>
             @endif
-            
+
             <form method="POST" action="{{ route('login') }}" class="space-y-5">
                 @csrf
-                
+
                 <div class="grid grid-cols-[150px_1fr] items-center gap-4">
                     <label class="text-right text-[13px] text-slate-950 font-extrabold uppercase tracking-wide">
                         <span class="text-red-600 font-black">*</span> Correo:
@@ -133,7 +145,7 @@
                         autofocus
                     >
                 </div>
-                
+
                 <div class="grid grid-cols-[150px_1fr] items-start gap-4 pt-1">
                     <label class="text-right text-[13px] text-slate-950 font-extrabold uppercase tracking-wide pt-2.5">
                         <span class="text-red-600 font-black">*</span> Contraseña:
@@ -145,25 +157,25 @@
                             class="input-high-contrast rounded-md px-3 py-2 w-full bg-white text-[13px] shadow-sm font-mono tracking-widest transition-all"
                             required
                         >
-                        <a href="{{ route('password.request') }}" class="text-[12px] text-[#0040af] hover:text-blue-900 font-bold mt-2.5 hover:underline">
+                        <a href="{{ route('password.request') }}" class="text-[12px] text-[#00913f] hover:text-green-900 font-bold mt-2.5 hover:underline">
                             He olvidado mi contraseña
                         </a>
                     </div>
                 </div>
-                
+
                 <div class="grid grid-cols-[150px_1fr] gap-4 pt-3">
                     <div></div>
                     <div>
-                        <button 
-                            type="submit" 
-                            class="bg-[#0d6efd] hover:bg-[#0b5ed7] text-white font-extrabold uppercase tracking-wider px-10 py-3 rounded-md text-[13px] transition-colors shadow-md shadow-blue-500/20 active:scale-[0.98]"
+                        <button
+                            type="submit"
+                            class="bg-[#00913f] hover:bg-[#055c39] text-white font-extrabold uppercase tracking-wider px-10 py-3 rounded-md text-[13px] transition-colors shadow-md shadow-green-500/20 active:scale-[0.98]"
                         >
                             Acceder
                         </button>
                     </div>
                 </div>
             </form>
-            
+
 
         </div>
     </div>

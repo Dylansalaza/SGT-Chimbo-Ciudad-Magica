@@ -5,11 +5,20 @@ las cláusulas atómicas FOR UPDATE SKIP LOCKED (Manejo de Concurrencia Seguro).
 """
 
 import os
+import sys
 import json
 import time
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import requests
+
+# Fuerza UTF-8 en la salida: evita que los emojis de los mensajes rompan el
+# arranque en consolas/hostings que no usan UTF-8 por defecto (UnicodeEncodeError).
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 # ==============================================================================
 # CONFIGURACIÓN DE INFRAESTRUCTURA
@@ -45,6 +54,11 @@ DB_CONFIG = {
 
 FLASK_URL    = os.getenv("CLIP_SERVICE_URL", "http://127.0.0.1:5001")
 HTTP_TIMEOUT = int(os.getenv("CLIP_WORKER_TIMEOUT", "45"))
+# Token compartido opcional con el servicio Flask (debe coincidir con CLIP_AUTH_TOKEN
+# de clip_service.py). Si está vacío, no se envía nada (desarrollo local).
+CLIP_AUTH_TOKEN = os.getenv("CLIP_AUTH_TOKEN", "").strip()
+# Tope de bytes al descargar por HTTP la imagen a consultar (defensa de memoria).
+MAX_IMAGE_BYTES = int(os.getenv("CLIP_MAX_IMAGE_BYTES", str(16 * 1024 * 1024)))
 
 # Carpeta física del storage público de Laravel (misma máquina que este worker).
 # Nos permite leer la imagen directo del disco en vez de pedirla por HTTP al
@@ -82,6 +96,14 @@ def _leer_imagen_local(image_url: str) -> bytes | None:
         return None
     ruta_relativa = image_url[idx + len(marcador):].split("?", 1)[0]
     ruta_local = os.path.normpath(os.path.join(STORAGE_PUBLIC_DIR, ruta_relativa))
+
+    # 🛡️ Defensa anti path-traversal: la ruta resuelta DEBE quedar dentro del
+    # storage público. Bloquea intentos como "/storage/../../.env".
+    base = os.path.normpath(STORAGE_PUBLIC_DIR)
+    if not (ruta_local == base or ruta_local.startswith(base + os.sep)):
+        print(f"  ⚠️ Ruta local fuera del storage rechazada: {ruta_relativa}")
+        return None
+
     if os.path.isfile(ruta_local):
         with open(ruta_local, "rb") as fh:
             return fh.read()
@@ -96,18 +118,26 @@ def consultar_clip(image_url: str) -> list:
     """
     contenido = _leer_imagen_local(image_url)
     if contenido is None:
-        # Fallback: descarga por HTTP (p. ej. storage remoto o de otra máquina)
-        resp = requests.get(image_url, timeout=HTTP_TIMEOUT)
-        resp.raise_for_status()
-        contenido = resp.content
+        # Fallback: descarga por HTTP (p. ej. storage remoto o de otra máquina),
+        # sin seguir redirecciones y con tope de tamaño (defensa de memoria/SSRF).
+        with requests.get(image_url, timeout=HTTP_TIMEOUT, stream=True, allow_redirects=False) as resp:
+            resp.raise_for_status()
+            buffer = bytearray()
+            for chunk in resp.iter_content(chunk_size=65536):
+                buffer.extend(chunk)
+                if len(buffer) > MAX_IMAGE_BYTES:
+                    raise RuntimeError("La imagen a consultar excede el tamaño permitido.")
+            contenido = bytes(buffer)
 
     # Codificación a texto Base64 para el contrato de la API de Flask
     import base64
     image_b64 = base64.b64encode(contenido).decode("utf-8")
 
+    headers = {"X-CLIP-Token": CLIP_AUTH_TOKEN} if CLIP_AUTH_TOKEN else {}
     flask_resp = requests.post(
         f"{FLASK_URL}/search",
         json={"image": image_b64},
+        headers=headers,
         timeout=HTTP_TIMEOUT,
     )
     flask_resp.raise_for_status()

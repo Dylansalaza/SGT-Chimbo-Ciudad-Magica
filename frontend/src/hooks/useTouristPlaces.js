@@ -121,11 +121,27 @@ export function useTouristPlaces() {
         setSearchResult(lugar);
     };
 
-    // Marca/desmarca una categoría en el filtro (checkbox múltiple)
-    const toggleCategoria = (cat) =>
+    // Búsqueda por texto. Al escribir se descarta cualquier resultado previo de
+    // la búsqueda por imagen (IA): sin esto, un resultado de IA activo tenía
+    // prioridad sobre los filtros manuales en el mapa y la búsqueda por texto
+    // "no respondía" hasta limpiar filtros.
+    const buscarPorTexto = (valor) => {
+        setSearchTerm(valor);
+        if (valor && valor.trim()) {
+            setSearchResult(null);
+            setResultadoEsIA(false);
+        }
+    };
+
+    // Marca/desmarca una categoría en el filtro (checkbox múltiple). También
+    // descarta el resultado de IA por el mismo motivo que buscarPorTexto.
+    const toggleCategoria = (cat) => {
+        setSearchResult(null);
+        setResultadoEsIA(false);
         setCategoriasSeleccionadas(prev =>
             prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
         );
+    };
 
     // Restablece todos los filtros y resultados a su estado inicial
     // (vuelve el mapa a la vista general de San José de Chimbo)
@@ -253,6 +269,7 @@ export function useTouristPlaces() {
         mapCenter, setMapCenter,
         mapZoom,   setMapZoom,
         searchTerm,   setSearchTerm,
+        buscarPorTexto,
         filtroPrecio, setFiltroPrecio,
         categoriasDisponibles,
         categoriasSeleccionadas,

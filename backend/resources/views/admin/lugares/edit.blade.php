@@ -13,7 +13,14 @@
                 <h1 class="font-serif text-2xl font-extrabold tracking-tight md:text-3xl flex items-center gap-3">
                     <i class="fas fa-pen-to-square text-lg text-slate-300"></i> Editar Lugar Turístico
                 </h1>
-                <p class="text-sm text-slate-300 font-medium">{{ $lugar->nombre }}</p>
+                <p class="text-sm text-slate-300 font-medium flex items-center gap-2">
+                    {{ $lugar->nombre }}
+                    @if($lugar->activo)
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-green-500/15 text-green-300 border border-green-500/30 uppercase tracking-wide"><span class="w-1.5 h-1.5 rounded-full bg-green-400"></span> Activo</span>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-500/15 text-slate-300 border border-slate-400/30 uppercase tracking-wide"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> De baja</span>
+                    @endif
+                </p>
             </div>
         </div>
     </div>
@@ -147,6 +154,39 @@
                     </a>
                 </div>
             </form>
+
+            {{-- Dar de baja / Activar: acción separada del formulario de arriba
+                 (endpoint y método HTTP distintos) para que guardar cambios y
+                 dar de baja el lugar nunca se disparen por accidente juntos. --}}
+            <div class="px-8 sm:px-10 pb-8 sm:pb-10 -mt-4">
+                <div class="pt-5 border-t border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+                    <p class="text-xs text-slate-400 max-w-sm">
+                        @if($lugar->activo)
+                            Dar de baja oculta este lugar del sitio público y del reconocimiento por imagen, sin borrar su información. Podrás reactivarlo cuando quieras.
+                        @else
+                            Este lugar está dado de baja: no aparece en el sitio público ni en el reconocimiento por imagen.
+                        @endif
+                    </p>
+                    @if($lugar->activo)
+                        <form method="POST" action="{{ route('admin.lugares.destroy', $lugar->id) }}"
+                              onsubmit="return confirmarEliminar(this, '¿Seguro que deseas dar de baja el lugar «' + '{{ addslashes($lugar->nombre) }}' + '»? Dejará de mostrarse al público, pero podrás reactivarlo cuando quieras.', {titulo: '¿Dar de baja este lugar?', boton: 'Dar de baja', icono: 'fa-power-off'})">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-red-50 text-red-600 hover:bg-red-100 border border-red-100/70 transition">
+                                <i class="fas fa-power-off text-xs"></i> Dar de baja este lugar
+                            </button>
+                        </form>
+                    @else
+                        <form method="POST" action="{{ route('admin.lugares.destroy', $lugar->id) }}">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-green-50 text-green-600 hover:bg-green-100 border border-green-100/70 transition">
+                                <i class="fas fa-check text-xs"></i> Reactivar este lugar
+                            </button>
+                        </form>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 </div>

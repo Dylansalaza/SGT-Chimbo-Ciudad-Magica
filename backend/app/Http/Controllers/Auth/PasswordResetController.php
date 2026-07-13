@@ -16,9 +16,9 @@ use Illuminate\Validation\Rules\Password as PasswordRule;
  *
  * Estructura del flujo:
  *   1. GET  /forgot-password         → formulario para escribir el correo.
- *   2. POST /forgot-password         → genera un token, intenta enviar el correo
- *                                      y SIEMPRE muestra el enlace en pantalla
- *                                      (así funciona aunque no haya SMTP configurado).
+ *   2. POST /forgot-password         → si el correo existe, genera un token y
+ *                                      lo envía por correo (avisa si NO existe,
+ *                                      ver nota de seguridad en sendResetLink).
  *   3. GET  /reset-password/{token}  → formulario de nueva contraseña.
  *   4. POST /reset-password          → valida el token y guarda la contraseña.
  */
@@ -33,37 +33,40 @@ class PasswordResetController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        // MENSAJE NEUTRO SIEMPRE: no revelamos si el correo está registrado o no.
-        // Esto evita la enumeración de cuentas (un atacante no puede usar este
-        // formulario para averiguar qué correos de funcionarios existen). El
-        // token nunca se muestra en pantalla: el reset solo se hace con el
-        // enlace que llega al correo.
-        $mensajeNeutro = 'Si el correo está registrado, te enviamos un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada y la carpeta de spam.';
+        // ⚠️ DECISIÓN EXPLÍCITA DEL ADMINISTRADOR (2026-07-13): este endpoint
+        // SÍ revela si el correo existe o no ("correo inexistente" vs. "te
+        // enviamos el enlace"). Esto es a propósito MENOS seguro que un
+        // mensaje neutro: en general, decir si un correo existe permite a un
+        // atacante enumerar cuentas válidas probando direcciones una por una.
+        // Se acepta el riesgo porque este panel tiene muy pocas cuentas (solo
+        // funcionarios del GAD, no registro público). Si el panel llegara a
+        // abrirse a usuarios externos, esto debe revertirse a un mensaje
+        // neutro (ver historial de este archivo / memoria del proyecto).
 
         // Buscamos por el correo principal o por el correo de recuperación.
         $user = User::where('email', $request->email)
             ->orWhere('recovery_email', $request->email)
             ->first();
 
-        // Si no existe, respondemos IGUAL que si existiera (sin delatar la ausencia).
         if (! $user) {
-            return back()->with('status', $mensajeNeutro);
+            return back()->with('error', 'No existe ninguna cuenta registrada con ese correo.');
         }
 
         // Generamos el token con el broker oficial (se guarda en
-        // password_reset_tokens) y enviamos el enlace por correo.
+        // password_reset_tokens) y enviamos el enlace por correo. El enlace
+        // en sí NUNCA se muestra en pantalla: el reset solo se hace con lo
+        // que llega al correo.
         $token = Password::broker()->createToken($user);
 
         try {
             $user->sendPasswordResetNotification($token);
         } catch (\Throwable $e) {
-            // El fallo de SMTP se registra para diagnóstico del administrador,
-            // pero al cliente le damos el MISMO mensaje neutro para no filtrar
-            // que la cuenta existe.
             Log::error('No se pudo enviar el correo de recuperación de contraseña: ' . $e->getMessage());
+
+            return back()->with('error', 'La cuenta existe, pero no pudimos enviar el correo. Intenta de nuevo en unos minutos o contacta al administrador.');
         }
 
-        return back()->with('status', $mensajeNeutro);
+        return back()->with('status', 'Te enviamos un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada y la carpeta de spam.');
     }
 
     public function showResetForm(Request $request, string $token)

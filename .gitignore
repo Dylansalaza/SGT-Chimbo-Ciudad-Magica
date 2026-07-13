@@ -67,3 +67,8 @@ backend/.venv-export/
 
 # Skills auxiliares de IA (herramientas, no forman parte del sistema)
 /ai-skills/
+
+# Volcados/temporales de base de datos (no versionar datos)
+/backend/datos.sql
+/backend/fix_home_settings.sql
+*.sql.tmp

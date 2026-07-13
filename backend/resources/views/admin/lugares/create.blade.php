@@ -15,24 +15,34 @@
                 </h1>
                 <p class="text-sm text-slate-300 font-medium">Completa los datos o impórtalos desde una Ficha MINTUR.</p>
             </div>
-
-            {{-- 📥 Botón para precargar el formulario desde una Ficha MINTUR (.xlsx/.xlsm).
-                 No crea el lugar automáticamente: solo llena los campos de abajo para
-                 que el admin los revise y luego presione "Agregar Lugar". --}}
-            <label id="importarFichaBtn" class="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer transition shadow-md self-start sm:self-center">
-                <i class="fas fa-file-import"></i>
-                <span id="importarFichaTexto">Importar Ficha</span>
-                <input type="file" id="fichaInput" accept=".xlsx,.xlsm,.xls" class="hidden">
-            </label>
         </div>
-        <p id="importarFichaAyuda" class="text-xs text-slate-300 mt-3 max-w-2xl">
-            Sube la "Ficha de Levantamiento y Jerarquización de Atractivos Turísticos" (formato oficial MINTUR) y se precargarán automáticamente los campos que apliquen.
-        </p>
     </div>
 
     <div class="p-8 w-full">
-        <div class="bg-white rounded-2xl card-premium-shadow max-w-5xl mx-auto">
-            <form method="POST" action="{{ route('admin.lugares.store') }}" id="lugarForm" class="p-8 sm:p-10 space-y-10">
+        <div class="max-w-5xl mx-auto space-y-6">
+
+            {{-- 📥 Atajo: precargar el formulario desde una Ficha MINTUR (.xlsx/.xlsm).
+                 No crea el lugar automáticamente: solo llena los campos de abajo para
+                 que el admin los revise antes de presionar "Agregar Lugar". --}}
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4 bg-green-50 border border-green-200 rounded-2xl p-5">
+                <span class="grid place-items-center w-11 h-11 rounded-xl bg-green-600 text-white text-lg shrink-0">
+                    <i class="fas fa-file-import"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-slate-800">Importar desde Ficha MINTUR</p>
+                    <p id="importarFichaAyuda" class="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                        Sube la "Ficha de Levantamiento y Jerarquización de Atractivos Turísticos" (formato oficial MINTUR) y se precargarán automáticamente los campos que apliquen.
+                    </p>
+                </div>
+                <label id="importarFichaBtn" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer transition shadow-md shrink-0 self-start sm:self-center whitespace-nowrap">
+                    <i class="fas fa-file-import"></i>
+                    <span id="importarFichaTexto">Importar Ficha</span>
+                    <input type="file" id="fichaInput" accept=".xlsx,.xlsm,.xls" class="hidden">
+                </label>
+            </div>
+
+            <div class="bg-white rounded-2xl card-premium-shadow">
+                <form method="POST" action="{{ route('admin.lugares.store') }}" id="lugarForm" class="p-8 sm:p-10 space-y-10">
                 @csrf
 
                 {{-- Sección: Información general --}}
@@ -152,7 +162,8 @@
                         Cancelar
                     </a>
                 </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 </div>

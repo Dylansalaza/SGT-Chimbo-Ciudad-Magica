@@ -84,7 +84,7 @@
                                    class="mt-0.5 text-green-600 focus:ring-green-500/30">
                             <span>
                                 <span class="block text-sm font-bold text-slate-800">
-                                    <i class="fas fa-map-marked-alt text-green-600 mr-1"></i> Admin de Turismo
+                                    <i class="fas fa-map-marked-alt text-green-600 mr-1"></i> Administrador del Proyecto de Investigación
                                 </span>
                                 <span class="block text-xs text-slate-500 mt-0.5">
                                     Gestiona eventos, noticias, galerías, lugares, categorías y reportes.

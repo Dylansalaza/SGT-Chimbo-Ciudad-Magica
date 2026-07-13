@@ -363,7 +363,12 @@
                 </div>
             </div>
             
-            <nav class="flex-1 mt-4 space-y-1 px-2">
+            {{-- min-h-0 es necesario para que overflow-y-auto funcione dentro de un
+                 flex-col: sin él, un hijo flex-1 se expande para caber TODO su
+                 contenido y el scroll nunca se activa (aunque el menú sea más alto
+                 que la pantalla). El logo (arriba) y "Cerrar Sesión" (abajo) quedan
+                 fijos; solo esta lista de enlaces se desplaza. --}}
+            <nav class="flex-1 min-h-0 overflow-y-auto mt-4 space-y-1 px-2">
                 {{-- ── Principal (ambos roles) ── --}}
                 <p class="nav-section sidebar-collapsible">Principal</p>
                 <a href="{{ route('admin.dashboard') }}" title="Dashboard" class="nav-link-premium flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">

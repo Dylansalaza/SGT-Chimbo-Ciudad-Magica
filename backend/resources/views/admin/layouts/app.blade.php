@@ -825,6 +825,7 @@
                         body: usuarioRaw
                     });
                 }
+                // Revoca el token de Sanctum del SPA, si lo hubiera.
                 if (token) {
                     await fetch('/api/logout', {
                         method: 'POST',
@@ -836,12 +837,28 @@
                     });
                 }
             } catch (error) {
-                console.error("Error en la sincronización del logout corporativo:", error);
-            } finally {
-                localStorage.removeItem('token');
-                localStorage.removeItem('usuario');
-                window.location.href = '/login';
+                console.error("Error sincronizando el cierre de sesión:", error);
             }
+
+            // Limpia las credenciales del SPA guardadas en el navegador.
+            localStorage.removeItem('token');
+            localStorage.removeItem('usuario');
+
+            // Cierra la SESIÓN WEB del panel con un POST a /logout que INCLUYE el
+            // token CSRF (por eso ya NO da 419). El servidor invalida la sesión y
+            // redirige al login. Antes se llamaba solo a /api/logout (que borra un
+            // token Sanctum, no la sesión web) y el redirect manual dejaba la
+            // sesión del panel abierta: el logout "no funcionaba".
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/logout';   // relativo: mismo origen que sirve el panel
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_token';
+            csrf.value = document.querySelector('meta[name="csrf-token"]').content;
+            form.appendChild(csrf);
+            document.body.appendChild(form);
+            form.submit();
         }
     </script>
 </body>

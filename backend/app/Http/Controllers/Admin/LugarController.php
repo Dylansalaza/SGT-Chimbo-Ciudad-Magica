@@ -141,9 +141,17 @@ class LugarController extends Controller
         $file = $request->file('file');
         // Convierte la foto a WebP (más liviano) cuando es posible.
         $path = \App\Support\ImageOptimizer::storeWebp($file, 'lugares');
-        $url = asset('storage/' . $path);
-        
-        return response()->json(['url' => $url]);
+
+        // URL RELATIVA (no absoluta): antes usaba asset('storage/'.$path), que
+        // "hornea" el host/puerto actual (APP_URL) dentro de la URL guardada en
+        // BD. Si el panel se vuelve a abrir desde otro host/puerto (dev en otro
+        // puerto, producción con otro dominio), esa URL vieja apunta a un host
+        // que ya no responde y la miniatura se ve rota. Los demás controladores
+        // de subida (Evento/Noticia/Galería/Home) ya devuelven '/storage/'.$path
+        // por el mismo motivo; el navegador la resuelve siempre contra el host
+        // ACTUAL. La vista que las muestra ya sabe anteponer el host si hace
+        // falta (Str::startsWith($u,'http') ? $u : url('/').$u).
+        return response()->json(['url' => '/storage/' . $path]);
     }
 
     /**

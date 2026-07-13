@@ -12,10 +12,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Registramos el middleware de visitas adjuntándolo al grupo web oficial
-        $middleware->web(append: [
-            \App\Http\Middleware\TrackVisits::class,
-        ]);
+        // Las visitas se registran SOLO desde el frontend (POST /registro-visita,
+        // una vez por sesión de navegador — ver App.jsx). Antes había además un
+        // middleware "TrackVisits" que contaba CUALQUIER GET del grupo web como
+        // una visita, incluida /storage/{ruta} (el respaldo que sirve imágenes
+        // cuando el symlink falla): cada miniatura/foto cargada sumaba una fila
+        // en `visits`, inflando el conteo muy por encima de las visitas reales
+        // y desajustando el número público (cacheado) del número del panel
+        // (en vivo). Se retiró para que solo exista UNA fuente de verdad.
 
         // Alias de middlewares para el panel admin
         $middleware->alias([

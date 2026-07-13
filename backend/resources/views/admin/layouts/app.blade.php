@@ -220,6 +220,13 @@
             .vista-enter { animation: none; }
         }
 
+        /* Scroll del listado de enlaces del sidebar SIN barra visible: el
+           scroll sigue funcionando (overflow-y-auto en el <nav>), solo se
+           oculta el "riel" gris para que no se vea recortado/feo dentro del
+           menú de marca. Cubre WebKit/móvil (Chrome, Safari), Firefox e IE/Edge legado. */
+        #sidebar nav { scrollbar-width: none; -ms-overflow-style: none; }
+        #sidebar nav::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
         /* ===== Sidebar colapsable ===== */
         #sidebar { transition: width 0.25s ease; }
         #sidebar.collapsed { width: 5rem !important; }

@@ -144,6 +144,9 @@
         /* ── Entrada escalonada de los enlaces del menú al cargar (fresco) ──
            Usa nth-of-type para contar SOLO los <a> (ignora los títulos <p>). */
         @keyframes nav-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        /* Entrada de los enlaces al abrir el cajón en móvil (deslizan desde la
+           izquierda con un pequeño desfase entre uno y otro). */
+        @keyframes drawer-link-in { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: translateX(0); } }
         #sidebar nav > a { animation: nav-in .45s cubic-bezier(.16,1,.3,1) both; }
         #sidebar nav > a:nth-of-type(1) { animation-delay: .04s; }
         #sidebar nav > a:nth-of-type(2) { animation-delay: .09s; }
@@ -153,7 +156,7 @@
         #sidebar nav > a:nth-of-type(6) { animation-delay: .29s; }
         #sidebar nav > a:nth-of-type(7) { animation-delay: .34s; }
         #sidebar nav > a:nth-of-type(8) { animation-delay: .39s; }
-        @media (prefers-reduced-motion: reduce) { #sidebar nav > a { animation: none; } }
+        @media (prefers-reduced-motion: reduce) { #sidebar nav > a, #sidebar.mobile-open nav > a { animation: none; } }
 
         /* Componentes de interfaz compartidos */
         .preview-image {
@@ -234,6 +237,65 @@
         #sidebar .sidebar-toggle-btn i { transition: transform 0.25s ease; }
         #sidebar.collapsed .sidebar-toggle-btn i { transform: rotate(180deg); }
 
+        /* ===== Barra superior móvil (con botón hamburguesa) ===== */
+        /* Mismo degradado de marca que el sidebar/header, pero se mantiene
+           pegajosa en móvil (a diferencia de .header-corporate, que abajo se
+           vuelve estática para no chocar con esta barra). */
+        .mobile-topbar { background-image: linear-gradient(180deg, #08573a 0%, #084832 55%, #02281c 100%); }
+
+        /* ===== Responsive móvil/tablet: sidebar como cajón deslizante ===== */
+        /* En escritorio (lg ≥1024px) el menú es una columna fija a la izquierda.
+           Por debajo, se convierte en un cajón (off-canvas) oculto que se abre
+           con el botón hamburguesa y se cierra tocando el fondo oscuro. */
+        @media (max-width: 1023px) {
+            #sidebar {
+                position: fixed;
+                top: 0; bottom: 0; left: 0;
+                transform: translateX(-100%);
+                /* Entrada con ease-out expresivo (rápido al inicio, frena suave);
+                   salida un poco más corta para que cerrar se sienta ágil. */
+                transition: transform .34s cubic-bezier(.16, 1, .3, 1);
+                z-index: 50;
+                box-shadow: 8px 0 40px rgba(0, 0, 0, .4);
+                will-change: transform;
+            }
+            #sidebar.mobile-open { transform: translateX(0); }
+            #sidebar:not(.mobile-open) { transition-duration: .26s; }
+
+            /* Los enlaces del menú entran escalonados CADA vez que se abre el
+               cajón (el selector .mobile-open re-dispara la animación al añadirse
+               la clase). En móvil se anula la animación de carga (nav-in), que
+               se reproducía inútilmente con el cajón fuera de pantalla. */
+            #sidebar nav > a { animation: none; }
+            #sidebar.mobile-open nav > a { animation: drawer-link-in .45s cubic-bezier(.16, 1, .3, 1) both; }
+            #sidebar.mobile-open nav > a:nth-of-type(1) { animation-delay: .06s; }
+            #sidebar.mobile-open nav > a:nth-of-type(2) { animation-delay: .10s; }
+            #sidebar.mobile-open nav > a:nth-of-type(3) { animation-delay: .14s; }
+            #sidebar.mobile-open nav > a:nth-of-type(4) { animation-delay: .18s; }
+            #sidebar.mobile-open nav > a:nth-of-type(5) { animation-delay: .22s; }
+            #sidebar.mobile-open nav > a:nth-of-type(6) { animation-delay: .26s; }
+            #sidebar.mobile-open nav > a:nth-of-type(7) { animation-delay: .30s; }
+            #sidebar.mobile-open nav > a:nth-of-type(8) { animation-delay: .34s; }
+            /* En móvil el cajón siempre va "ancho" (ignora el modo mini de
+               escritorio) para que se lean los textos de cada enlace. */
+            #sidebar.collapsed { width: 16rem !important; }
+            #sidebar.collapsed .sidebar-collapsible { display: flex !important; }
+            #sidebar.collapsed .sidebar-mini { display: none !important; }
+            #sidebar.collapsed nav a { justify-content: flex-start; padding-left: 1rem !important; }
+            #sidebar.collapsed nav a span { display: inline !important; }
+
+            /* Los headers de cada página dejan de ser pegajosos en móvil (para
+               no solaparse con la barra hamburguesa) y ocupan menos alto. */
+            .header-corporate {
+                position: static !important;
+                min-height: 0 !important;
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+                padding-top: 1.1rem !important;
+                padding-bottom: 1.1rem !important;
+            }
+        }
+
         /* ===== PULIDO: accesibilidad y microdetalles de marca ===== */
         html { scroll-behavior: smooth; }
         ::selection { background: rgba(234, 181, 42, 0.35); color: #04301e; }
@@ -267,14 +329,20 @@
 <body class="antialiased select-none text-slate-950">
 
     <div class="flex h-screen overflow-hidden">
-        
-        {{-- Sidebar Izquierdo --}}
+
+        {{-- Fondo oscuro del cajón (solo móvil). Siempre en el DOM: se funde con
+             opacity/transition en vez de aparecer de golpe. Cuando está cerrado,
+             pointer-events-none deja pasar los clics al contenido. --}}
+        <div id="sidebar-backdrop" onclick="toggleMobileSidebar()"
+             class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden opacity-0 pointer-events-none transition-opacity duration-300 ease-out"></div>
+
+        {{-- Sidebar Izquierdo (columna fija en escritorio; cajón deslizante en móvil) --}}
         <aside id="sidebar" class="relative w-64 sidebar-corporate text-white flex flex-col z-20 shrink-0">
 
             {{-- Botón flotante para abrir/cerrar el menú (borde derecho, centrado) --}}
             <button type="button" onclick="toggleSidebar()" title="Abrir/cerrar menú" aria-label="Abrir o cerrar menú"
                     class="sidebar-toggle-btn group absolute top-1/2 -right-5 -translate-y-1/2 z-40 w-11 h-11 rounded-full
-                           flex items-center justify-center text-white bg-brand-green hover:bg-brand-emerald
+                           hidden lg:flex items-center justify-center text-white bg-brand-green hover:bg-brand-emerald
                            border-2 border-white shadow-lg transition-all duration-200 active:scale-90 hover:scale-105">
                 <i class="fas fa-chevron-left text-base group-hover:scale-110 transition-transform"></i>
             </button>
@@ -365,6 +433,18 @@
 
         {{-- Área de Contenido Principal sin paddings forzados --}}
         <main class="flex-1 overflow-y-auto relative z-10 flex flex-col bg-[#f1f5f9]">
+
+            {{-- Barra superior SOLO móvil/tablet con botón hamburguesa.
+                 En escritorio (lg+) se oculta: allí el sidebar ya está visible. --}}
+            <div class="lg:hidden sticky top-0 z-30 mobile-topbar text-white flex items-center gap-3 px-4 py-3 shadow-lg">
+                <button type="button" onclick="toggleMobileSidebar()" aria-label="Abrir menú"
+                        class="w-10 h-10 -ml-1 rounded-lg flex items-center justify-center hover:bg-white/10 active:scale-90 transition-all">
+                    <i class="fas fa-bars text-lg"></i>
+                </button>
+                <span class="grid place-items-center w-8 h-8 rounded-lg brand-gradient-bg ring-1 ring-inset ring-brand-gold/50 text-white font-serif font-black text-sm leading-none shadow">C</span>
+                <span class="font-extrabold italic text-white text-base tracking-tight">SGT <span class="not-italic text-brand-gold">CHIMBO</span></span>
+            </div>
+
             <div class="vista-enter flex-1 flex flex-col">
                 @yield('content')
             </div>
@@ -492,6 +572,37 @@
                 document.getElementById('sidebar')?.classList.add('collapsed');
             }
         })();
+
+        // ===== Cajón lateral en móvil (off-canvas) =====
+        function toggleMobileSidebar() {
+            const sb = document.getElementById('sidebar');
+            const bd = document.getElementById('sidebar-backdrop');
+            const abierto = sb.classList.toggle('mobile-open');
+            // Funde el fondo oscuro (opacity + pointer-events) en vez de ocultarlo de golpe
+            bd.classList.toggle('opacity-0', !abierto);
+            bd.classList.toggle('pointer-events-none', !abierto);
+            // Bloquea el scroll del fondo mientras el cajón está abierto
+            document.body.style.overflow = abierto ? 'hidden' : '';
+        }
+        // Al tocar un enlace del menú en móvil, cerrar el cajón automáticamente
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('#sidebar nav a').forEach((a) => {
+                a.addEventListener('click', () => {
+                    if (window.matchMedia('(max-width: 1023px)').matches
+                        && document.getElementById('sidebar').classList.contains('mobile-open')) {
+                        toggleMobileSidebar();
+                    }
+                });
+            });
+        });
+        // Si se agranda la ventana a escritorio, asegurar que el cajón quede cerrado
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024) {
+                document.getElementById('sidebar')?.classList.remove('mobile-open');
+                document.getElementById('sidebar-backdrop')?.classList.add('opacity-0', 'pointer-events-none');
+                document.body.style.overflow = '';
+            }
+        });
     </script>
 
     <script>
@@ -704,7 +815,7 @@
 
             try {
                 if (usuarioRaw && token) {
-                    await fetch('http://127.0.0.1:3000/api/admin/guardar-progreso', {
+                    await fetch('/api/admin/guardar-progreso', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -715,7 +826,7 @@
                     });
                 }
                 if (token) {
-                    await fetch('http://127.0.0.1:3000/api/logout', {
+                    await fetch('/api/logout', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -729,7 +840,7 @@
             } finally {
                 localStorage.removeItem('token');
                 localStorage.removeItem('usuario');
-                window.location.href = 'http://127.0.0.1:3000/login';
+                window.location.href = '/login';
             }
         }
     </script>

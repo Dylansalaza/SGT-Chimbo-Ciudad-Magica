@@ -13,7 +13,7 @@
         </div>
     </div>
 
-    <div class="p-8 w-full">
+    <div class="p-4 sm:p-6 lg:p-8 w-full">
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
 
             @php

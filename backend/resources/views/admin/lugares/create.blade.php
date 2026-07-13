@@ -18,7 +18,7 @@
         </div>
     </div>
 
-    <div class="p-8 w-full">
+    <div class="p-4 sm:p-6 lg:p-8 w-full">
         <div class="max-w-5xl mx-auto space-y-6">
 
             {{-- 📥 Atajo: precargar el formulario desde una Ficha MINTUR (.xlsx/.xlsm).

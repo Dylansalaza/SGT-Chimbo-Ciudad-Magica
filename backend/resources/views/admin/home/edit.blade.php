@@ -13,7 +13,7 @@
         </div>
     </div>
 
-    <div class="p-8 w-full">
+    <div class="p-4 sm:p-6 lg:p-8 w-full">
         <div class="bg-white rounded-2xl p-8 card-premium-shadow max-w-5xl mx-auto">
 
             <form method="POST" action="{{ route('admin.home.update') }}">

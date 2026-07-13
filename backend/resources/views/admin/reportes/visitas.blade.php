@@ -11,7 +11,7 @@
         'generado'  => $generado,
     ])
 
-    <div class="p-8 w-full space-y-6">
+    <div class="p-4 sm:p-6 lg:p-8 w-full space-y-6">
 
         {{-- KPIs --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">

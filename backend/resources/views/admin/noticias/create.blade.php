@@ -18,7 +18,7 @@
         </div>
     </div>
 
-    <div class="p-8 w-full">
+    <div class="p-4 sm:p-6 lg:p-8 w-full">
         <div class="bg-white rounded-2xl card-premium-shadow max-w-4xl mx-auto">
             <form method="POST" action="{{ route('admin.noticias.store') }}" id="noticiaForm" class="p-8 sm:p-10 space-y-10">
                 @csrf

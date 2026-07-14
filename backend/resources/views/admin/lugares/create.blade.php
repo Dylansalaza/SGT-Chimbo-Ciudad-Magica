@@ -321,8 +321,18 @@
         try {
             const response = await fetch('{{ route("admin.lugares.importarFicha") }}', {
                 method: 'POST',
+                headers: { 'Accept': 'application/json' },
                 body: formData,
             });
+
+            // Si el servidor redirige (sesión expirada / CSRF vencido), fetch
+            // sigue la redirección y esto ya NO es JSON: avisamos claro en
+            // vez de que falle response.json() con un mensaje genérico.
+            if (response.redirected || !response.headers.get('content-type')?.includes('application/json')) {
+                alert('Tu sesión pudo haber expirado. Recarga la página (F5) e inténtalo de nuevo.');
+                return;
+            }
+
             const data = await response.json();
 
             if (!response.ok) {

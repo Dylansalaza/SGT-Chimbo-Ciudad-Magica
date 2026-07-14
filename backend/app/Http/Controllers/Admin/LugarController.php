@@ -180,9 +180,23 @@ class LugarController extends Controller
      */
     public function importarFicha(Request $request)
     {
+        // Se valida la extensión (no el MIME real vía fileinfo/libmagic):
+        // un .xlsx es un zip por dentro, y en varios servidores Linux
+        // libmagic lo detecta como "application/zip" genérico en vez del
+        // MIME de Excel, así que la regla "mimes:" rechazaba archivos
+        // válidos en producción aunque funcionaran en local (Windows).
+        // PhpSpreadsheet igual valida el contenido real al abrirlo más
+        // abajo, así que la seguridad no depende de este chequeo.
         $request->validate([
-            'ficha' => 'required|file|mimes:xlsx,xlsm,xls|max:20480',
+            'ficha' => 'required|file|max:20480',
         ]);
+
+        $extension = strtolower($request->file('ficha')->getClientOriginalExtension());
+        if (!in_array($extension, ['xlsx', 'xlsm', 'xls'], true)) {
+            return response()->json([
+                'error' => 'El archivo debe ser un Excel (.xlsx, .xlsm o .xls) con el formato de la Ficha MINTUR.',
+            ], 422);
+        }
 
         $path = $request->file('ficha')->getRealPath();
 

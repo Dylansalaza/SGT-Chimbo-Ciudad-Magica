@@ -9,13 +9,12 @@ import { SunIcon, MoonIcon } from '@heroicons/react/24/solid';
 // (ver index.css) también depende de esta clase "dark".
 // ============================================================================
 export default function ThemeToggle() {
-  // Estado inicial: usa la preferencia guardada en localStorage si existe;
-  // si es la primera visita, respeta la preferencia del sistema operativo.
-  const [dark, setDark] = useState(() => {
-    const saved = localStorage.getItem('theme');
-    if (saved) return saved === 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
+  // Estado inicial: el sitio SIEMPRE abre en modo CLARO por defecto. Solo se
+  // muestra en oscuro si el propio usuario lo activó antes con este botón (queda
+  // guardado en localStorage). Ya NO se sigue la preferencia del sistema
+  // operativo: así, al abrir el enlace en un equipo/celular en modo oscuro, el
+  // sitio igual carga en claro como se espera.
+  const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark');
 
   // Cada vez que cambia "dark", sincroniza la clase del <html> y guarda la
   // preferencia para que persista entre visitas (recarga de página, etc.)

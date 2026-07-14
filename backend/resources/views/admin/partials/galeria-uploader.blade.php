@@ -94,8 +94,13 @@
     });
 
     previews.addEventListener('click', e => {
-        if (e.target.classList.contains('galeria-remove')) {
-            e.target.closest('.galeria-item').remove();
+        // closest() (no classList.contains sobre e.target) porque el clic casi
+        // siempre cae sobre el ícono <i> DENTRO del botón, no sobre el <button>
+        // en sí: con classList.contains(e.target) el ícono nunca tiene la clase
+        // "galeria-remove" y el borrado nunca se disparaba.
+        const boton = e.target.closest('.galeria-remove');
+        if (boton) {
+            boton.closest('.galeria-item').remove();
         }
     });
 

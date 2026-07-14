@@ -67,13 +67,30 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        // 🛡️ BLINDAJE: Verificamos que el usuario esté autenticado y tenga un token activo
+        // Flujo SPA (React): si la petición trae un token Sanctum, lo revocamos.
         if ($request->user() && $request->user()->currentAccessToken()) {
             $request->user()->currentAccessToken()->delete();
             return response()->json(['message' => 'Sesión cerrada correctamente']);
         }
 
-        // Si llegó aquí sin token o la sesión ya expiró, respondemos con éxito para no trabar a React
-        return response()->json(['message' => 'No había token activo o la sesión ya expiró'], 200);
+        // Flujo panel admin: cierre de la SESIÓN WEB. El panel se autentica por
+        // sesión de servidor (Auth::login en el login Blade), NO por token; por
+        // eso hay que cerrar el guard web e invalidar la sesión. Antes esto no
+        // se hacía y el logout "no cerraba" realmente la sesión del panel.
+        if (Auth::guard('web')->check()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            // Formulario del panel (navegación normal): redirige al login.
+            if (! $request->expectsJson()) {
+                return redirect()->route('login')->with('success', 'Sesión cerrada correctamente.');
+            }
+        }
+
+        // Sin token ni sesión activa: respondemos OK para no trabar al cliente.
+        return $request->expectsJson()
+            ? response()->json(['message' => 'No había sesión activa.'], 200)
+            : redirect()->route('login');
     }
 }

@@ -16,7 +16,7 @@
         </div>
     </div>
 
-    <div class="p-8 w-full">
+    <div class="p-4 sm:p-6 lg:p-8 w-full">
         <div class="bg-white rounded-2xl p-6 card-premium-shadow w-full">
 
             <div class="overflow-x-auto rounded-xl border border-gray-100">
@@ -55,7 +55,7 @@
                                     </span>
                                 @elseif($u->rol === 'admin_turismo')
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black bg-teal-50 text-teal-700 border border-teal-100">
-                                        <i class="fas fa-map-marked-alt text-[9px]"></i> Admin Turismo
+                                        <i class="fas fa-map-marked-alt text-[9px]"></i> Administrador del Proyecto de Investigación
                                     </span>
                                 @else
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-50 text-slate-500 border border-slate-100">

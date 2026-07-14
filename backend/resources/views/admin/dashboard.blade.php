@@ -28,7 +28,7 @@
     </div>
 
     {{-- Cuerpo con Margen de Separación --}}
-    <div class="p-8 w-full space-y-6">
+    <div class="p-4 sm:p-6 lg:p-8 w-full space-y-6">
         
         {{-- Mi Perfil Institucional --}}
         <div class="bg-white rounded-2xl p-6 card-premium-shadow">

@@ -65,7 +65,10 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    // Ecuador (UTC-5, sin horario de verano). Antes 'UTC': con el servidor en
+    // UTC, un reporte generado de noche (hora Ecuador) ya caía en el día
+    // siguiente en UTC, y el PDF salía con la fecha de "mañana".
+    'timezone' => env('APP_TIMEZONE', 'America/Guayaquil'),
 
     /*
     |--------------------------------------------------------------------------
@@ -78,7 +81,9 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    // App en español (Ecuador): con 'en' los meses de los reportes PDF salían
+    // en inglés ("July" en vez de "julio").
+    'locale' => env('APP_LOCALE', 'es'),
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 

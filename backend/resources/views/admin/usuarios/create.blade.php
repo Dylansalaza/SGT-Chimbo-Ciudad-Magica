@@ -16,7 +16,7 @@
         </div>
     </div>
 
-    <div class="p-8 w-full">
+    <div class="p-4 sm:p-6 lg:p-8 w-full">
         <div class="bg-white rounded-2xl p-8 card-premium-shadow max-w-2xl mx-auto">
 
 
@@ -72,7 +72,7 @@
                                     <i class="fas fa-user-shield text-[#00913f] mr-1"></i> Administrador
                                 </span>
                                 <span class="block text-xs text-slate-500 mt-0.5">
-                                    Solo puede ver el Dashboard y gestionar usuarios del sistema.
+                                    Solo puede ver el Panel de Control y gestionar usuarios del sistema.
                                 </span>
                             </span>
                         </label>
@@ -84,7 +84,7 @@
                                    class="mt-0.5 text-green-600 focus:ring-green-500/30">
                             <span>
                                 <span class="block text-sm font-bold text-slate-800">
-                                    <i class="fas fa-map-marked-alt text-green-600 mr-1"></i> Admin de Turismo
+                                    <i class="fas fa-map-marked-alt text-green-600 mr-1"></i> Administrador del Proyecto de Investigación
                                 </span>
                                 <span class="block text-xs text-slate-500 mt-0.5">
                                     Gestiona eventos, noticias, galerías, lugares, categorías y reportes.

@@ -80,11 +80,12 @@
     .badge.gold{ background: #fef3c7; color: #b45309; }
     .empty { text-align: center; color: #94a3b8; padding: 18px; font-style: italic; border: 1px dashed #cbd5e1; border-radius: 6px; }
 
-    /* ── Área de firma ── */
-    .firmas { margin-top: 34px; }
-    .firmas table { width: 100%; border-collapse: collapse; }
-    .firmas td { width: 50%; text-align: center; padding: 0 22px; font-size: 9px; color: #475569; border: 0; }
-    .firma-line { border-top: 1px solid #64748b; margin: 0 10px 4px; padding-top: 4px; }
+    /* ── Área de firma ──
+       Un solo bloque, centrado en el ANCHO TOTAL de la página (antes era una
+       tabla de 2 columnas al 50% con la segunda vacía: el texto quedaba
+       centrado solo en la mitad izquierda, muy corrido hacia la izquierda). */
+    .firmas { margin-top: 34px; text-align: center; font-size: 9px; color: #475569; }
+    .firma-line { border-top: 1px solid #64748b; width: 260px; margin: 0 auto 4px; padding-top: 4px; }
     .firma-role { font-weight: bold; color: #334155; }
 </style>
 </head>
@@ -146,16 +147,9 @@
 
     {{-- Área de validación / firma (al final del documento) --}}
     <div class="firmas">
-        <table>
-            <tr>
-                <td>
-                    <div class="firma-line"></div>
-                    <div class="firma-role">Elaborado por</div>
-                    <div>Sistema de Gestión Turística</div>
-                </td>
-                <td></td>
-            </tr>
-        </table>
+        <div class="firma-line"></div>
+        <div class="firma-role">Elaborado por</div>
+        <div>Sistema de Gestión Turística</div>
     </div>
 
 </body>

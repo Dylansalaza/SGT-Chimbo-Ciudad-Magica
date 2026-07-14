@@ -68,7 +68,18 @@ STORAGE_PUBLIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "s
 # Umbral mínimo de similitud (coseno 0-1) para aceptar una coincidencia.
 # Por debajo de esto se considera que NO se reconoció el lugar.
 # Súbelo para ser más estricto (menos falsos positivos), bájalo para ser más permisivo.
-MATCH_THRESHOLD = float(os.getenv("CLIP_MATCH_THRESHOLD", "0.75"))
+#
+# Calibrado empíricamente (2026-07) con fotos REALES del catálogo (5 lugares,
+# 245 pares de fotos distintas del mismo lugar + 10 pares de lugares distintos),
+# usando el mismo modelo (clip-vit-base-patch32) y preprocesamiento de producción:
+#   - Con el valor anterior (0.75), la MEDIANA de fotos genuinamente distintas
+#     del MISMO lugar daba 0.74 -> el umbral rechazaba más de la mitad de las
+#     coincidencias reales ("no hay coincidencias" con fotos correctas).
+#   - 0.66 es el umbral más bajo que en la muestra sigue dando CERO falsos
+#     positivos entre lugares distintos, y reconoce ~75% de las coincidencias
+#     reales (vs. ~49% con 0.75). Bajar más empieza a confundir lugares con
+#     arquitectura similar (p. ej. Santuario del Guayco vs Iglesia Matriz).
+MATCH_THRESHOLD = float(os.getenv("CLIP_MATCH_THRESHOLD", "0.66"))
 
 
 def conectar_db():

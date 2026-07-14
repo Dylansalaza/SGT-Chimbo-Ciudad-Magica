@@ -62,6 +62,7 @@
 
         .login-card-master {
             width: 960px;
+            max-width: 100%;
             height: 520px;
             border-radius: 20px;
 
@@ -77,6 +78,27 @@
             display: flex;
             overflow: hidden;
             position: relative;
+        }
+
+        /* ===== Responsive: en móvil la tarjeta ocupa toda la pantalla y sus dos
+           columnas se apilan (marca arriba en verde, formulario debajo en blanco). */
+        @media (max-width: 767px) {
+            body {
+                align-items: stretch;
+                background-image: none;
+                background-color: #ffffff;
+            }
+            .login-card-master {
+                width: 100%;
+                height: auto;
+                min-height: 100vh;
+                border-radius: 0;
+                flex-direction: column;
+                background-image: none;
+                background-color: #ffffff;
+                box-shadow: none;
+                overflow: visible;
+            }
         }
 
         /* Bordes reforzados y texto oscuro para legibilidad extrema */
@@ -95,21 +117,22 @@
 
     <div class="login-card-master">
 
-        <div class="w-1/2 flex flex-col items-center justify-center relative pr-8">
-
+        <div class="w-full md:w-1/2 flex flex-col items-center justify-center relative py-10 md:py-0 md:pr-8 bg-[#084832] md:bg-transparent">
+            {{-- En móvil esta columna es una franja verde superior; en escritorio
+                 hereda el degradado dividido de la tarjeta (fondo transparente). --}}
             <div class="flex items-center gap-3.5 drop-shadow-md">
-                <span class="grid place-items-center w-16 h-16 rounded-2xl text-white font-serif font-black text-3xl leading-none shadow-xl ring-1 ring-inset ring-white/40"
+                <span class="grid place-items-center w-14 h-14 md:w-16 md:h-16 rounded-2xl text-white font-serif font-black text-2xl md:text-3xl leading-none shadow-xl ring-1 ring-inset ring-white/40"
                       style="background-image: linear-gradient(120deg, #00913f, #059c45 55%, #eab52a);">C</span>
                 <div class="flex flex-col leading-none">
-                    <span class="font-extrabold italic text-white text-5xl tracking-tight">SGT</span>
-                    <span class="font-extrabold text-2xl tracking-wide leading-tight" style="color:#eab52a;">CHIMBO</span>
-                    <span class="text-[11px] font-semibold tracking-[0.35em] text-green-100/80 mt-1.5">GESTIÓN TURÍSTICA</span>
+                    <span class="font-extrabold italic text-white text-4xl md:text-5xl tracking-tight">SGT</span>
+                    <span class="font-extrabold text-xl md:text-2xl tracking-wide leading-tight" style="color:#eab52a;">CHIMBO</span>
+                    <span class="text-[10px] md:text-[11px] font-semibold tracking-[0.35em] text-green-100/80 mt-1.5">GESTIÓN TURÍSTICA</span>
                 </div>
             </div>
 
         </div>
 
-        <div class="w-1/2 flex flex-col justify-center pl-10 pr-16 bg-transparent">
+        <div class="w-full md:w-1/2 flex flex-col justify-center bg-white md:bg-transparent px-6 py-8 md:py-0 md:pl-10 md:pr-16">
 
             <div class="mb-8">
                 <h2 class="font-serif text-[32px] font-extrabold text-slate-950 tracking-tight">
@@ -131,8 +154,8 @@
             <form method="POST" action="{{ route('login') }}" class="space-y-5">
                 @csrf
 
-                <div class="grid grid-cols-[150px_1fr] items-center gap-4">
-                    <label class="text-right text-[13px] text-slate-950 font-extrabold uppercase tracking-wide">
+                <div class="grid grid-cols-1 sm:grid-cols-[130px_1fr] sm:items-center gap-2 sm:gap-4">
+                    <label class="text-left sm:text-right text-[13px] text-slate-950 font-extrabold uppercase tracking-wide">
                         <span class="text-red-600 font-black">*</span> Correo:
                     </label>
                     <input
@@ -146,8 +169,8 @@
                     >
                 </div>
 
-                <div class="grid grid-cols-[150px_1fr] items-start gap-4 pt-1">
-                    <label class="text-right text-[13px] text-slate-950 font-extrabold uppercase tracking-wide pt-2.5">
+                <div class="grid grid-cols-1 sm:grid-cols-[130px_1fr] items-start gap-2 sm:gap-4 pt-1">
+                    <label class="text-left sm:text-right text-[13px] text-slate-950 font-extrabold uppercase tracking-wide sm:pt-2.5">
                         <span class="text-red-600 font-black">*</span> Contraseña:
                     </label>
                     <div class="w-full flex flex-col items-end">
@@ -163,12 +186,12 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-[150px_1fr] gap-4 pt-3">
-                    <div></div>
+                <div class="grid grid-cols-1 sm:grid-cols-[130px_1fr] gap-4 pt-3">
+                    <div class="hidden sm:block"></div>
                     <div>
                         <button
                             type="submit"
-                            class="bg-[#00913f] hover:bg-[#055c39] text-white font-extrabold uppercase tracking-wider px-10 py-3 rounded-md text-[13px] transition-colors shadow-md shadow-green-500/20 active:scale-[0.98]"
+                            class="w-full sm:w-auto bg-[#00913f] hover:bg-[#055c39] text-white font-extrabold uppercase tracking-wider px-10 py-3 rounded-md text-[13px] transition-colors shadow-md shadow-green-500/20 active:scale-[0.98]"
                         >
                             Acceder
                         </button>

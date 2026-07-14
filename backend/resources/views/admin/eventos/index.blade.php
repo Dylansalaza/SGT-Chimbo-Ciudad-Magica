@@ -17,7 +17,7 @@
     </div>
 
     {{-- Contenedor de la Tabla --}}
-    <div class="p-8 w-full">
+    <div class="p-4 sm:p-6 lg:p-8 w-full">
         <div class="bg-white rounded-2xl p-6 card-premium-shadow w-full">
             
             <div class="overflow-x-auto rounded-xl border border-gray-100">

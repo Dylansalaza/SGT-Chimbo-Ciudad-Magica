@@ -1,0 +1,4 @@
+# Los scripts de shell SIEMPRE con finales de línea LF.
+# Con core.autocrlf=true (Windows) podrían guardarse con CRLF y, al hacer
+# checkout en el servidor Linux, fallar con "bad interpreter: /usr/bin/env bash^M".
+*.sh text eol=lf

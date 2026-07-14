@@ -5,6 +5,21 @@
     <link rel="icon" type="image/svg+xml" href="/media/logo/logo-icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chimbo Ciudad Mágica</title>
+    <!-- Tema inicial SIN parpadeo: antes de pintar, aplica el modo oscuro SOLO
+         si el usuario lo guardó explícitamente. Sin preferencia guardada, el
+         sitio arranca en modo CLARO por defecto (no sigue el modo del sistema).
+         Debe ir aquí, en el <head>, para ejecutarse antes del primer pintado. -->
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <!-- El backend (API + imágenes de /storage, incluida la del carrusel que
          suele ser el LCP) vive en OTRO origen (Vercel sirve el frontend; la API
          está en su propio dominio). Este script, durante el parseo del HTML:

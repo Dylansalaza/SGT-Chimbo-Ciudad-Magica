@@ -7,7 +7,7 @@
     <div class="sticky top-0 z-50 header-corporate text-white w-full px-10 shadow-lg border-b border-white/5">
         <div class="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
             <div class="space-y-1">
-                <h1 class="font-serif text-2xl font-extrabold tracking-tight md:text-3xl">Editar Home</h1>
+                <h1 class="font-serif text-2xl font-extrabold tracking-tight md:text-3xl">Editar Inicio</h1>
                 <p class="text-sm text-slate-300 font-medium">Cambia el carrusel principal y el texto de bienvenida del inicio. Los “Lugares destacados” se gestionan marcándolos en el módulo de Lugares.</p>
             </div>
         </div>
@@ -44,7 +44,7 @@
                 </div>
                 <p class="text-xs text-slate-400 mb-4">
                     <i class="fas fa-circle-info text-[#00913f]/60"></i>
-                    Estas imágenes se muestran <span class="font-semibold text-slate-500">a pantalla completa al inicio del Home</span>, en el mismo orden que aparecen aquí (de izquierda a derecha). Sube o cambia la imagen de cada diapositiva; el título y subtítulo se ven encima de la foto.
+                    Estas imágenes se muestran <span class="font-semibold text-slate-500">a pantalla completa en la página de inicio</span>, en el mismo orden que aparecen aquí (de izquierda a derecha). Sube o cambia la imagen de cada diapositiva; el título y subtítulo se ven encima de la foto.
                 </p>
 
                 <div id="slides" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8 items-start"></div>

@@ -378,18 +378,18 @@
             <nav class="flex-1 min-h-0 overflow-y-auto mt-4 space-y-1 px-2">
                 {{-- ── Principal (ambos roles) ── --}}
                 <p class="nav-section sidebar-collapsible">Principal</p>
-                <a href="{{ route('admin.dashboard') }}" title="Dashboard" class="nav-link-premium flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                <a href="{{ route('admin.dashboard') }}" title="Panel de Control" class="nav-link-premium flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <i class="fas fa-tachometer-alt w-5 text-center text-base"></i>
-                    <span>Dashboard</span>
+                    <span>Panel de Control</span>
                 </a>
 
                 {{-- Sección del Admin de Turismo --}}
                 @if(auth()->user()?->isAdminTurismo())
                 {{-- ── Contenido ── --}}
                 <p class="nav-section sidebar-collapsible">Contenido</p>
-                <a href="{{ route('admin.home.edit') }}" title="Editar Home" class="nav-link-premium flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('admin.home.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.home.edit') }}" title="Editar Inicio" class="nav-link-premium flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('admin.home.*') ? 'active' : '' }}">
                     <i class="fas fa-house w-5 text-center text-base"></i>
-                    <span>Editar Home</span>
+                    <span>Editar Inicio</span>
                 </a>
                 <a href="{{ route('admin.eventos.index') }}" title="Eventos" class="nav-link-premium flex items-center gap-3 px-4 py-3 rounded-lg text-sm {{ request()->routeIs('admin.eventos.*') ? 'active' : '' }}">
                     <i class="fas fa-calendar-alt w-5 text-center text-base"></i>

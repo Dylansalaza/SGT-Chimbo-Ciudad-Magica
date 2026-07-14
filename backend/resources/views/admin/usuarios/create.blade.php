@@ -72,7 +72,7 @@
                                     <i class="fas fa-user-shield text-[#00913f] mr-1"></i> Administrador
                                 </span>
                                 <span class="block text-xs text-slate-500 mt-0.5">
-                                    Solo puede ver el Dashboard y gestionar usuarios del sistema.
+                                    Solo puede ver el Panel de Control y gestionar usuarios del sistema.
                                 </span>
                             </span>
                         </label>

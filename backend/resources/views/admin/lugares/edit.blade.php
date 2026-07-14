@@ -140,7 +140,7 @@
                 <section>
                     <label class="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer w-fit hover:bg-slate-100 transition">
                         <input type="checkbox" name="destacado" value="1" class="w-5 h-5 accent-orange-500" {{ old('destacado', $lugar->destacado) ? 'checked' : '' }}>
-                        <span class="text-sm font-semibold text-slate-700 flex items-center gap-1.5"><i class="fas fa-star text-slate-400"></i> Mostrar como “Destacado” en el inicio (Home)</span>
+                        <span class="text-sm font-semibold text-slate-700 flex items-center gap-1.5"><i class="fas fa-star text-slate-400"></i> Mostrar como “Destacado” en la página de inicio</span>
                     </label>
                 </section>
 

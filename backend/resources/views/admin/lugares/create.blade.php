@@ -33,6 +33,18 @@
                     <p id="importarFichaAyuda" class="text-xs text-slate-500 mt-0.5 leading-relaxed">
                         Sube la "Ficha de Levantamiento y Jerarquización de Atractivos Turísticos" (formato oficial MINTUR) y se precargarán automáticamente los campos que apliquen.
                     </p>
+
+                    {{-- Barra de progreso de la subida (oculta hasta que el admin elige un archivo).
+                         Muestra el % real mientras sube y pasa a "Procesando…" cuando el archivo
+                         ya llegó al servidor y este lee el Excel / extrae las fotos. --}}
+                    <div id="fichaProgreso" class="hidden mt-2.5">
+                        <div class="flex items-center justify-between text-[11px] font-bold text-green-700 mb-1">
+                            <span id="fichaProgresoTexto">Subiendo… 0%</span>
+                        </div>
+                        <div class="h-1.5 w-full bg-green-100 rounded-full overflow-hidden">
+                            <div id="fichaProgresoBarra" class="h-full bg-green-600 rounded-full transition-all duration-150" style="width:0%"></div>
+                        </div>
+                    </div>
                 </div>
                 <label id="importarFichaBtn" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer transition shadow-md shrink-0 self-start sm:self-center whitespace-nowrap">
                     <i class="fas fa-file-import"></i>
@@ -149,7 +161,7 @@
                 <section>
                     <label class="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer w-fit hover:bg-slate-100 transition">
                         <input type="checkbox" name="destacado" value="1" class="w-5 h-5 accent-orange-500">
-                        <span class="text-sm font-semibold text-slate-700 flex items-center gap-1.5"><i class="fas fa-star text-slate-400"></i> Mostrar como “Destacado” en el inicio (Home)</span>
+                        <span class="text-sm font-semibold text-slate-700 flex items-center gap-1.5"><i class="fas fa-star text-slate-400"></i> Mostrar como “Destacado” en la página de inicio</span>
                     </label>
                 </section>
 

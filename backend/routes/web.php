@@ -22,10 +22,17 @@ use Illuminate\Support\Facades\Route;
 // =========================================================
 // 🛡️ RUTAS DEL PANEL DE ADMINISTRADOR (PRIVADAS)
 // =========================================================
-Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth:sanctum', 'admin', 'presencia'])->prefix('admin')->name('admin.')->group(function () {
 
     // ── Dashboard (ambos roles) ────────────────────────────────────────────
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // ── Latido de presencia (ambos roles) ──────────────────────────────────
+    // El layout del panel llama a esta ruta cada ~15 s mientras la pestaña vive.
+    // El middleware 'presencia' refresca la marca de presencia; aquí solo hay
+    // que responder algo mínimo. Al cerrar la pestaña dejan de llegar latidos y
+    // el siguiente acceso al panel cierra la sesión (ver EnforcePanelHeartbeat).
+    Route::post('latido', fn () => response()->noContent())->name('latido');
 
     // ── Sección exclusiva del ADMINISTRADOR (gestión de usuarios) ─────────
     Route::middleware('rol:administrador')->group(function () {

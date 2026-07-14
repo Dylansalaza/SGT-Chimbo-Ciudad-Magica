@@ -13,7 +13,21 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 echo "==> [1/6] Trayendo cambios de git..."
-git pull
+# Auto-actualización segura: si el propio deploy.sh cambia en el git pull, bash
+# seguiría ejecutando la versión VIEJA que ya cargó en memoria (el pull crea un
+# inode nuevo, pero este proceso conserva el viejo). Para evitarlo, hacemos el
+# pull aquí y, si HEAD cambió, re-ejecutamos la versión nueva UNA sola vez.
+if [ "${SGT_DEPLOY_REEXEC:-}" != "1" ]; then
+    _antes=$(git rev-parse HEAD)
+    git pull
+    _despues=$(git rev-parse HEAD)
+    if [ "$_antes" != "$_despues" ]; then
+        echo "==> deploy.sh se actualizó en el pull; re-ejecutando la versión nueva..."
+        exec env SGT_DEPLOY_REEXEC=1 bash "$0" "$@"
+    fi
+else
+    echo "    (ya se hizo git pull; ejecutando la versión nueva del script)"
+fi
 
 # --- Dependencias / migraciones (descomenta SOLO cuando el deploy las incluya) ---
 # Si cambió composer.json (nuevas librerías PHP):

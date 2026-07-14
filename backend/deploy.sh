@@ -23,14 +23,20 @@ git pull
 
 # Límite de subida de PHP-FPM: por defecto Ubuntu trae upload_max_filesize=2M,
 # muy por debajo de lo que permite Nginx (client_max_body_size 20M) y de lo
-# que valida Laravel (max:20480 en LugarController::importarFicha, la Ficha
-# MINTUR con fotos incrustadas). Sin esto, PHP descarta el archivo ANTES de
-# que Laravel llegue a validarlo (error "validation.uploaded"). Se deja en
-# un .ini propio (no se toca el php.ini principal) para que sea idempotente.
-echo "==> [2/6] Asegurando límite de subida en PHP-FPM (hasta 25MB)..."
+# que valida Laravel (20 MB en LugarController::importarFicha, la Ficha MINTUR
+# con fotos incrustadas). Sin esto, PHP descarta el archivo ANTES de que
+# Laravel llegue a validarlo (error "validation.uploaded"). Se deja en un .ini
+# propio (no se toca el php.ini principal) para que sea idempotente. También se
+# fija una carpeta temporal de subidas propia y con permisos, por si el default
+# del sistema no fuera escribible por www-data (otra causa de "validation.uploaded").
+echo "==> [2/6] Asegurando límite y carpeta temporal de subida en PHP-FPM..."
+sudo mkdir -p /var/lib/php/sgt-uploads
+sudo chown www-data:www-data /var/lib/php/sgt-uploads
+sudo chmod 700 /var/lib/php/sgt-uploads
 sudo tee /etc/php/8.5/fpm/conf.d/99-sgt-uploads.ini > /dev/null <<'INI'
 upload_max_filesize = 25M
 post_max_size = 25M
+upload_tmp_dir = /var/lib/php/sgt-uploads
 INI
 
 echo "==> [3/6] Limpiando cachés viejas (config/route/view/event)..."
@@ -39,11 +45,21 @@ php artisan optimize:clear
 echo "==> [4/6] Re-cacheando para rendimiento..."
 php artisan optimize
 
-echo "==> [5/6] Recargando PHP-FPM (toma el nuevo límite de subida + OPcache)..."
-sudo systemctl reload php8.5-fpm
+# RESTART (no reload): un reload graceful de FPM NO siempre re-lee los .ini de
+# conf.d, así que el nuevo límite de subida podía quedar sin aplicarse. El
+# restart garantiza que el proceso arranque con la config nueva.
+echo "==> [5/6] Reiniciando PHP-FPM (aplica límite de subida + refresca OPcache)..."
+sudo systemctl restart php8.5-fpm
 
 echo "==> [6/6] Reiniciando workers de Supervisor..."
 sudo supervisorctl restart sgt-queue sgt-worker
+
+# Prueba de que el límite quedó APLICADO en la config real de FPM (php-fpm -i
+# lee el php.ini + conf.d del SAPI de FPM, no el de la CLI). Debe verse 25M.
+echo ""
+echo "--- Límite de subida efectivo en PHP-FPM ---"
+php-fpm8.5 -i 2>/dev/null | grep -Ei 'upload_max_filesize|post_max_size|upload_tmp_dir' || \
+  echo "(no se pudo leer php-fpm8.5 -i; verifica manualmente)"
 
 echo ""
 echo "OK - Despliegue completado."

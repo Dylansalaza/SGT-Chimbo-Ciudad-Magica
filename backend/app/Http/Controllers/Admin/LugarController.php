@@ -180,25 +180,67 @@ class LugarController extends Controller
      */
     public function importarFicha(Request $request)
     {
+        // NO se usa $request->validate(['ficha' => 'file|...']): su regla
+        // implícita "uploaded" convierte CUALQUIER fallo de subida de PHP en un
+        // opaco "validation.uploaded" sin decir la causa. Aquí inspeccionamos el
+        // archivo a mano para devolver un mensaje CLARO (tamaño, carpeta temporal
+        // ausente, permisos, subida a medias...) y poder diagnosticar desde el
+        // navegador exactamente qué está fallando en el servidor.
+        $file = $request->file('ficha');
+
+        if ($file === null) {
+            // Ni siquiera llegó el archivo: normalmente porque el cuerpo POST
+            // superó post_max_size y PHP lo descartó entero.
+            \Log::error('importarFicha: no llegó archivo (¿post_max_size del servidor superado?).');
+            return response()->json([
+                'error' => 'No se recibió ningún archivo. Puede que supere el tamaño máximo que acepta el servidor.',
+            ], 422);
+        }
+
+        if (!$file->isValid()) {
+            // El archivo llegó a $_FILES pero con un código de error de PHP.
+            // Traducimos cada código a algo accionable en vez de "uploaded".
+            $codigo = $file->getError();
+            $mensaje = match ($codigo) {
+                UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE =>
+                    'El archivo supera el límite de subida del servidor (upload_max_filesize). Ejecuta deploy.sh, que lo sube a 25 MB.',
+                UPLOAD_ERR_PARTIAL =>
+                    'La subida se interrumpió a medias. Vuelve a intentarlo.',
+                UPLOAD_ERR_NO_TMP_DIR =>
+                    'El servidor no tiene carpeta temporal para subidas (falta upload_tmp_dir en PHP).',
+                UPLOAD_ERR_CANT_WRITE =>
+                    'El servidor no pudo escribir el archivo temporal (permisos de la carpeta temporal).',
+                default =>
+                    'No se pudo recibir el archivo (código de error PHP ' . $codigo . ').',
+            };
+            \Log::error('importarFicha: fallo de subida de PHP', [
+                'codigo'  => $codigo,
+                'archivo' => $file->getClientOriginalName(),
+            ]);
+            return response()->json(['error' => $mensaje], 422);
+        }
+
+        // Tamaño máximo (20 MB), ya con un archivo válido en mano.
+        if ($file->getSize() > 20 * 1024 * 1024) {
+            return response()->json([
+                'error' => 'El archivo supera el máximo de 20 MB.',
+            ], 422);
+        }
+
         // Se valida la extensión (no el MIME real vía fileinfo/libmagic):
         // un .xlsx es un zip por dentro, y en varios servidores Linux
         // libmagic lo detecta como "application/zip" genérico en vez del
-        // MIME de Excel, así que la regla "mimes:" rechazaba archivos
+        // MIME de Excel, así que una regla "mimes:" rechazaba archivos
         // válidos en producción aunque funcionaran en local (Windows).
-        // PhpSpreadsheet igual valida el contenido real al abrirlo más
-        // abajo, así que la seguridad no depende de este chequeo.
-        $request->validate([
-            'ficha' => 'required|file|max:20480',
-        ]);
-
-        $extension = strtolower($request->file('ficha')->getClientOriginalExtension());
+        // PhpSpreadsheet igual valida el contenido real al abrirlo más abajo.
+        $extension = strtolower($file->getClientOriginalExtension());
         if (!in_array($extension, ['xlsx', 'xlsm', 'xls'], true)) {
             return response()->json([
                 'error' => 'El archivo debe ser un Excel (.xlsx, .xlsm o .xls) con el formato de la Ficha MINTUR.',
             ], 422);
         }
 
-        $path = $request->file('ficha')->getRealPath();
+        $path = $file->getRealPath();
 
         try {
             $spreadsheet = IOFactory::load($path);

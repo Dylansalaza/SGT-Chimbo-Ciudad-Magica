@@ -9,13 +9,28 @@ use Illuminate\Notifications\Notification;
 /**
  * Notificación de recuperación de contraseña personalizada para el SGT Chimbo.
  * El correo sale en español con el nombre y la identidad visual del sistema.
+ *
+ * Sobre $destino: el usuario puede pedir el restablecimiento desde su correo
+ * principal O desde su correo de recuperación (ver PasswordResetController).
+ * El correo debe llegar a la dirección que ESCRIBIÓ, no siempre a la principal,
+ * así que se guarda aquí y User::routeNotificationForMail() la lee. Si es null
+ * se cae al correo principal (comportamiento por defecto de Laravel).
  */
 class ResetPasswordNotification extends Notification
 {
     use Queueable;
 
-    public function __construct(private string $token)
+    public function __construct(private string $token, private ?string $destino = null)
     {
+    }
+
+    /**
+     * Dirección a la que debe ENTREGARSE este correo (null = la principal).
+     * La usa User::routeNotificationForMail().
+     */
+    public function destino(): ?string
+    {
+        return $this->destino;
     }
 
     public function via(object $notifiable): array

@@ -38,10 +38,32 @@ class User extends Authenticatable
 
     /**
      * Usa la notificación personalizada en español para el reset de contraseña.
+     *
+     * $destino permite entregar el correo en la dirección que el usuario
+     * escribió (puede ser su 'recovery_email', no solo la principal). Si se
+     * omite, Laravel lo manda a la principal como siempre.
      */
-    public function sendPasswordResetNotification($token): void
+    public function sendPasswordResetNotification($token, ?string $destino = null): void
     {
-        $this->notify(new ResetPasswordNotification($token));
+        $this->notify(new ResetPasswordNotification($token, $destino));
+    }
+
+    /**
+     * A qué dirección se entregan los correos de notificación.
+     *
+     * Por defecto Laravel usa SIEMPRE $this->email. Para el reset de contraseña
+     * eso era un bug: si el usuario pedía el enlace desde su correo de
+     * recuperación, el correo se iba igual al principal (posiblemente uno al
+     * que ya no tiene acceso, que es justo el motivo de tener un alternativo).
+     * Aquí respetamos la dirección que trae la notificación de reset.
+     */
+    public function routeNotificationForMail($notification = null): string
+    {
+        if ($notification instanceof ResetPasswordNotification && $notification->destino()) {
+            return $notification->destino();
+        }
+
+        return $this->email;
     }
 
     /**

@@ -873,5 +873,46 @@
             form.submit();
         }
     </script>
+
+    <script>
+        // ===== Latido de presencia de la pestaña =====
+        // Cierra la sesión automáticamente cuando se CIERRA LA PESTAÑA del panel,
+        // aunque no se pulse "Cerrar sesión" (complementa a expire_on_close, que
+        // cubre el cierre de TODO el navegador). Mientras la pestaña vive, manda
+        // un "latido" al servidor cada 15 s; al cerrarla dejan de llegar y el
+        // servidor cierra la sesión pasada la gracia (config session.tab_heartbeat_grace).
+        // Recargar (F5/botón) y el botón "Atrás" reanudan el latido al instante,
+        // así que NO cierran la sesión.
+        (function () {
+            const URL_LATIDO = @json(route('admin.latido'));
+            const TOKEN      = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const INTERVALO  = 15000; // 15 s — debe ser MENOR que la gracia del servidor (45 s)
+
+            function latir() {
+                const fd = new FormData();
+                fd.append('_token', TOKEN);
+                try {
+                    // sendBeacon es fiable (no se cancela al ocultar la pestaña) y no
+                    // bloquea el hilo. Si no existe, se usa fetch con keepalive.
+                    if (navigator.sendBeacon) {
+                        navigator.sendBeacon(URL_LATIDO, fd);
+                    } else {
+                        fetch(URL_LATIDO, { method: 'POST', body: fd, keepalive: true, credentials: 'same-origin' });
+                    }
+                } catch (e) { /* silencioso: el latido es best-effort */ }
+            }
+
+            latir();                       // uno inmediato al cargar la página
+            setInterval(latir, INTERVALO); // y periódico mientras la pestaña vive
+
+            // Al VOLVER a la pestaña (tras estar en segundo plano, donde el navegador
+            // frena los timers), late enseguida para revivir la sesión ANTES de que
+            // el usuario navegue: así una pestaña en segundo plano nunca cierra sesión
+            // por error, y solo el cierre real de la pestaña la termina.
+            document.addEventListener('visibilitychange', function () {
+                if (document.visibilityState === 'visible') latir();
+            });
+        })();
+    </script>
 </body>
 </html>

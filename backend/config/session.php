@@ -34,7 +34,28 @@ return [
 
     'lifetime' => (int) env('SESSION_LIFETIME', 120),
 
-    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
+    // Por defecto TRUE: la cookie de sesión del panel se convierte en cookie de
+    // sesión del navegador → al CERRAR EL NAVEGADOR se descarta y el admin queda
+    // deslogueado (aunque no haya pulsado "Cerrar sesión"). Se puede desactivar
+    // con SESSION_EXPIRE_ON_CLOSE=false en el .env. Para el caso de cerrar SOLO
+    // la pestaña (con el navegador abierto) se usa además el "latido" del panel
+    // (ver 'tab_heartbeat_grace' abajo y el middleware EnforcePanelHeartbeat).
+    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Gracia del "latido" de presencia del panel (segundos)
+    |--------------------------------------------------------------------------
+    |
+    | Mientras la pestaña del panel está abierta envía un "latido" periódico
+    | (ver el <script> del layout admin). Si dejan de llegar latidos durante
+    | más de estos segundos, se asume que la PESTAÑA se cerró y el siguiente
+    | acceso al panel cierra la sesión automáticamente. Debe ser mayor que el
+    | intervalo del latido (15 s) para que recargar/volver atrás —que reanudan
+    | el latido de inmediato— nunca lo superen y NO cierren sesión por error.
+    |
+    */
+    'tab_heartbeat_grace' => (int) env('SESSION_TAB_GRACE', 45),
 
     /*
     |--------------------------------------------------------------------------

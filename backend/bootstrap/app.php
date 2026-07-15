@@ -23,8 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Alias de middlewares para el panel admin
         $middleware->alias([
-            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
-            'rol'   => \App\Http\Middleware\EnsureRol::class,
+            'admin'     => \App\Http\Middleware\EnsureUserIsAdmin::class,
+            'rol'       => \App\Http\Middleware\EnsureRol::class,
+            'presencia' => \App\Http\Middleware\EnforcePanelHeartbeat::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

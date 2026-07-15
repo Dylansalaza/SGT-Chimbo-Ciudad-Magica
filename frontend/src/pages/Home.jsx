@@ -257,7 +257,7 @@ function AdminAccessCard() {
       )}
 
       <a
-        href={`${LARAVEL_URL}/admin`}
+        href={`${LARAVEL_URL}/login`}
         className="btn-press group inline-flex w-full items-center justify-center gap-1.5 px-4 py-2.5 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-lg text-sm shadow-green-md"
       >
         Dirigirse al Panel de Administrador <ArrowRightIcon className="w-4 h-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5" />

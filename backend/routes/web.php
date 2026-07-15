@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\CategoriaLugarController;
 use App\Http\Controllers\Admin\ChatFaqController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\AuthController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 // NOTA: la búsqueda visual real vive en routes/api.php (POST /api/image-search y
@@ -114,7 +116,18 @@ Route::middleware(['auth:sanctum', 'admin', 'presencia'])->prefix('admin')->name
 // =========================================================
 // 🔐 RUTAS DE AUTENTICACIÓN
 // =========================================================
-Route::get('/login', function () {
+Route::get('/login', function (Request $request) {
+    // SEGURIDAD: abrir el login SIEMPRE cierra cualquier sesión web activa antes
+    // de mostrar el formulario. Así, entrar al panel desde el botón del sitio
+    // público ("Dirigirse al Panel de Administrador") exige credenciales aunque
+    // el navegador conservara una sesión iniciada antes (p. ej. si se cerró la
+    // ventana del panel sin pulsar "Cerrar sesión"). Solo actúa si hay sesión;
+    // para un visitante ya deslogueado es un no-op (no regenera nada de más).
+    if (Auth::guard('web')->check()) {
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+    }
     return view('auth.login');
 })->name('login');
 

@@ -148,7 +148,7 @@ export default function Navbar() {
                 Usamos <a> normal porque /admin NO es una ruta de React. */}
             {admin && (
               <div className="flex items-center space-x-4 ml-3 pl-3 border-l border-white/15">
-                <a href={`${BACKEND_URL}/admin`} className="flex items-center gap-1.5 whitespace-nowrap px-3 py-2 rounded-lg text-gold-300 hover:text-gold-200 hover:bg-white/5 text-sm transition-colors">
+                <a href={`${BACKEND_URL}/login`} className="flex items-center gap-1.5 whitespace-nowrap px-3 py-2 rounded-lg text-gold-300 hover:text-gold-200 hover:bg-white/5 text-sm transition-colors">
                   <ChartBarIcon className="w-4 h-4" /> Panel Admin
                 </a>
               </div>
@@ -218,7 +218,7 @@ export default function Navbar() {
 
             {admin && (
               <a
-                href={`${BACKEND_URL}/admin`}
+                href={`${BACKEND_URL}/login`}
                 className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-gold-300 hover:bg-white/10 hover:text-gold-200 transition-colors font-semibold"
               >
                 <ChartBarIcon className="w-4 h-4" /> Panel Admin

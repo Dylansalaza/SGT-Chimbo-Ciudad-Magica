@@ -879,14 +879,14 @@
         // Cierra la sesión automáticamente cuando se CIERRA LA PESTAÑA del panel,
         // aunque no se pulse "Cerrar sesión" (complementa a expire_on_close, que
         // cubre el cierre de TODO el navegador). Mientras la pestaña vive, manda
-        // un "latido" al servidor cada 15 s; al cerrarla dejan de llegar y el
-        // servidor cierra la sesión pasada la gracia (config session.tab_heartbeat_grace).
+        // un "latido" al servidor cada 5 s; al cerrarla dejan de llegar y el
+        // servidor cierra la sesión pasada la gracia (config session.tab_heartbeat_grace, 15 s).
         // Recargar (F5/botón) y el botón "Atrás" reanudan el latido al instante,
         // así que NO cierran la sesión.
         (function () {
             const URL_LATIDO = @json(route('admin.latido'));
             const TOKEN      = document.querySelector('meta[name="csrf-token"]')?.content || '';
-            const INTERVALO  = 15000; // 15 s — debe ser MENOR que la gracia del servidor (45 s)
+            const INTERVALO  = 5000; // 5 s — debe ser MENOR que la gracia del servidor (15 s)
 
             function latir() {
                 const fd = new FormData();

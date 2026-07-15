@@ -19,11 +19,12 @@ import {
 // del sufijo, dejando una URL rota como "https:/.midominio.com/api".
 const BACKEND_URL = import.meta.env.VITE_API_URL?.replace(/\/api$/, '') || 'http://127.0.0.1:3000';
 
-// Lee el usuario logueado (guardado en localStorage al iniciar sesión)
+// Lee el usuario logueado. La sesión vive en sessionStorage (se borra al
+// CERRAR LA PESTAÑA); el login la guarda ahí a propósito. Se mantiene la
+// lectura de localStorage como respaldo para sesiones antiguas aún no migradas
+// (ver la migración en main.jsx).
 const getCurrentUser = () => {
-  // El login guarda la clave 'user'. Si el usuario NO marcó "Recordarme",
-  // la sesión vive en sessionStorage (se borra al cerrar la pestaña).
-  const user = localStorage.getItem('user') || sessionStorage.getItem('user');
+  const user = sessionStorage.getItem('user') || localStorage.getItem('user');
   return user ? JSON.parse(user) : null;
 };
 

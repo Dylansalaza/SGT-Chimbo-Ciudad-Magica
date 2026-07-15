@@ -24,10 +24,15 @@ export default function Login() {
       });
       
       const { access_token, user } = response.data;
-      
-      localStorage.setItem('token', access_token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
+
+      // La sesión se guarda en sessionStorage (NO localStorage) a propósito:
+      // sessionStorage se borra automáticamente al CERRAR LA PESTAÑA, así la
+      // sesión no queda "abierta" al reabrir el sitio. localStorage, en cambio,
+      // persistía indefinidamente (la sesión seguía activa tras cerrar la
+      // pestaña). El logout del Navbar limpia ambos por retrocompatibilidad.
+      sessionStorage.setItem('token', access_token);
+      sessionStorage.setItem('user', JSON.stringify(user));
+
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Error al iniciar sesión');

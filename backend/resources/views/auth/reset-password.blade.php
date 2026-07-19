@@ -129,10 +129,15 @@
                 @csrf
                 <input type="hidden" name="token" value="{{ $token }}">
 
+                {{-- Solo lectura: viene del enlace del correo y es SIEMPRE la cuenta
+                     principal, que es contra la que el token fue emitido. Si se
+                     pudiera editar (p. ej. escribiendo el correo de recuperación),
+                     la validación del token fallaría con "usuario no encontrado". --}}
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1.5">Correo electrónico</label>
-                    <input type="email" name="email" value="{{ old('email', $email) }}" required
-                           class="field w-full px-4 py-2.5 rounded-xl border-2 border-slate-300 text-sm text-slate-900 outline-none">
+                    <input type="email" name="email" value="{{ old('email', $email) }}" required readonly
+                           class="field w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50 text-sm text-slate-500 cursor-not-allowed outline-none">
+                    <p class="text-xs text-slate-400 mt-1">Es la cuenta a la que pertenece este enlace.</p>
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1.5">Nueva contraseña</label>

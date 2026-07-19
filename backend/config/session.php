@@ -32,7 +32,7 @@ return [
     |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+    'lifetime' => (int) env('SESSION_LIFETIME', 30),
 
     // Por defecto TRUE: la cookie de sesión del panel se convierte en cookie de
     // sesión del navegador → al CERRAR EL NAVEGADOR se descarta y el admin queda
@@ -50,12 +50,15 @@ return [
     | Mientras la pestaña del panel está abierta envía un "latido" periódico
     | (ver el <script> del layout admin). Si dejan de llegar latidos durante
     | más de estos segundos, se asume que la PESTAÑA se cerró y el siguiente
-    | acceso al panel cierra la sesión automáticamente. Debe ser mayor que el
-    | intervalo del latido (15 s) para que recargar/volver atrás —que reanudan
+    | acceso al panel cierra la sesión automáticamente. Debe ser MAYOR que el
+    | intervalo del latido (5 s) para que recargar/volver atrás —que reanudan
     | el latido de inmediato— nunca lo superen y NO cierren sesión por error.
+    | Se mantiene un margen de 3× (15 s) frente al latido: reduce la ventana en
+    | la que, tras cerrar la pestaña, una sesión aún viva podría reutilizarse
+    | (p. ej. escribiendo /admin a mano), sin arriesgar cierres falsos.
     |
     */
-    'tab_heartbeat_grace' => (int) env('SESSION_TAB_GRACE', 45),
+    'tab_heartbeat_grace' => (int) env('SESSION_TAB_GRACE', 15),
 
     /*
     |--------------------------------------------------------------------------

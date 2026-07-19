@@ -317,50 +317,101 @@
     const fichaInput      = document.getElementById('fichaInput');
     const importarFichaBtn = document.getElementById('importarFichaBtn');
     const importarFichaTexto = document.getElementById('importarFichaTexto');
+    const fichaProgreso      = document.getElementById('fichaProgreso');
+    const fichaProgresoTexto = document.getElementById('fichaProgresoTexto');
+    const fichaProgresoBarra = document.getElementById('fichaProgresoBarra');
 
-    fichaInput.addEventListener('change', async (e) => {
+    function mostrarProgreso(porcentaje, texto) {
+        fichaProgreso.classList.remove('hidden');
+        fichaProgresoBarra.style.width = porcentaje + '%';
+        fichaProgresoTexto.textContent = texto;
+    }
+
+    function ocultarProgreso() {
+        fichaProgreso.classList.add('hidden');
+        fichaProgresoBarra.style.width = '0%';
+    }
+
+    // Se usa XMLHttpRequest y no fetch() a propósito: fetch NO expone el
+    // progreso de SUBIDA, y las fichas MINTUR con fotos incrustadas llegan a
+    // varios MB (el límite es 20 MB), así que sin barra el admin se queda
+    // mirando un botón congelado sin saber si va o si se colgó.
+    fichaInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         const textoOriginal = importarFichaTexto.textContent;
         importarFichaTexto.textContent = 'Leyendo ficha...';
         importarFichaBtn.classList.add('opacity-60', 'pointer-events-none');
+        mostrarProgreso(0, 'Subiendo… 0%');
 
         const formData = new FormData();
         formData.append('ficha', file);
         formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
 
-        try {
-            const response = await fetch('{{ route("admin.lugares.importarFicha") }}', {
-                method: 'POST',
-                headers: { 'Accept': 'application/json' },
-                body: formData,
-            });
+        const finalizar = () => {
+            ocultarProgreso();
+            importarFichaTexto.textContent = textoOriginal;
+            importarFichaBtn.classList.remove('opacity-60', 'pointer-events-none');
+            fichaInput.value = '';
+        };
 
-            // Si el servidor redirige (sesión expirada / CSRF vencido), fetch
-            // sigue la redirección y esto ya NO es JSON: avisamos claro en
-            // vez de que falle response.json() con un mensaje genérico.
-            if (response.redirected || !response.headers.get('content-type')?.includes('application/json')) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '{{ route("admin.lugares.importarFicha") }}');
+        xhr.setRequestHeader('Accept', 'application/json');
+
+        xhr.upload.addEventListener('progress', (ev) => {
+            if (!ev.lengthComputable) return;
+            const pct = Math.round((ev.loaded / ev.total) * 100);
+            mostrarProgreso(pct, `Subiendo… ${pct}%`);
+        });
+
+        // El archivo ya llegó completo, pero el servidor todavía tiene que abrir
+        // el Excel y extraer las fotos: la barra se queda al 100% con un texto
+        // distinto para que no parezca que se trabó al final.
+        xhr.upload.addEventListener('load', () => {
+            mostrarProgreso(100, 'Procesando ficha…');
+        });
+
+        xhr.addEventListener('load', () => {
+            // Si la sesión expiró, Laravel redirige al login y la respuesta ya
+            // no es JSON: avisamos claro en vez de fallar al parsearla.
+            const tipo = xhr.getResponseHeader('content-type') || '';
+            if (!tipo.includes('application/json')) {
                 alert('Tu sesión pudo haber expirado. Recarga la página (F5) e inténtalo de nuevo.');
+                finalizar();
                 return;
             }
 
-            const data = await response.json();
+            let data;
+            try {
+                data = JSON.parse(xhr.responseText);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al importar la ficha.');
+                finalizar();
+                return;
+            }
 
-            if (!response.ok) {
+            if (xhr.status < 200 || xhr.status >= 300) {
                 alert(data.error || 'No se pudo leer la ficha.');
+                finalizar();
                 return;
             }
 
             precargarFormularioDesdeFicha(data);
-        } catch (error) {
-            console.error('Error:', error);
+            finalizar();
+        });
+
+        xhr.addEventListener('error', () => {
+            console.error('Error de red al importar la ficha.');
             alert('Error al importar la ficha.');
-        } finally {
-            importarFichaTexto.textContent = textoOriginal;
-            importarFichaBtn.classList.remove('opacity-60', 'pointer-events-none');
-            fichaInput.value = '';
-        }
+            finalizar();
+        });
+
+        xhr.addEventListener('abort', finalizar);
+
+        xhr.send(formData);
     });
 
     // Vuelca los datos devueltos por el backend en los campos del formulario.

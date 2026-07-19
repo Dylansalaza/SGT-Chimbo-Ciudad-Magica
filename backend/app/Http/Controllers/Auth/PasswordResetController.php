@@ -58,8 +58,13 @@ class PasswordResetController extends Controller
         // que llega al correo.
         $token = Password::broker()->createToken($user);
 
+        // El correo se ENTREGA en la dirección que el usuario escribió (puede
+        // ser su correo de recuperación); antes se iba siempre al principal.
+        // El enlace, en cambio, lleva el correo PRINCIPAL, porque el token del
+        // broker se indexa por él y Password::reset() solo lo valida contra ese
+        // (con el alternativo daría "usuario no encontrado").
         try {
-            $user->sendPasswordResetNotification($token);
+            $user->sendPasswordResetNotification($token, $request->email);
         } catch (\Throwable $e) {
             Log::error('No se pudo enviar el correo de recuperación de contraseña: ' . $e->getMessage());
 

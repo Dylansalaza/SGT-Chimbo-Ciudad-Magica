@@ -270,11 +270,28 @@ export default function ChimboMap() {
 
         const lugares = state.lugares || [];
 
+        // ── Caso: mostrar TODOS los lugares atractivos ──────────────────
+        // Llega desde el menú "Turismo → ¿Cómo llegar?": activa la vista de
+        // "mostrar todos los lugares" para pintar cada atractivo del cantón.
+        if (nav.showAll) {
+            setChatbotHighlight(null);
+            setMostrarTodos(true);
+            if (typeof state.setMapCenter === 'function') {
+                state.setMapCenter([-1.6825, -79.0435]);
+                if (typeof state.setMapZoom === 'function') state.setMapZoom(14);
+            }
+            return;
+        }
+
         // ── Caso: grupo por categoría (miradores, parques, cascadas…) ───
-        // Llega desde el chatbot con nav.categoriaKeys = subcadenas de categoría.
-        // Filtra los lugares de esa categoría, los resalta como grupo y centra
-        // en el primero (o en el lugar concreto si vino con placeId).
+        // Llega desde el chatbot o el menú "Turismo" con nav.categoriaKeys =
+        // subcadenas de categoría. Filtra los lugares de esa categoría, los
+        // resalta como grupo y centra en el primero (o en el lugar concreto
+        // si vino con placeId).
         if (nav.categoriaKeys && Array.isArray(nav.categoriaKeys) && nav.categoriaKeys.length) {
+            // Si venimos de "mostrar todos", lo desactivamos para que se vea
+            // SOLO el grupo de la categoría pedida (ej. hoteles, restaurantes).
+            setMostrarTodos(false);
             const keys = nav.categoriaKeys.map(k => String(k).toLowerCase());
             const grupo = lugares.filter(l =>
                 l.categoria && keys.some(k => l.categoria.toLowerCase().includes(k))
@@ -290,12 +307,17 @@ export default function ChimboMap() {
                 // _foodGroup es el nombre interno del "grupo a mostrar/resaltar";
                 // sirve para cualquier categoría, no solo comida.
                 setChatbotHighlight({ ...primero, _foodGroup: grupo });
+            } else {
+                // La categoría no tiene lugares registrados: limpiamos el
+                // resaltado para no dejar marcadores de una consulta anterior.
+                setChatbotHighlight(null);
             }
             return;
         }
 
         // ── Caso: "lugares de comer en el mapa" (showFood) ──────────────
         if (nav.showFood) {
+            setMostrarTodos(false);
             const FOOD_KEYS = ['gastro', 'restaurante', 'comida', 'cafetería', 'cafeteria',
                                'cocina', 'alimenta', 'comer', 'food', 'picante', 'mercado'];
             const foodLugares = lugares.filter(l =>

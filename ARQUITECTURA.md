@@ -161,6 +161,36 @@ el campo en vez de borrar).
 - **Rendimiento**: imágenes en WebP, fuentes auto-hospedadas y precargadas,
   preconnect al backend inyectado desde `index.html`, y `/home` cacheado.
 
+### 5.1 Menú "Turismo" del header (`Navbar.jsx`)
+
+El header incluye un menú desplegable **"Turismo"** con las 4 preguntas más
+frecuentes del turista. Cada opción navega a una vista y, cuando aplica, envía
+un **estado de navegación** (`<Link state={…}>`) que la página del mapa
+(`ChimboMap.jsx`) interpreta para filtrar los marcadores:
+
+| Opción | Destino | Estado enviado | Resultado |
+|--------|---------|----------------|-----------|
+| **¿Qué hacer?** | `/eventos` | — | Agenda de eventos del cantón |
+| **¿Cómo llegar?** | `/mapa` | `{ showAll: true }` | **Todos** los lugares atractivos |
+| **¿Qué comer?** | `/mapa` | `{ categoriaKeys: ['restaurante','cafeter'] }` | Restaurantes y cafeterías |
+| **¿Dónde dormir?** | `/mapa` | `{ categoriaKeys: ['hotel','hostal','hoster'] }` | Hoteles, hostales y hosterías |
+
+- Las `categoriaKeys` son **subcadenas sin tildes**: el mapa hace `includes()`
+  sobre la categoría en minúsculas, así `hoster` calza con "Hostería" y
+  `cafeter` con "Cafetería" sin depender del acento.
+- El desplegable se muestra en **escritorio** (abre con hover/foco) y como una
+  **sección plegada dentro del menú hamburguesa** en móvil. Ambos reutilizan la
+  misma lista `TURISMO_MENU`.
+- En `ChimboMap.jsx`, el `useEffect` que lee `location.state` maneja `showAll`
+  (activa "mostrar todos los lugares") y `categoriaKeys` (resalta solo el grupo
+  de esa categoría), reiniciando el estado previo para que cada opción muestre
+  exactamente lo pedido. Es el mismo mecanismo que ya usa el chatbot para
+  centrar y resaltar lugares.
+- Las categorías de lugares (Hotel, Hostal, Hostería, Restaurante, Cafetería,
+  etc.) se administran desde el panel (`place_categories`); el
+  `TouristPlaceSeeder` incluye ejemplos de cada una para que estas opciones
+  muestren resultados desde una instalación limpia.
+
 ---
 
 ## 6. Asistente virtual (chatbot)
@@ -279,7 +309,7 @@ configurado, `CLIP_AUTH_TOKEN` definido, y rotación de secretos.
 cd backend
 composer install
 cp .env.example .env && php artisan key:generate
-php artisan migrate
+php artisan migrate --seed   # --seed carga lugares/eventos/noticias de ejemplo
 php artisan serve --port=3000
 
 # Motor de IA (dos procesos, en dos terminales)
@@ -289,7 +319,12 @@ python worker.py            # orquestador de la cola
 # Frontend
 cd frontend
 npm install
-npm run dev                 # Vite (requiere VITE_API_URL en .env)
+npm run dev                 # Vite en http://localhost:5173 (requiere VITE_API_URL en .env)
 ```
+
+> **Nota sobre `localhost`:** estos servidores escuchan en la máquina donde se
+> ejecutan. Si el proyecto corre en un servidor/contenedor remoto, `localhost`
+> apunta a *esa* máquina, no a la tuya: para verlo desde tu navegador usa la IP
+> pública/túnel del servidor, o clona y ejecuta el proyecto en tu equipo local.
 
 Para producción, seguir [`DEPLOY.md`](DEPLOY.md).

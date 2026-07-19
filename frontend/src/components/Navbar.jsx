@@ -3,13 +3,17 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
 import {
   HomeIcon,
-  CalendarDaysIcon,
   NewspaperIcon,
   PhotoIcon,
   MapIcon,
   ChartBarIcon,
   UserCircleIcon,
   XMarkIcon,
+  ChevronDownIcon,
+  SparklesIcon,
+  MapPinIcon,
+  BuildingStorefrontIcon,
+  BuildingOffice2Icon,
 } from '@heroicons/react/24/solid';
 
 // Base del backend (para enlazar al panel admin de Laravel).
@@ -35,13 +39,54 @@ const isAdmin = () => {
   return user?.is_admin === true; // el backend devuelve is_admin
 };
 
-// Enlaces del menú de navegación público (mismo orden en escritorio y móvil)
+// Enlaces del menú de navegación público (mismo orden en escritorio y móvil).
+// "Eventos" se reemplazó por el menú desplegable "Turismo" (ver TURISMO_MENU),
+// que se inserta aparte en el orden porque no es un enlace simple.
 const NAV_LINKS = [
-  { to: '/',        label: 'Inicio',         Icon: HomeIcon },
-  { to: '/eventos', label: 'Eventos',        Icon: CalendarDaysIcon },
-  { to: '/noticias', label: 'Noticias',      Icon: NewspaperIcon },
-  { to: '/galerias', label: 'Galerías',      Icon: PhotoIcon },
-  { to: '/mapa',    label: 'Mapa Turístico', Icon: MapIcon },
+  { to: '/',         label: 'Inicio',         Icon: HomeIcon },
+  { to: '/noticias', label: 'Noticias',       Icon: NewspaperIcon },
+  { to: '/galerias', label: 'Galerías',       Icon: PhotoIcon },
+  { to: '/mapa',     label: 'Mapa Turístico', Icon: MapIcon },
+];
+
+// Submenú "Turismo": 4 preguntas frecuentes del turista. Cada una lleva a una
+// vista y, cuando aplica, envía un `state` de navegación que el mapa (/mapa)
+// interpreta para filtrar los marcadores:
+//   • ¿Qué hacer?    → /eventos (agenda de eventos del cantón)
+//   • ¿Cómo llegar?  → /mapa con TODOS los lugares atractivos (showAll)
+//   • ¿Qué comer?    → /mapa filtrado a restaurantes y cafeterías (categoriaKeys)
+//   • ¿Dónde dormir? → /mapa filtrado a hoteles, hostales y hosterías
+// Las categoriaKeys son subcadenas SIN tildes: el mapa hace `includes()` sobre
+// la categoría en minúsculas, así "hoster" calza con "Hostería" y "cafeter"
+// con "Cafetería" sin depender del acento.
+const TURISMO_MENU = [
+  {
+    to: '/eventos',
+    label: '¿Qué hacer?',
+    desc: 'Eventos y actividades del cantón',
+    Icon: SparklesIcon,
+  },
+  {
+    to: '/mapa',
+    label: '¿Cómo llegar?',
+    desc: 'Todos los lugares atractivos en el mapa',
+    Icon: MapPinIcon,
+    state: { showAll: true },
+  },
+  {
+    to: '/mapa',
+    label: '¿Qué comer?',
+    desc: 'Restaurantes y cafeterías',
+    Icon: BuildingStorefrontIcon,
+    state: { categoriaKeys: ['restaurante', 'cafeter'] },
+  },
+  {
+    to: '/mapa',
+    label: '¿Dónde dormir?',
+    desc: 'Hoteles, hostales y hosterías',
+    Icon: BuildingOffice2Icon,
+    state: { categoriaKeys: ['hotel', 'hostal', 'hoster'] },
+  },
 ];
 
 // ============================================================================
@@ -63,6 +108,9 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   // Estado del menú móvil (hamburguesa)
   const [menuAbierto, setMenuAbierto] = useState(false);
+  // Estado del desplegable "Turismo" en escritorio (se abre al pasar el ratón
+  // o al hacer clic; se cierra al elegir una opción o al cambiar de ruta).
+  const [turismoAbierto, setTurismoAbierto] = useState(false);
 
   // Escuchar el evento de scroll
   useEffect(() => {
@@ -78,10 +126,15 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Cerrar el menú móvil al cambiar de ruta
+  // Cerrar el menú móvil y el desplegable "Turismo" al cambiar de ruta.
+  // OJO: dependemos también de location.key (no solo de pathname) porque las
+  // opciones del submenú "¿Qué comer?/¿Dónde dormir?" navegan siempre a /mapa
+  // cambiando solo el `state`; sin location.key el efecto no se dispararía al
+  // ir de una opción de /mapa a otra y el desplegable quedaría abierto.
   useEffect(() => {
     setMenuAbierto(false);
-  }, [location.pathname]);
+    setTurismoAbierto(false);
+  }, [location.pathname, location.key]);
 
   // No mostrar navbar en rutas de administrador (Laravel)
   if (location.pathname.startsWith('/admin')) {
@@ -92,6 +145,50 @@ export default function Navbar() {
   // resto basta con que la ruta empiece por su prefijo, ej. /eventos/12).
   const isActive = (to) =>
     to === '/' ? location.pathname === '/' : location.pathname.startsWith(to);
+
+  // "Turismo" se resalta como activo cuando estamos en cualquiera de sus
+  // destinos: la agenda de eventos (/eventos) o el mapa turístico (/mapa).
+  const turismoActivo = isActive('/eventos') || isActive('/mapa');
+
+  // Render de un enlace simple del navbar de escritorio. Se extrae en una
+  // función para poder intercalar el desplegable "Turismo" entre "Inicio" y
+  // el resto de enlaces sin duplicar el marcado.
+  const renderNavLink = (l) => {
+    const active = isActive(l.to);
+    return (
+      <Link
+        key={l.to}
+        to={l.to}
+        aria-current={active ? 'page' : undefined}
+        className={`relative flex items-center gap-1.5 whitespace-nowrap px-3 py-2 rounded-lg text-sm transition-colors duration-200 ${
+          active ? 'text-white' : 'text-green-100/80 hover:text-white hover:bg-white/5'
+        }`}
+      >
+        <l.Icon className={`w-4 h-4 transition-colors ${active ? 'text-gold-400' : ''}`} /> {l.label}
+        {/* Indicador de página activa: subrayado dorado */}
+        <span className={`pointer-events-none absolute left-3 right-3 -bottom-0.5 h-0.5 rounded-full brand-gradient-bar origin-left transition-transform duration-200 ease-out ${active ? 'scale-x-100' : 'scale-x-0'}`} />
+      </Link>
+    );
+  };
+
+  // Render de un enlace simple del navbar MÓVIL (menú hamburguesa).
+  const renderMobileLink = (l) => {
+    const active = isActive(l.to);
+    return (
+      <Link
+        key={l.to}
+        to={l.to}
+        aria-current={active ? 'page' : undefined}
+        className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors font-semibold ${
+          active
+            ? 'bg-white/10 text-white border-l-2 border-gold-400'
+            : 'text-green-100/80 hover:bg-white/10 hover:text-white'
+        }`}
+      >
+        <l.Icon className={`w-4 h-4 ${active ? 'text-gold-400' : ''}`} /> {l.label}
+      </Link>
+    );
+  };
 
   // Cierra la sesión: borra las credenciales guardadas y redirige al login
   const handleLogout = () => {
@@ -126,23 +223,62 @@ export default function Navbar() {
 
           {/* ENLACES DE NAVEGACIÓN — solo en pantallas grandes */}
           <div className="hidden lg:flex items-center space-x-1 font-semibold">
-            {NAV_LINKS.map((l) => {
-              const active = isActive(l.to);
-              return (
-                <Link
-                  key={l.to}
-                  to={l.to}
-                  aria-current={active ? 'page' : undefined}
-                  className={`relative flex items-center gap-1.5 whitespace-nowrap px-3 py-2 rounded-lg text-sm transition-colors duration-200 ${
-                    active ? 'text-white' : 'text-green-100/80 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <l.Icon className={`w-4 h-4 transition-colors ${active ? 'text-gold-400' : ''}`} /> {l.label}
-                  {/* Indicador de página activa: subrayado dorado */}
-                  <span className={`pointer-events-none absolute left-3 right-3 -bottom-0.5 h-0.5 rounded-full brand-gradient-bar origin-left transition-transform duration-200 ease-out ${active ? 'scale-x-100' : 'scale-x-0'}`} />
-                </Link>
-              );
-            })}
+            {/* Inicio */}
+            {renderNavLink(NAV_LINKS[0])}
+
+            {/* 🧭 MENÚ DESPLEGABLE "TURISMO" (reemplaza al antiguo "Eventos").
+                Se abre al pasar el ratón por encima o al hacer clic. */}
+            <div
+              className="relative"
+              onMouseEnter={() => setTurismoAbierto(true)}
+              onMouseLeave={() => setTurismoAbierto(false)}
+              onFocus={() => setTurismoAbierto(true)}
+              onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setTurismoAbierto(false); }}
+            >
+              <button
+                type="button"
+                onClick={() => setTurismoAbierto(true)}
+                aria-haspopup="true"
+                aria-expanded={turismoAbierto}
+                className={`relative flex items-center gap-1.5 whitespace-nowrap px-3 py-2 rounded-lg text-sm transition-colors duration-200 ${
+                  turismoActivo ? 'text-white' : 'text-green-100/80 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <MapIcon className={`w-4 h-4 transition-colors ${turismoActivo ? 'text-gold-400' : ''}`} /> Turismo
+                <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform duration-200 ${turismoAbierto ? 'rotate-180' : ''}`} />
+                <span className={`pointer-events-none absolute left-3 right-3 -bottom-0.5 h-0.5 rounded-full brand-gradient-bar origin-left transition-transform duration-200 ease-out ${turismoActivo ? 'scale-x-100' : 'scale-x-0'}`} />
+              </button>
+
+              {/* Panel del desplegable */}
+              <div
+                className={`absolute left-0 top-full pt-2 w-72 transition-all duration-200 origin-top ${
+                  turismoAbierto
+                    ? 'opacity-100 visible translate-y-0'
+                    : 'opacity-0 invisible -translate-y-1 pointer-events-none'
+                }`}
+              >
+                <div className="bg-green-950/95 backdrop-blur-md border border-gold-400/20 rounded-xl shadow-green-md overflow-hidden p-1.5">
+                  {TURISMO_MENU.map((item) => (
+                    <Link
+                      key={item.label}
+                      to={item.to}
+                      state={item.state}
+                      onClick={() => setTurismoAbierto(false)}
+                      className="flex items-start gap-3 px-3 py-2.5 rounded-lg text-green-100/90 hover:bg-white/10 hover:text-white transition-colors"
+                    >
+                      <item.Icon className="w-5 h-5 mt-0.5 shrink-0 text-gold-400" />
+                      <span className="flex flex-col leading-tight">
+                        <span className="text-sm font-semibold">{item.label}</span>
+                        <span className="text-xs text-green-200/70">{item.desc}</span>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Resto de enlaces (Noticias, Galerías, Mapa Turístico) */}
+            {NAV_LINKS.slice(1).map(renderNavLink)}
 
             {/* Botón al panel de administración (Laravel/Blade) - solo admin.
                 Usamos <a> normal porque /admin NO es una ruta de React. */}
@@ -198,23 +334,34 @@ export default function Navbar() {
         {/* MENÚ MÓVIL DESPLEGABLE */}
         {menuAbierto && (
           <div className="lg:hidden pb-4 border-t border-white/10 pt-3 space-y-1 animate-fade-in-up">
-            {NAV_LINKS.map((l) => {
-              const active = isActive(l.to);
-              return (
-                <Link
-                  key={l.to}
-                  to={l.to}
-                  aria-current={active ? 'page' : undefined}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors font-semibold ${
-                    active
-                      ? 'bg-white/10 text-white border-l-2 border-gold-400'
-                      : 'text-green-100/80 hover:bg-white/10 hover:text-white'
-                  }`}
-                >
-                  <l.Icon className={`w-4 h-4 ${active ? 'text-gold-400' : ''}`} /> {l.label}
-                </Link>
-              );
-            })}
+            {/* Inicio */}
+            {renderMobileLink(NAV_LINKS[0])}
+
+            {/* 🧭 Sección "Turismo" con sus 4 preguntas (siempre visible en móvil) */}
+            <div className="pt-1">
+              <p className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-gold-400/90">
+                <MapIcon className="w-4 h-4" /> Turismo
+              </p>
+              <div className="pl-2 space-y-1 border-l border-white/10 ml-3">
+                {TURISMO_MENU.map((item) => (
+                  <Link
+                    key={item.label}
+                    to={item.to}
+                    state={item.state}
+                    className="flex items-start gap-2.5 px-3 py-2 rounded-lg text-green-100/80 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <item.Icon className="w-4 h-4 mt-0.5 shrink-0 text-gold-400" />
+                    <span className="flex flex-col leading-tight">
+                      <span className="text-sm font-semibold">{item.label}</span>
+                      <span className="text-[11px] text-green-200/60">{item.desc}</span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Resto de enlaces (Noticias, Galerías, Mapa Turístico) */}
+            {NAV_LINKS.slice(1).map(renderMobileLink)}
 
             {admin && (
               <a
